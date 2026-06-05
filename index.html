@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -767,7 +768,167 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   color: #4285f4;
 }
 
+/* LOGIN SCREEN */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.login-screen.hidden { display: none; }
+
+.login-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 380px;
+  animation: su .25s ease;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-logo .ico {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.login-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.login-logo p {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.login-field {
+  margin-bottom: 14px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.login-field input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.login-field input:focus { border-color: var(--accent, #e8433a); }
+
+.login-btn {
+  width: 100%;
+  background: var(--accent, #e8433a);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity .2s;
+}
+
+.login-btn:hover { opacity: .88; }
+.login-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.login-error {
+  background: rgba(232,67,58,.12);
+  border: 1px solid rgba(232,67,58,.3);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.8rem;
+  padding: 10px 12px;
+  margin-top: 12px;
+  display: none;
+  text-align: center;
+}
+
+.login-error.show { display: block; }
+
+.login-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* User info in topbar */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.user-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent, #e8433a), #ff8c42);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  flex-shrink: 0;
+}
+
+.user-email {
+  font-size: 0.72rem;
+  color: var(--muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.btn-logout:hover { border-color: var(--accent, #e8433a); color: var(--accent, #e8433a); }
+
 /* Import button */
+
 
 .btn-import { background: rgba(255,255,255,.05); border: 1px solid var(--border); color: var(--muted); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
@@ -775,6 +936,28 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 <!-- Firebase SDK (compat) -->
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="ico">🗺️</span>
+      <h1>Coordenação Eleitoral</h1>
+      <p>Acesso restrito — faça login para continuar</p>
+    </div>
+    <div class="login-field">
+      <label>Usuário (e-mail)</label>
+      <input type="email" id="loginEmail" placeholder="usuario@coord.com" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginSenha" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-footer">Coordenação — Raiane · Zona Norte</div>
+  </div>
+</div>
 
 <!-- LOADING OVERLAY -->
 <div id="loading-overlay" style="position:fixed;inset:0;background:rgba(13,15,24,.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
@@ -843,6 +1026,11 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
     <div class="topbar-actions">
       <button class="btn-map-toggle" id="btnMapToggle" onclick="toggleMapView()">🗺️ Mapa</button>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+      </div>
       <label class="btn btn-import" style="cursor:pointer" title="Importar planilha desta zona">
         📥 Importar
         <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" onchange="importarArquivo(event)">
@@ -1071,30 +1259,28 @@ function mostrarLoading(show) {
 
 async function carregarDoFirebase() {
   try {
-    const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
-    for (const zona of zonas) {
-      const snap = await db.collection('liderancas').where('_zona', '==', zona).get();
-      DB[zona] = snap.docs.map(d => ({...d.data(), _fireId: d.id}));
-      // Reconstrói bairros
-      DB[zona].forEach(d => {
-        if (d.bairro && !BAIRROS[zona].includes(d.bairro)) {
-          BAIRROS[zona].push(d.bairro);
-        }
-      });
-      BAIRROS[zona].sort();
+    // Verifica se banco está vazio e migra se necessário
+    const snapCheck = await db.collection('liderancas').limit(1).get();
+    if (snapCheck.empty) {
+      await migrarDadosNorte();
     }
+
+    // Carrega todas as zonas em paralelo
+    const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+    const snaps = await Promise.all(
+      zonas.map(z => db.collection('liderancas').where('_zona', '==', z).get())
+    );
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+
     dbCarregado = true;
-    await migrarDadosNorte();
-    // Recarrega norte após possível migração
-    const snapNorte = await db.collection('liderancas').where('_zona', '==', 'norte').get();
-    DB.norte = snapNorte.docs.map(d => ({...d.data(), _fireId: d.id}));
-    BAIRROS.norte = [...new Set(DB.norte.map(d => d.bairro).filter(Boolean))].sort();
     mostrarLoading(false);
     atualizarNavCounts();
     trocarZona('norte');
   } catch(e) {
     console.error('Erro ao carregar Firebase:', e);
-    // Fallback: carrega dados Norte locais
     DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
     BAIRROS.norte = [...new Set(DB.norte.map(d => d.bairro).filter(Boolean))].sort();
     dbCarregado = true;
@@ -1626,8 +1812,73 @@ async function carregarFirestore() {
   }
 }
 
+// ===================== AUTENTICAÇÃO =====================
+const auth = firebase.auth();
+
+// Observa estado de login
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Logado — mostra sistema
+    document.getElementById('loginScreen').classList.add('hidden');
+    const initials = user.email.substring(0, 2).toUpperCase();
+    document.getElementById('userAvatar').textContent = initials;
+    document.getElementById('userEmail').textContent = user.email;
+    init();
+  } else {
+    // Não logado — mostra tela de login
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loading-overlay').style.display = 'none';
+  }
+});
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+
+  if (!email || !senha) {
+    err.textContent = 'Preencha e-mail e senha.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  err.classList.remove('show');
+
+  try {
+    await auth.signInWithEmailAndPassword(email, senha);
+    // onAuthStateChanged cuida do resto
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    const msgs = {
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+      'auth/invalid-credential': 'E-mail ou senha incorretos.'
+    };
+    err.textContent = msgs[e.code] || 'Erro ao fazer login. Tente novamente.';
+    err.classList.add('show');
+  }
+}
+
+async function fazerLogout() {
+  if (!confirm('Deseja sair do sistema?')) return;
+  await auth.signOut();
+}
+
+// Login com Enter
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) {
+    fazerLogin();
+  }
+});
+
 // ===================== START =====================
-init();
+// init() é chamado pelo onAuthStateChanged após login
 carregarFirestore();
 
 // ===================== MAPA =====================
