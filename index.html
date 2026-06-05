@@ -2024,12 +2024,11 @@ const VINCULOS_PLANILHA = {"EDNA MARIA DA SILVA SOUSA": ["MARIA SOLIDADE FERNAND
 const RAIANE_NOME = 'SHÉLYDA RAIANE RODRIGUES MACHADO (SEMAM)';
 
 async function migrarVinculos() {
-  // Verifica se já migrou (checa um registro com lider_id preenchido)
-  const snap = await db.collection('liderancas')
-    .where('lider_id', '!=', '')
-    .limit(1).get();
-  if (!snap.empty) return; // já migrado
+  // Sempre roda para garantir vínculos completos
+  await migrarVinculosForce();
+}
 
+async function migrarVinculosForce() {
   console.log('Iniciando migração de vínculos...');
   toast('🔗 Vinculando hierarquia…');
 
@@ -2042,53 +2041,61 @@ async function migrarVinculos() {
   const raianeId = raiane ? raiane._fireId : '';
   const raianeNome = raiane ? raiane.nome : RAIANE_NOME;
 
-  const batch = db.batch();
+  const updates = [];
   let count = 0;
 
   // Para cada liderança com mobilizadores no mapa
   for (const [nomeL, nomesMobs] of Object.entries(VINCULOS_PLANILHA)) {
-    // Encontra a liderança pelo nome
-    const lider = docs.find(d => d.nome && d.nome.startsWith(nomeL.substring(0, 20)));
-    if (!lider) continue;
+    // Encontra a liderança pelo nome (busca flexível)
+    const nomeKeyL = nomeL.substring(0, 15).toUpperCase();
+    const lider = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyL));
+    if (!lider) { console.log('Lider nao encontrada:', nomeL); continue; }
 
     // Vincula liderança à Raiane (se não for a própria Raiane)
-    if (lider.nome !== raianeNome && raianeId) {
-      const lRef = db.collection('liderancas').doc(lider._fireId);
-      batch.update(lRef, {
+    if (lider._fireId !== raianeId && raianeId) {
+      updates.push({ ref: db.collection('liderancas').doc(lider._fireId), data: {
         coord_area_id: raianeId,
         coord_area_nome: raianeNome
-      });
+      }});
       count++;
     }
 
     // Vincula mobilizadores à liderança
     for (const nomeMob of nomesMobs) {
-      const mob = docs.find(d => d.nome && d.nome.startsWith(nomeMob.substring(0, 20)));
-      if (!mob) continue;
-      const mRef = db.collection('liderancas').doc(mob._fireId);
-      batch.update(mRef, {
+      const nomeKeyM = nomeMob.substring(0, 15).toUpperCase();
+      const mob = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyM));
+      if (!mob) { console.log('Mob nao encontrado:', nomeMob); continue; }
+      updates.push({ ref: db.collection('liderancas').doc(mob._fireId), data: {
         lider_id: lider._fireId,
         lider_nome: lider.nome,
         coord_area_id: raianeId,
         coord_area_nome: raianeNome
-      });
+      }});
       count++;
     }
   }
 
   // Vincula todas as lideranças restantes à Raiane também
-  docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && !d.coord_area_id && d._fireId !== raianeId).forEach(l => {
-    const lRef = db.collection('liderancas').doc(l._fireId);
-    batch.update(lRef, {
-      coord_area_id: raianeId,
-      coord_area_nome: raianeNome
-    });
-    count++;
+  docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && d._fireId !== raianeId).forEach(l => {
+    if (!updates.find(u => u.ref.id === l._fireId && u.data.coord_area_id)) {
+      updates.push({ ref: db.collection('liderancas').doc(l._fireId), data: {
+        coord_area_id: raianeId,
+        coord_area_nome: raianeNome
+      }});
+      count++;
+    }
   });
 
-  await batch.commit();
+  // Executa em batches de 400
+  for (let i = 0; i < updates.length; i += 400) {
+    const batch = db.batch();
+    updates.slice(i, i + 400).forEach(u => batch.update(u.ref, u.data));
+    await batch.commit();
+    console.log(`Batch ${Math.floor(i/400)+1} concluído`);
+  }
+
   console.log(`Migração concluída: ${count} vínculos criados`);
-  toast(`✅ ${count} vínculos hierárquicos aplicados!`);
+  toast(`✅ ${count} vínculos aplicados!`);
 }
 
 // Migra dados locais da Zona Norte para Firebase (só na primeira vez)
