@@ -773,8 +773,6 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 </style>
 <!-- Firebase SDK (compat) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1572,17 +1570,7 @@ document.getElementById('filtro-bairro').addEventListener('change', ()=>{ pg=1; 
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ fecharModal(); fecharDrawer(); }});
 
 // ===================== FIREBASE =====================
-const firebaseConfig = {
-  apiKey: "AIzaSyDBg5pyAFWljMcty6qRYU6fONB6fm2xts8",
-  authDomain: "coordenacao-eleitoral.firebaseapp.com",
-  projectId: "coordenacao-eleitoral",
-  storageBucket: "coordenacao-eleitoral.firebasestorage.app",
-  messagingSenderId: "784517014215",
-  appId: "1:784517014215:web:e37569899a5d598f0154e2"
-};
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 // Mostra indicador de sync
 function setSyncStatus(msg, cor) {
