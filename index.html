@@ -1194,6 +1194,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 </style>
 <!-- Firebase SDK (compat) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1296,6 +1297,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
         📥 Importar
         <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" onchange="importarArquivo(event)">
       </label>
+      <button class="btn btn-import" onclick="exportarDados()" title="Exportar dados da zona atual em Excel">📤 Exportar</button>
       <button class="btn btn-primary" onclick="abrirModal(null)">+ Novo</button>
     </div>
   </div>
@@ -2298,6 +2300,54 @@ function toggleNode(id) {
   if (!body) return;
   body.classList.toggle('open');
   if (tog) tog.classList.toggle('open');
+}
+
+// ===================== EXPORTAR =====================
+function exportarDados() {
+  const dados = getDados();
+  if (!dados.length) { toast('⚠️ Nenhum dado para exportar', true); return; }
+
+  const zonaNome = zonaAtual === 'todas' ? 'Todas as Zonas' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual);
+
+  const rows = dados.map(d => ({
+    'ID': d.id,
+    'Tipo': d.tipo,
+    'Nome': d.nome,
+    'Telefone': d.telefone || '',
+    'Bairro': d.bairro || '',
+    'Endereço': d.endereco || '',
+    'Zona': ZONAS_CFG[d._zona]?.label || d._zona || '',
+    'Colégio Eleitoral': d.colegio || '',
+    'Seção': d.secao || '',
+    'Zona Eleitoral': d.zona_eleitoral || '',
+    'Coordenador de Área': d.coord_area_nome || '',
+    'Liderança': d.lider_nome || '',
+    'Votos': d.votos || 0,
+    'V. Entrada': d.v_entrada || 0,
+    'Custo Jul': d.custo_jul || 0,
+    'Custo Ago': d.custo_ago || 0,
+    'Custo Set': d.custo_set || 0,
+    'Custo Out': d.custo_out || 0,
+    'Total Pago': d.total || 0,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Largura das colunas
+  ws['!cols'] = [
+    {wch:6},{wch:8},{wch:40},{wch:18},{wch:20},{wch:40},
+    {wch:16},{wch:30},{wch:10},{wch:14},{wch:30},{wch:30},
+    {wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, zonaNome.substring(0,31));
+
+  const data = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const filename = `coordenacao_${zonaAtual}_${data}.xlsx`;
+  XLSX.writeFile(wb, filename);
+
+  toast(`✅ Exportado: ${filename}`);
 }
 
 // ===================== TOAST =====================
