@@ -639,6 +639,265 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .toast.show { transform: translateY(0); opacity: 1; }
 .toast.err { border-color: var(--red); color: var(--red); box-shadow: 0 4px 20px rgba(232,67,58,.2); }
 
+/* TREE VIEW */
+.tree-area {
+  flex: 1;
+  overflow-y: auto;
+  display: none;
+  padding: 20px 24px;
+  background: var(--bg);
+}
+
+.tree-area.active { display: block; }
+.tree-area::-webkit-scrollbar { width: 6px; }
+.tree-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.tree-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tree-header h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.tree-search {
+  flex: 1;
+  max-width: 280px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  padding: 7px 12px;
+  outline: none;
+}
+
+.tree-search:focus { border-color: var(--accent, #e8433a); }
+
+.tree-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tree-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.tree-stat strong { color: var(--text); font-family: 'Syne', sans-serif; }
+
+/* CA node */
+.tree-ca {
+  background: var(--surface2);
+  border: 1px solid rgba(251,146,60,.3);
+  border-left: 4px solid #fb923c;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.tree-ca-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+}
+
+.tree-ca-header:hover { background: rgba(251,146,60,.05); }
+
+.tree-ca-avatar {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(251,146,60,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.tree-ca-info { flex: 1; }
+.tree-ca-nome {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .9rem;
+  color: #fff;
+}
+
+.tree-ca-sub { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+.tree-ca-counts {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tree-count-pill {
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: .7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tree-count-pill strong { color: var(--text); }
+
+.tree-toggle { color: var(--muted); font-size: .8rem; transition: transform .2s; }
+.tree-toggle.open { transform: rotate(90deg); }
+
+.tree-ca-body { display: none; padding: 0 18px 14px 18px; }
+.tree-ca-body.open { display: block; }
+
+/* Liderança node */
+.tree-l {
+  background: rgba(59,130,246,.06);
+  border: 1px solid rgba(59,130,246,.2);
+  border-left: 3px solid #3b82f6;
+  border-radius: 10px;
+  margin: 8px 0 8px 16px;
+  overflow: hidden;
+}
+
+.tree-l-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+}
+
+.tree-l-header:hover { background: rgba(59,130,246,.06); }
+
+.tree-l-avatar {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(59,130,246,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.tree-l-nome {
+  flex: 1;
+  font-weight: 500;
+  font-size: .83rem;
+  color: var(--text);
+}
+
+.tree-l-sub { font-size: .7rem; color: var(--muted); }
+
+.tree-l-body { display: none; padding: 4px 14px 10px 14px; }
+.tree-l-body.open { display: block; }
+
+/* Mobilizador node */
+.tree-m {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  margin: 4px 0 4px 20px;
+  border-radius: 8px;
+  background: rgba(34,197,94,.05);
+  border: 1px solid rgba(34,197,94,.15);
+  transition: background .15s;
+  cursor: pointer;
+}
+
+.tree-m:hover { background: rgba(34,197,94,.1); }
+
+.tree-m-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+
+.tree-m-nome { font-size: .8rem; color: var(--text); flex: 1; }
+.tree-m-bairro { font-size: .7rem; color: var(--muted); }
+.tree-m-votos { font-size: .75rem; font-weight: 700; color: var(--accent, #e8433a); white-space: nowrap; }
+
+/* Sem vínculo */
+.tree-orphans {
+  margin-top: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tree-orphans-header {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+.tree-orphans-header h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--muted);
+  flex: 1;
+}
+
+.tree-orphans-body { padding: 10px 18px; display: none; }
+.tree-orphans-body.open { display: block; }
+
+.orphan-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(37,42,64,.5);
+  font-size: .8rem;
+}
+
+.orphan-item:last-child { border-bottom: none; }
+.orphan-name { flex: 1; color: var(--text); }
+.orphan-bairro { color: var(--muted); font-size: .72rem; }
+
+.btn-tree-toggle {
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s;
+}
+
+.btn-tree-toggle:hover, .btn-tree-toggle.active {
+  background: rgba(251,146,60,.15);
+  border-color: #fb923c;
+  color: #fb923c;
+}
+
 /* MAP VIEW */
 .map-area {
   flex: 1;
@@ -1026,6 +1285,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="pill" id="tp2"></div>
     </div>
     <div class="topbar-actions">
+      <button class="btn-tree-toggle" id="btnTreeToggle" onclick="toggleTreeView()">🌳 Árvore</button>
       <button class="btn-map-toggle" id="btnMapToggle" onclick="toggleMapView()">🗺️ Mapa</button>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">?</div>
@@ -1143,6 +1403,16 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
   </div>
 </div>
+
+  <!-- TREE VIEW -->
+  <div class="tree-area" id="treeArea">
+    <div class="tree-header">
+      <h3>🌳 Hierarquia da Coordenação</h3>
+      <input class="tree-search" type="text" id="treeSearch" placeholder="Buscar na árvore…" oninput="renderArvore()">
+    </div>
+    <div class="tree-stats" id="treeStats"></div>
+    <div id="treeContent"></div>
+  </div>
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
@@ -1830,6 +2100,206 @@ function getEquipeDeUm(d) {
   return [];
 }
 
+// ===================== ÁRVORE HIERÁRQUICA =====================
+let treeView = false;
+
+function toggleTreeView() {
+  // Fecha mapa se estiver aberto
+  if (mapView) {
+    mapView = false;
+    document.getElementById('btnMapToggle').classList.remove('active');
+    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
+    document.getElementById('mapArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+  }
+
+  treeView = !treeView;
+  const btn = document.getElementById('btnTreeToggle');
+  const tableArea = document.querySelector('.table-area');
+  const pag = document.getElementById('pag');
+  const treeArea = document.getElementById('treeArea');
+  const ctrlBar = document.querySelector('.controls-bar');
+
+  if (treeView) {
+    btn.classList.add('active');
+    btn.textContent = '📋 Tabela';
+    tableArea.classList.add('hidden');
+    pag.style.display = 'none';
+    ctrlBar.style.display = 'none';
+    treeArea.classList.add('active');
+    renderArvore();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🌳 Árvore';
+    tableArea.classList.remove('hidden');
+    pag.style.display = '';
+    ctrlBar.style.display = '';
+    treeArea.classList.remove('active');
+  }
+}
+
+function renderArvore() {
+  const q = (document.getElementById('treeSearch')?.value || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const dados = getDados();
+
+  const coords = dados.filter(d => d.tipo === 'CA');
+  const liderancas = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE');
+  const mobilizadores = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME');
+
+  // Stats
+  const totalVotos = dados.reduce((s,d) => s+(d.votos||0), 0);
+  document.getElementById('treeStats').innerHTML = `
+    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
+    <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
+    <div class="tree-stat">Total de votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong></div>
+  `;
+
+  let html = '';
+
+  // Sem coordenador cadastrado — mostra aviso
+  if (coords.length === 0) {
+    html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);margin-bottom:16px">
+      <div style="font-size:1.5rem;margin-bottom:8px">🏛️</div>
+      <div style="font-size:.85rem">Nenhum Coordenador de Área cadastrado ainda.</div>
+      <div style="font-size:.75rem;margin-top:6px">Cadastre um CA usando o botão "+ Novo" e selecione o tipo <strong>Coordenador de Área (CA)</strong>.</div>
+    </div>`;
+  }
+
+  // Nó de cada Coordenador
+  coords.forEach((ca, ci) => {
+    const nomeCA = ca.nome || '';
+    if (q && !nomeCA.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)) {
+      // Verifica se alguma liderança/mob bate
+      const lidsCa = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
+      const mobsCa = mobilizadores.filter(m => lidsCa.some(l => l._fireId === m.lider_id || String(l.id) === m.lider_id));
+      const algumBate = [...lidsCa, ...mobsCa].some(d =>
+        (d.nome||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)
+      );
+      if (!algumBate) return;
+    }
+
+    const lidsCA = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
+    const totalMobs = mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id)).length;
+    const totalVotosCA = [...lidsCA, ...mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id))].reduce((s,d)=>s+(d.votos||0),0);
+
+    html += `<div class="tree-ca">
+      <div class="tree-ca-header" onclick="toggleNode('ca-${ci}')">
+        <div class="tree-ca-avatar">🏛️</div>
+        <div class="tree-ca-info">
+          <div class="tree-ca-nome">${nomeCA}</div>
+          <div class="tree-ca-sub">${ca.bairro||''} ${ca.telefone ? '· '+ca.telefone : ''}</div>
+        </div>
+        <div class="tree-ca-counts">
+          <div class="tree-count-pill">👥 <strong>${lidsCA.length}</strong> lideranças</div>
+          <div class="tree-count-pill">🗳️ <strong>${totalMobs}</strong> mob.</div>
+          <div class="tree-count-pill">✅ <strong>${totalVotosCA}</strong> votos</div>
+        </div>
+        <span class="tree-toggle open" id="tog-ca-${ci}">▶</span>
+      </div>
+      <div class="tree-ca-body open" id="ca-${ci}">`;
+
+    if (lidsCA.length === 0) {
+      html += `<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma liderança vinculada a este coordenador ainda.</div>`;
+    }
+
+    // Lideranças do CA
+    lidsCA.forEach((l, li) => {
+      const nomeL = l.nome || '';
+      const mobsL = mobilizadores.filter(m => m.lider_id === (l._fireId || String(l.id)));
+      const votosL = [l, ...mobsL].reduce((s,d)=>s+(d.votos||0),0);
+
+      html += `<div class="tree-l">
+        <div class="tree-l-header" onclick="toggleNode('l-${ci}-${li}')">
+          <div class="tree-l-avatar">👤</div>
+          <div style="flex:1">
+            <div class="tree-l-nome">${nomeL}</div>
+            <div class="tree-l-sub">${l.bairro||''} ${l.secao?'· Seção '+l.secao:''}</div>
+          </div>
+          <div class="tree-ca-counts">
+            <div class="tree-count-pill">👥 <strong>${mobsL.length}</strong> mob.</div>
+            <div class="tree-count-pill">🗳️ <strong>${votosL}</strong> votos</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-left:8px">
+            <button class="btn-ico view" onclick="event.stopPropagation();verDrawer(${l.id},'${l._zona}')" title="Ver">👁</button>
+            <button class="btn-ico edit" onclick="event.stopPropagation();abrirModal(${l.id},'${l._zona}')" title="Editar">✏️</button>
+          </div>
+          <span class="tree-toggle open" id="tog-l-${ci}-${li}" style="margin-left:6px">▶</span>
+        </div>
+        <div class="tree-l-body open" id="l-${ci}-${li}">`;
+
+      if (mobsL.length === 0) {
+        html += `<div style="font-size:.75rem;color:var(--muted);padding:4px 0">Nenhum mobilizador vinculado a esta liderança.</div>`;
+      }
+
+      mobsL.forEach(m => {
+        html += `<div class="tree-m" onclick="verDrawer(${m.id},'${m._zona}')">
+          <div class="tree-m-dot"></div>
+          <span class="tree-m-nome">${m.nome}</span>
+          <span class="tree-m-bairro">${m.bairro||''}</span>
+          ${m.votos ? `<span class="tree-m-votos">🗳️ ${m.votos}</span>` : ''}
+          <button class="btn-ico edit" onclick="event.stopPropagation();abrirModal(${m.id},'${m._zona}')" title="Editar">✏️</button>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  // Sem vínculo — Lideranças sem coordenador
+  const lidersSemCA = liderancas.filter(l => !l.coord_area_id || l.coord_area_id === '');
+  const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
+
+  if (lidersSemCA.length > 0 || mobsSemL.length > 0) {
+    html += `<div class="tree-orphans">
+      <div class="tree-orphans-header" onclick="toggleNode('orphans')">
+        <h4>⚠️ Sem vínculo definido</h4>
+        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> lideranças · <strong>${mobsSemL.length}</strong> mobilizadores</span>
+        <span class="tree-toggle" id="tog-orphans">▶</span>
+      </div>
+      <div class="tree-orphans-body" id="orphans">`;
+
+    if (lidersSemCA.length > 0) {
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Lideranças sem coordenador</div>`;
+      lidersSemCA.forEach(l => {
+        html += `<div class="orphan-item">
+          <span class="badge badge-${l.tipo}">${l.tipo}</span>
+          <span class="orphan-name">${l.nome}</span>
+          <span class="orphan-bairro">${l.bairro||''}</span>
+          <button class="btn-ico edit" onclick="abrirModal(${l.id},'${l._zona}')" title="Vincular">✏️</button>
+        </div>`;
+      });
+    }
+
+    if (mobsSemL.length > 0) {
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Mobilizadores sem liderança</div>`;
+      mobsSemL.forEach(m => {
+        html += `<div class="orphan-item">
+          <span class="badge badge-${m.tipo}">${m.tipo}</span>
+          <span class="orphan-name">${m.nome}</span>
+          <span class="orphan-bairro">${m.bairro||''}</span>
+          <button class="btn-ico edit" onclick="abrirModal(${m.id},'${m._zona}')" title="Vincular">✏️</button>
+        </div>`;
+      });
+    }
+
+    html += `</div></div>`;
+  }
+
+  document.getElementById('treeContent').innerHTML = html;
+}
+
+function toggleNode(id) {
+  const body = document.getElementById(id);
+  const tog = document.getElementById('tog-' + id);
+  if (!body) return;
+  body.classList.toggle('open');
+  if (tog) tog.classList.toggle('open');
+}
+
 // ===================== TOAST =====================
 function toast(msg, err=false) {
   const t = document.getElementById('toast');
@@ -1980,6 +2450,16 @@ let geocodeCache = {};  // endereço -> {lat, lng} | null
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
 
 function toggleMapView() {
+  // Fecha árvore se estiver aberta
+  if (treeView) {
+    treeView = false;
+    document.getElementById('btnTreeToggle').classList.remove('active');
+    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('treeArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+    document.querySelector('.controls-bar').style.display = '';
+  }
   mapView = !mapView;
   const btn = document.getElementById('btnMapToggle');
   const tableArea = document.querySelector('.table-area');
