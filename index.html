@@ -1611,8 +1611,13 @@ function salvar() {
   const zonaOrigem = _editZona || zonaAtual;
   const zonaDestino = document.getElementById('f-zona').value;
 
+  // Recupera o _fireId do registro original antes de qualquer alteração
+  const regOriginal = editId !== null ? DB[zonaOrigem].find(x => x.id === editId) : null;
+  const fireId = regOriginal ? regOriginal._fireId : null;
+
   const reg = {
     id: editId !== null ? editId : getNextId(zonaDestino),
+    _fireId: fireId, // preserva o ID do Firebase para deletar/atualizar corretamente
     tipo: document.getElementById('f-tipo').value,
     nome: nome.toUpperCase(),
     telefone: document.getElementById('f-tel').value.trim(),
@@ -1632,24 +1637,8 @@ function salvar() {
 
   const zonaChanged = editId !== null && zonaDestino !== zonaOrigem;
 
-  if (editId !== null) {
-    // Remove da zona de origem
-    DB[zonaOrigem] = DB[zonaOrigem].filter(x=>x.id!==editId);
-    // Garante ID único na zona destino se mudou de zona
-    if (zonaChanged) reg.id = getNextId(zonaDestino);
-    // Insere na zona destino
-    DB[zonaDestino].push(reg);
-  } else {
-    DB[zonaDestino].push(reg);
-  }
-
-  // Atualiza lista de bairros da zona destino
-  if (reg.bairro && !BAIRROS[zonaDestino].includes(reg.bairro)) {
-    BAIRROS[zonaDestino].push(reg.bairro);
-    BAIRROS[zonaDestino].sort();
-  }
-
   document.getElementById('overlay').classList.remove('on');
+  // Delega tudo ao Firebase — ele recarrega as zonas após salvar
   salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editId);
 }
 
