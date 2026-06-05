@@ -417,6 +417,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .badge-M { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
 .badge-LE { background: rgba(168,85,247,.15); color: #c084fc; border: 1px solid rgba(168,85,247,.3); }
 .badge-ME { background: rgba(234,179,8,.15); color: #facc15; border: 1px solid rgba(234,179,8,.3); }
+.badge-CA { background: rgba(251,146,60,.18); color: #fb923c; border: 1px solid rgba(251,146,60,.35); }
 
 .nome-td {
   font-weight: 500;
@@ -1080,6 +1081,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
       <option value="M">Mobilizador (M)</option>
       <option value="LE">Liderança SEMAM (LE)</option>
       <option value="ME">Mobilizador SEMAM (ME)</option>
+      <option value="CA">Coordenador de Área (CA)</option>
     </select>
     <select id="filtro-bairro"></select>
     <button class="btn btn-outline" onclick="limpar()">✕</button>
@@ -1130,6 +1132,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
     <div class="map-legend" id="mapLegend">
       <h4>Legenda</h4>
+      <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Coordenador (CA)</div>
       <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Liderança (L)</div>
       <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Mobilizador (M)</div>
       <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> SEMAM (LE)</div>
@@ -1153,7 +1156,8 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     <h2 id="modal-title">📋 Novo Registro</h2>
     <div class="fgrid">
       <div class="fg"><label>Tipo</label>
-        <select id="f-tipo">
+        <select id="f-tipo" onchange="atualizarCamposHierarquia()">
+          <option value="CA">Coordenador de Área (CA)</option>
           <option value="L">Liderança (L)</option>
           <option value="M">Mobilizador (M)</option>
           <option value="LE">Liderança SEMAM (LE)</option>
@@ -1174,6 +1178,19 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="fg"><label>Telefone</label><input type="text" id="f-tel" placeholder="(86) 9 ..."></div>
       <div class="fg"><label>Bairro</label><input type="text" id="f-bairro" placeholder="Bairro"></div>
       <div class="fg full"><label>Endereço (para link Google Maps)</label><input type="text" id="f-end" placeholder="Ex: Rua das Flores 123, Mocambinho, Teresina PI"></div>
+      <div class="fsep">🏛️ Hierarquia</div>
+      <div class="fg full" id="campo-coordenador" style="display:none">
+        <label>Coordenador de Área responsável</label>
+        <select id="f-coord-area">
+          <option value="">— Selecione o coordenador —</option>
+        </select>
+      </div>
+      <div class="fg full" id="campo-lideranca" style="display:none">
+        <label>Liderança responsável</label>
+        <select id="f-lider">
+          <option value="">— Selecione a liderança —</option>
+        </select>
+      </div>
       <div class="fsep">🗳️ Dados Eleitorais</div>
       <div class="fg"><label>Colégio Eleitoral</label><input type="text" id="f-colegio" placeholder="Nome do colégio"></div>
       <div class="fg"><label>Seção</label><input type="text" id="f-secao" placeholder="Ex: 0042"></div>
@@ -1542,6 +1559,10 @@ function verDrawer(id, zona) {
     <div class="d-row"><span class="d-lbl">📋 Seção</span><span class="d-val">${d.secao||'—'}</span></div>
     <div class="d-row"><span class="d-lbl">🗂️ Zona El.</span><span class="d-val">${d.zona_eleitoral||'—'}</span></div>
     <div class="d-row"><span class="d-lbl">🗳️ Votos</span><span class="d-val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${d.votos||'—'}</span></div>
+    ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
+    ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${d.coord_area_nome}</span></div>` : ''}
+    ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
+    ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${d.lider_nome}</span></div>` : ''}
     <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Custos mensais</div>
     ${[['Julho',d.custo_jul],['Agosto',d.custo_ago],['Setembro',d.custo_set],['Outubro',d.custo_out]].map(([m,v])=>
       `<div class="d-row"><span class="d-lbl">${m}</span><span class="d-val">${fmtR(v)}</span></div>`
@@ -1591,7 +1612,14 @@ function abrirModal(id, zona) {
     document.getElementById('f-colegio').value = d.colegio||'';
     document.getElementById('f-secao').value = d.secao||'';
     document.getElementById('f-zona-el').value = d.zona_eleitoral||'';
+    // Carrega hierarquia
+    atualizarCamposHierarquia();
+    setTimeout(() => {
+      document.getElementById('f-coord-area').value = d.coord_area_id||'';
+      document.getElementById('f-lider').value = d.lider_id||'';
+    }, 50);
   }
+  if (id === null) atualizarCamposHierarquia();
   document.getElementById('overlay').classList.add('on');
 }
 
@@ -1633,6 +1661,10 @@ function salvar() {
     colegio: document.getElementById('f-colegio').value.trim().toUpperCase(),
     secao: document.getElementById('f-secao').value.trim(),
     zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
+    coord_area_id: document.getElementById('f-coord-area').value || '',
+    coord_area_nome: document.getElementById('f-coord-area').options[document.getElementById('f-coord-area').selectedIndex]?.text || '',
+    lider_id: document.getElementById('f-lider').value || '',
+    lider_nome: document.getElementById('f-lider').options[document.getElementById('f-lider').selectedIndex]?.text || '',
   };
 
   const zonaChanged = editId !== null && zonaDestino !== zonaOrigem;
@@ -1727,6 +1759,75 @@ function importarArquivo(event) {
   if (!file) return;
   toast('📥 Importação via arquivo requer servidor. Adicione registros manualmente ou cole no console: DB["' + zonaAtual + '"]');
   event.target.value = '';
+}
+
+// ===================== HIERARQUIA =====================
+function atualizarCamposHierarquia() {
+  const tipo = document.getElementById('f-tipo').value;
+  const campoCord = document.getElementById('campo-coordenador');
+  const campoLider = document.getElementById('campo-lideranca');
+
+  // L e LE precisam de coordenador
+  if (tipo === 'L' || tipo === 'LE') {
+    campoCord.style.display = 'block';
+    campoLider.style.display = 'none';
+    popularSelectCoordenadores();
+  }
+  // M e ME precisam de liderança (e indiretamente coordenador)
+  else if (tipo === 'M' || tipo === 'ME') {
+    campoCord.style.display = 'none';
+    campoLider.style.display = 'block';
+    popularSelectLiderancas();
+  }
+  // CA não precisa de vínculo
+  else {
+    campoCord.style.display = 'none';
+    campoLider.style.display = 'none';
+  }
+}
+
+function popularSelectCoordenadores() {
+  const sel = document.getElementById('f-coord-area');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione o coordenador —</option>';
+
+  const todas = getDados();
+  const coords = todas.filter(d => d.tipo === 'CA').sort((a,b) => a.nome.localeCompare(b.nome));
+  coords.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d._fireId || d.id;
+    opt.textContent = d.nome + (d.bairro ? ` (${d.bairro})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = atual;
+}
+
+function popularSelectLiderancas() {
+  const sel = document.getElementById('f-lider');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione a liderança —</option>';
+
+  const zona = document.getElementById('f-zona').value;
+  const todas = getDados();
+  const liders = todas.filter(d => d.tipo === 'L' || d.tipo === 'LE').sort((a,b) => a.nome.localeCompare(b.nome));
+  liders.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d._fireId || d.id;
+    opt.textContent = d.nome + (d.bairro ? ` (${d.bairro})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = atual;
+}
+
+function getEquipeDeUm(d) {
+  const todas = getDados();
+  if (d.tipo === 'CA') {
+    return todas.filter(x => x.coord_area_id === (d._fireId || String(d.id)));
+  }
+  if (d.tipo === 'L' || d.tipo === 'LE') {
+    return todas.filter(x => x.lider_id === (d._fireId || String(d.id)));
+  }
+  return [];
 }
 
 // ===================== TOAST =====================
@@ -1876,7 +1977,7 @@ let leafletMap = null;
 let markers = [];
 let geocodeCache = {};  // endereço -> {lat, lng} | null
 
-const TIPO_COLORS = { L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
+const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
 
 function toggleMapView() {
   mapView = !mapView;
