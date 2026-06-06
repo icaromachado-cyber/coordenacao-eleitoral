@@ -11,20 +11,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0d0f18;
-  --surface: #13162100;
-  --surface-solid: #131621;
-  --surface2: #1a1f30;
-  --border: #252a40;
-  --text: #dde1f0;
-  --muted: #6b7294;
-  --z-norte: #e8433a;
+  --bg: #1c1e24;
+  --surface: #22252e00;
+  --surface-solid: #22252e;
+  --surface2: #2a2d38;
+  --border: #383c4a;
+  --text: #e4e6f0;
+  --muted: #8890aa;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --z-norte: #ef4444;
   --z-leste: #3b82f6;
   --z-sul: #22c55e;
   --z-sudeste: #a855f7;
-  --z-rural: #eab308;
+  --z-rural: #f59e0b;
   --green: #22c55e;
-  --red: #e8433a;
+  --red: #ef4444;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +49,7 @@ body {
   position: fixed;
   left: 0; top: 0; bottom: 0;
   width: 220px;
-  background: var(--surface2);
+  background: #22252e;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -57,6 +59,7 @@ body {
 .sidebar-logo {
   padding: 22px 20px 16px;
   border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #1e3a5f 0%, #1a2d4a 100%);
 }
 
 .sidebar-logo h1 {
@@ -146,7 +149,7 @@ body {
 /* TOPBAR */
 .topbar {
   flex-shrink: 0;
-  background: var(--surface2);
+  background: #2a2d38;
   border-bottom: 1px solid var(--border);
   padding: 0 24px;
   height: 60px;
@@ -204,7 +207,7 @@ body {
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--border);
-  background: var(--surface2);
+  background: #252830;
 }
 
 .strip-card {
@@ -223,7 +226,7 @@ body {
   height: 2px;
 }
 
-.strip-card.s-total::after { background: var(--current-color, #e8433a); }
+.strip-card.s-total::after { background: #3b82f6; }
 .strip-card.s-l::after { background: var(--z-leste); }
 .strip-card.s-m::after { background: var(--green); }
 .strip-card.s-semam::after { background: var(--z-sudeste); }
@@ -258,7 +261,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 20px;
-  background: var(--bg);
+  background: #1e2028;
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -271,7 +274,7 @@ body {
 
 .search-wrap input {
   width: 100%;
-  background: var(--surface2);
+  background: #1e2028;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -295,7 +298,7 @@ body {
 }
 
 select {
-  background: var(--surface2);
+  background: #1e2028;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -336,7 +339,7 @@ select:focus { border-color: var(--accent, #e8433a); }
   color: var(--muted);
 }
 
-.btn-outline:hover { border-color: var(--accent, #e8433a); color: var(--accent, #e8433a); }
+.btn-outline:hover { border-color: #3b82f6; color: #3b82f6; }
 
 .result-info {
   font-size: 0.75rem;
@@ -350,6 +353,7 @@ select:focus { border-color: var(--accent, #e8433a); }
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
+  background: #1c1e24;
 }
 
 /* Custom scrollbar */
@@ -369,7 +373,7 @@ thead {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--surface2);
+  background: #2a2d38;
 }
 
 th {
@@ -492,7 +496,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .pbn:hover { border-color: var(--muted); color: var(--text); }
-.pbn.active { background: var(--accent, #e8433a); border-color: var(--accent, #e8433a); color: #fff; }
+.pbn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
 .pbn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 .p-info { font-size: 0.72rem; color: var(--muted); padding: 0 8px; }
@@ -523,7 +527,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .overlay.on { display: flex; }
 
 .modal {
-  background: var(--surface2);
+  background: #2a2d38;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 26px 28px;
@@ -590,7 +594,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   position: fixed;
   top: 0; right: 0; bottom: 0;
   width: 320px;
-  background: var(--surface2);
+  background: #2a2d38;
   border-left: 1px solid var(--border);
   z-index: 400;
   padding: 22px 20px;
@@ -628,7 +632,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 /* TOAST */
 .toast {
   position: fixed; bottom: 22px; right: 22px;
-  background: #1a1f30; border: 1px solid var(--green);
+  background: #2a2d38; border: 1px solid var(--green);
   color: var(--green); padding: 10px 18px; border-radius: 10px;
   font-size: 0.82rem; font-weight: 500; z-index: 9999;
   transform: translateY(60px); opacity: 0;
@@ -701,9 +705,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 /* CA node */
 .tree-ca {
-  background: var(--surface2);
-  border: 1px solid rgba(251,146,60,.3);
-  border-left: 4px solid #fb923c;
+  background: #2a2d38;
+  border: 1px solid rgba(59,130,246,.25);
+  border-left: 4px solid #3b82f6;
   border-radius: 12px;
   margin-bottom: 16px;
   overflow: hidden;
@@ -837,7 +841,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 /* Sem vínculo */
 .tree-orphans {
   margin-top: 24px;
-  background: var(--surface2);
+  background: #2a2d38;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -893,9 +897,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .btn-tree-toggle:hover, .btn-tree-toggle.active {
-  background: rgba(251,146,60,.15);
-  border-color: #fb923c;
-  color: #fb923c;
+  background: rgba(59,130,246,.15);
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
 /* MAP VIEW */
@@ -1023,16 +1027,16 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   transition: all .15s;
 }
 .btn-map-toggle:hover, .btn-map-toggle.active {
-  background: rgba(66,133,244,.15);
-  border-color: #4285f4;
-  color: #4285f4;
+  background: rgba(59,130,246,.15);
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
 /* LOGIN SCREEN */
 .login-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: #1c1e24;
   z-index: 10000;
   display: flex;
   align-items: center;
@@ -1106,7 +1110,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .login-btn {
   width: 100%;
-  background: var(--accent, #e8433a);
+  background: #3b82f6;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -1154,7 +1158,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .user-avatar {
   width: 30px; height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent, #e8433a), #ff8c42);
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1232,7 +1236,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   transition: all .15s;
 }
 
-.drawer-tab.active { color: var(--accent, #e8433a); border-bottom-color: var(--accent, #e8433a); }
+.drawer-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 
 .drawer-tab-content { display: none; }
 .drawer-tab-content.active { display: block; }
@@ -1491,8 +1495,8 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 <div class="mob-overlay" id="mobOverlay" onclick="toggleSidebar()"></div>
 
 <!-- LOADING OVERLAY -->
-<div id="loading-overlay" style="position:fixed;inset:0;background:rgba(13,15,24,.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="width:40px;height:40px;border:3px solid #252a40;border-top-color:#e8433a;border-radius:50%;animation:spin .8s linear infinite"></div>
+<div id="loading-overlay" style="position:fixed;inset:0;background:rgba(28,30,36,.96);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:40px;height:40px;border:3px solid #383c4a;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite"></div>
   <div style="font-family:Syne,sans-serif;font-size:1rem;font-weight:700;color:#fff">Carregando dados…</div>
   <div style="font-size:.78rem;color:#6b7294">Conectando ao banco de dados</div>
 </div>
@@ -2087,7 +2091,7 @@ function renderTable() {
       <td class="muted-td" style="text-align:center">${d.zona_eleitoral||'—'}</td>
       <td>${statusBadge(d.status)}</td>
       <td>${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</td>
-      <td class="votos-td" style="color:var(--accent,#e8433a)">${d.votos||'—'}</td>
+      <td class="votos-td" style="color:#3b82f6">${d.votos||'—'}</td>
       <td class="num-td ${custoClass(d.custo_jul)}">${d.custo_jul?'R$'+d.custo_jul.toLocaleString('pt-BR'):'—'}</td>
       <td class="num-td ${custoClass(d.custo_ago)}">${d.custo_ago?'R$'+d.custo_ago.toLocaleString('pt-BR'):'—'}</td>
       <td class="num-td ${custoClass(d.custo_set)}">${d.custo_set?'R$'+d.custo_set.toLocaleString('pt-BR'):'—'}</td>
