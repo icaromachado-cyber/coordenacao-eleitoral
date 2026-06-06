@@ -1198,6 +1198,145 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 
 /* ============================================================
+   CAMPANHAS
+   ============================================================ */
+.campanha-bar {
+  background: #1a1d28;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+body.theme-light .campanha-bar { background: #e8eaf5; border-bottom-color: #dde1ee; }
+
+.campanha-label {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.campanha-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.campanha-tab {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: .75rem;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  color: var(--muted);
+  transition: all .15s;
+  background: transparent;
+}
+
+.campanha-tab:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.campanha-tab.active { background: rgba(59,130,246,.15); border-color: rgba(59,130,246,.3); color: #60a5fa; }
+
+body.theme-light .campanha-tab:hover { background: rgba(0,0,0,.05); color: #1e2235; }
+body.theme-light .campanha-tab.active { background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.25); color: #2563eb; }
+
+.btn-nova-campanha {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .72rem;
+  padding: 3px 10px;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.btn-nova-campanha:hover { border-color: #3b82f6; color: #3b82f6; }
+
+/* Modal de campanha */
+.modal-campanha {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-campanha.open { display: flex; }
+
+.modal-campanha-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 480px;
+  animation: su .2s ease;
+}
+
+body.theme-light .modal-campanha-box { background: #fff; border-color: #dde1ee; }
+
+.modal-campanha-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+body.theme-light .modal-campanha-box h2 { color: #1e2235; }
+
+.mc-field { margin-bottom: 14px; }
+.mc-field label { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+.mc-field input, .mc-field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .88rem;
+  padding: 10px 12px;
+  outline: none;
+}
+
+body.theme-light .mc-field input, body.theme-light .mc-field select { background: #f0f2f8; border-color: #dde1ee; color: #1e2235; }
+
+.mc-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+body.theme-light .mc-footer { border-top-color: #dde1ee; }
+
+/* Migrar badge no drawer */
+.migrar-zona-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.25);
+  border-radius: 8px;
+  color: #60a5fa;
+  cursor: pointer;
+  font-size: .78rem;
+  font-family: 'DM Sans', sans-serif;
+  padding: 8px 12px;
+  transition: all .15s;
+}
+
+.migrar-zona-btn:hover { background: rgba(59,130,246,.2); }
+
+/* ============================================================
    PAINEL DE ZONAS (visão todas)
    ============================================================ */
 #zone-panel {
@@ -1838,6 +1977,13 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
     </div>
   </div>
 
+  <!-- CAMPANHA BAR -->
+  <div class="campanha-bar" id="campanhaBar">
+    <span class="campanha-label">📅 Campanha:</span>
+    <div class="campanha-tabs" id="campanhaTabs"></div>
+    <button class="btn-nova-campanha" onclick="abrirModalCampanha()">+ Nova</button>
+  </div>
+
   <!-- ZONE PANEL -->
   <div id="zone-panel"></div>
 
@@ -1925,6 +2071,54 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
     </div>
     <div class="tree-stats" id="treeStats"></div>
     <div id="treeContent"></div>
+  </div>
+</div>
+
+<!-- MODAL CAMPANHA -->
+<div class="modal-campanha" id="modalCampanha">
+  <div class="modal-campanha-box">
+    <h2>🗓️ Nova Campanha</h2>
+    <div class="mc-field">
+      <label>Nome da campanha</label>
+      <input type="text" id="mc-nome" placeholder="Ex: 2026 - Deputado Federal">
+    </div>
+    <div class="mc-field">
+      <label>Ano</label>
+      <input type="number" id="mc-ano" placeholder="2026" value="2026">
+    </div>
+    <div class="mc-field">
+      <label>Candidato (opcional)</label>
+      <input type="text" id="mc-candidato" placeholder="Nome do candidato">
+    </div>
+    <div class="mc-field">
+      <label>Cargo</label>
+      <select id="mc-cargo">
+        <option>Governador</option>
+        <option>Senador</option>
+        <option>Deputado Federal</option>
+        <option>Deputado Estadual</option>
+        <option>Vereador</option>
+        <option>Prefeito</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div class="mc-field">
+      <label>Iniciar com dados de</label>
+      <select id="mc-origem">
+        <option value="">Campanha zerada</option>
+      </select>
+    </div>
+    <div class="mc-field" id="mc-migrar-opcoes" style="display:none">
+      <label>O que copiar?</label>
+      <select id="mc-copiar">
+        <option value="estrutura">Só estrutura (nomes, contatos, hierarquia)</option>
+        <option value="tudo">Tudo (incluindo votos e custos)</option>
+      </select>
+    </div>
+    <div class="mc-footer">
+      <button class="btn btn-outline" onclick="fecharModalCampanha()">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarCampanha()">✅ Criar Campanha</button>
+    </div>
   </div>
 </div>
 
@@ -2024,6 +2218,15 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ===================== CAMPANHAS =====================
+let campanhaAtual = null; // ID da campanha ativa
+let campanhas = {}; // {id: {nome, ano, cargo}}
+
+// Retorna a coleção correta baseada na campanha ativa
+function colecao() {
+  return db.collection('campanhas').doc(campanhaAtual || 'default').collection('liderancas');
+}
+
 // ===================== DADOS =====================
 const ZONAS_CFG = {
   norte:   { label: 'Zona Norte',    cor: '#e8433a' },
@@ -2074,8 +2277,11 @@ function mostrarLoading(show) {
 
 async function carregarDoFirebase() {
   try {
+    // Carrega campanhas disponíveis
+    await carregarCampanhas();
+
     // Verifica se banco está vazio e migra se necessário
-    const snapCheck = await db.collection('liderancas').limit(1).get();
+    const snapCheck = await colecao().limit(1).get();
     if (snapCheck.empty) {
       await migrarDadosNorte();
     }
@@ -2083,7 +2289,7 @@ async function carregarDoFirebase() {
     // Carrega todas as zonas em paralelo
     const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
     const snaps = await Promise.all(
-      zonas.map(z => db.collection('liderancas').where('_zona', '==', z).get())
+      zonas.map(z => colecao().where('_zona', '==', z).get())
     );
     zonas.forEach((zona, i) => {
       DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
@@ -2096,7 +2302,7 @@ async function carregarDoFirebase() {
     // Recarrega para pegar os vínculos
     const zonasReload = ['norte','leste','sul','sudeste','rural'];
     const snapsReload = await Promise.all(
-      zonasReload.map(z => db.collection('liderancas').where('_zona','==',z).get())
+      zonasReload.map(z => colecao().where('_zona','==',z).get())
     );
     zonasReload.forEach((zona, i) => {
       DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
@@ -2459,6 +2665,9 @@ function verDrawer(id, zona) {
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn btn-outline" style="flex:1;font-size:.78rem" onclick="abrirModal(${d.id},'${zona}');fecharDrawer()">✏️ Editar</button>
       </div>
+      <button class="migrar-zona-btn" onclick="migrarPessoa('${d._fireId}',${d.id},'${zona}')">
+        📅 Adicionar em outra campanha
+      </button>
     </div>
 
     <!-- TAB REUNIÕES -->
@@ -2620,13 +2829,13 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
 
     if (editIdOrig !== null && fireId) {
       if (zonaChanged) {
-        await db.collection('liderancas').doc(fireId).delete();
-        await db.collection('liderancas').add(docData);
+        await colecao().doc(fireId).delete();
+        await colecao().add(docData);
       } else {
-        await db.collection('liderancas').doc(fireId).set(docData);
+        await colecao().doc(fireId).set(docData);
       }
     } else {
-      await db.collection('liderancas').add(docData);
+      await colecao().add(docData);
     }
 
     await recarregarZona(zonaDestino);
@@ -2653,7 +2862,7 @@ function deletar(id, zona) {
 async function deletarNoFirebase(d, zona) {
   try {
     if (d._fireId) {
-      await db.collection('liderancas').doc(d._fireId).delete();
+      await colecao().doc(d._fireId).delete();
     }
     await recarregarZona(zona);
     atualizarNavCounts();
@@ -2666,7 +2875,7 @@ async function deletarNoFirebase(d, zona) {
 }
 
 async function recarregarZona(zona) {
-  const snap = await db.collection('liderancas').where('_zona', '==', zona).get();
+  const snap = await colecao().where('_zona', '==', zona).get();
   DB[zona] = snap.docs.map(d => ({...d.data(), _fireId: d.id}));
   BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
 }
@@ -2688,7 +2897,7 @@ async function migrarVinculosForce() {
   toast('🔗 Vinculando hierarquia…');
 
   // Busca todos os docs
-  const todos = await db.collection('liderancas').get();
+  const todos = await colecao().get();
   const docs = todos.docs.map(d => ({...d.data(), _fireId: d.id}));
 
   // Encontra a Raiane
@@ -2708,7 +2917,7 @@ async function migrarVinculosForce() {
 
     // Vincula liderança à Raiane (se não for a própria Raiane)
     if (lider._fireId !== raianeId && raianeId) {
-      updates.push({ ref: db.collection('liderancas').doc(lider._fireId), data: {
+      updates.push({ ref: colecao().doc(lider._fireId), data: {
         coord_area_id: raianeId,
         coord_area_nome: raianeNome
       }});
@@ -2720,7 +2929,7 @@ async function migrarVinculosForce() {
       const nomeKeyM = nomeMob.substring(0, 15).toUpperCase();
       const mob = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyM));
       if (!mob) { console.log('Mob nao encontrado:', nomeMob); continue; }
-      updates.push({ ref: db.collection('liderancas').doc(mob._fireId), data: {
+      updates.push({ ref: colecao().doc(mob._fireId), data: {
         lider_id: lider._fireId,
         lider_nome: lider.nome,
         coord_area_id: raianeId,
@@ -2733,7 +2942,7 @@ async function migrarVinculosForce() {
   // Vincula todas as lideranças restantes à Raiane também
   docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && d._fireId !== raianeId).forEach(l => {
     if (!updates.find(u => u.ref.id === l._fireId && u.data.coord_area_id)) {
-      updates.push({ ref: db.collection('liderancas').doc(l._fireId), data: {
+      updates.push({ ref: colecao().doc(l._fireId), data: {
         coord_area_id: raianeId,
         coord_area_nome: raianeNome
       }});
@@ -2755,7 +2964,7 @@ async function migrarVinculosForce() {
 
 // Migra dados locais da Zona Norte para Firebase (só na primeira vez)
 async function migrarDadosNorte() {
-  const snap = await db.collection('liderancas').where('_zona', '==', 'norte').limit(1).get();
+  const snap = await colecao().where('_zona', '==', 'norte').limit(1).get();
   if (!snap.empty) return;
   toast('📤 Importando Zona Norte para o banco…');
   // Divide em batches de 500
@@ -2763,7 +2972,7 @@ async function migrarDadosNorte() {
   for (let i = 0; i < todos.length; i += 400) {
     const batch = db.batch();
     todos.slice(i, i + 400).forEach(d => {
-      const ref = db.collection('liderancas').doc();
+      const ref = colecao().doc();
       const docData = {...d};
       delete docData._fireId;
       batch.set(ref, docData);
@@ -3118,7 +3327,7 @@ async function carregarReunioes(fireId, localId) {
   const el = document.getElementById('lista-reunioes-' + localId);
   if (!el || !fireId) return;
   try {
-    const snap = await db.collection('liderancas').doc(fireId)
+    const snap = await colecao().doc(fireId)
       .collection('reunioes').orderBy('data', 'desc').limit(10).get();
     if (snap.empty) {
       el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhuma reunião registrada ainda.</div>';
@@ -3139,10 +3348,10 @@ async function salvarReuniao(fireId, localId, zona) {
   const obs  = document.getElementById('nr-obs-' + localId).value.trim();
   if (!data) { toast('⚠️ Informe a data', true); return; }
   try {
-    await db.collection('liderancas').doc(fireId)
+    await colecao().doc(fireId)
       .collection('reunioes').add({ data, obs, criadoEm: new Date().toISOString() });
     // Marca reunião feita no registro principal
-    await db.collection('liderancas').doc(fireId).update({ reuniao_feita: 'sim', reuniao_data: data });
+    await colecao().doc(fireId).update({ reuniao_feita: 'sim', reuniao_data: data });
     await recarregarZona(zona);
     aplicarFiltros();
     toggleMiniModal('form-reuniao-' + localId);
@@ -3156,7 +3365,7 @@ async function carregarPagamentos(fireId, localId) {
   const el = document.getElementById('lista-pagamentos-' + localId);
   if (!el || !fireId) return;
   try {
-    const snap = await db.collection('liderancas').doc(fireId)
+    const snap = await colecao().doc(fireId)
       .collection('pagamentos').orderBy('criadoEm', 'desc').limit(20).get();
     if (snap.empty) {
       el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhum pagamento registrado ainda.</div>';
@@ -3182,12 +3391,224 @@ async function salvarPagamento(fireId, localId, zona) {
   const obs    = document.getElementById('np-obs-' + localId).value.trim();
   if (!valor) { toast('⚠️ Informe o valor', true); return; }
   try {
-    await db.collection('liderancas').doc(fireId)
+    await colecao().doc(fireId)
       .collection('pagamentos').add({ mes, valor, status, obs, criadoEm: new Date().toISOString() });
     toggleMiniModal('form-pag-' + localId);
     carregarPagamentos(fireId, localId);
     toast('✅ Pagamento registrado!');
   } catch(e) { toast('❌ Erro ao salvar pagamento', true); }
+}
+
+// ===================== CAMPANHAS =====================
+async function carregarCampanhas() {
+  try {
+    const snap = await db.collection('campanhas').orderBy('ano', 'asc').get();
+
+    if (snap.empty) {
+      // Cria campanhas padrão
+      const campanhasPadrao = [
+        { id: '2024-vereador',        nome: '2024 - Vereador',          ano: 2024, cargo: 'Vereador' },
+        { id: '2026-governador',      nome: '2026 - Governador',        ano: 2026, cargo: 'Governador' },
+        { id: '2026-senador-1',       nome: '2026 - Senador 1',         ano: 2026, cargo: 'Senador' },
+        { id: '2026-senador-2',       nome: '2026 - Senador 2',         ano: 2026, cargo: 'Senador' },
+        { id: '2026-dep-estadual',    nome: '2026 - Dep. Estadual',     ano: 2026, cargo: 'Deputado Estadual' },
+        { id: '2026-dep-federal',     nome: '2026 - Dep. Federal',      ano: 2026, cargo: 'Deputado Federal' },
+      ];
+      const batch = db.batch();
+      campanhasPadrao.forEach(cp => {
+        batch.set(db.collection('campanhas').doc(cp.id), {
+          nome: cp.nome, ano: cp.ano, cargo: cp.cargo,
+          criadoEm: new Date().toISOString()
+        });
+      });
+      await batch.commit();
+      campanhas = {};
+      campanhasPadrao.forEach(cp => { campanhas[cp.id] = { nome: cp.nome, ano: cp.ano, cargo: cp.cargo }; });
+      campanhaAtual = '2024-vereador';
+    } else {
+      campanhas = {};
+      snap.docs.forEach(d => { campanhas[d.id] = d.data(); });
+      // Usa a mais recente por padrão
+      campanhaAtual = snap.docs[snap.docs.length - 1].id;
+      // Ou a salva no localStorage
+      const saved = localStorage.getItem('campanhaAtual');
+      if (saved && campanhas[saved]) campanhaAtual = saved;
+    }
+
+    renderCampanhaTabs();
+  } catch(e) {
+    console.error('Erro campanhas:', e);
+    campanhaAtual = '2024-vereador';
+  }
+}
+
+function renderCampanhaTabs() {
+  const container = document.getElementById('campanhaTabs');
+  if (!container) return;
+
+  const cargoCores = {
+    'Vereador': '#22c55e',
+    'Governador': '#a855f7',
+    'Senador': '#f59e0b',
+    'Deputado Estadual': '#3b82f6',
+    'Deputado Federal': '#ef4444',
+  };
+
+  container.innerHTML = Object.entries(campanhas).map(([id, camp]) => {
+    const cor = cargoCores[camp.cargo] || '#6b7294';
+    const isActive = id === campanhaAtual;
+    return `<button class="campanha-tab ${isActive ? 'active' : ''}"
+      onclick="trocarCampanha('${id}')"
+      title="${camp.candidato ? 'Candidato: '+camp.candidato : ''}"
+      style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
+      ${camp.nome}${camp.candidato ? ` · ${camp.candidato.split(' ')[0]}` : ''}
+    </button>`;
+  }).join('');
+
+  // Atualiza select de origem no modal
+  const sel = document.getElementById('mc-origem');
+  if (sel) {
+    sel.innerHTML = '<option value="">Campanha zerada</option>' +
+      Object.entries(campanhas).map(([id, c]) =>
+        `<option value="${id}">Copiar de: ${c.nome}</option>`
+      ).join('');
+  }
+}
+
+async function trocarCampanha(id) {
+  if (!campanhas[id]) return;
+  campanhaAtual = id;
+  localStorage.setItem('campanhaAtual', id);
+  renderCampanhaTabs();
+  mostrarLoading(true);
+
+  // Recarrega dados da nova campanha
+  const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+  try {
+    const snaps = await Promise.all(
+      zonas.map(z => colecao().where('_zona', '==', z).get())
+    );
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+  } catch(e) { console.error('Erro trocar campanha:', e); }
+
+  mostrarLoading(false);
+  atualizarNavCounts();
+  aplicarFiltros();
+  toast(`📅 Campanha: ${campanhas[id].nome}`);
+}
+
+function abrirModalCampanha() {
+  document.getElementById('mc-nome').value = '';
+  document.getElementById('mc-ano').value = new Date().getFullYear() + 2;
+  document.getElementById('modalCampanha').classList.add('open');
+}
+
+function fecharModalCampanha() {
+  document.getElementById('modalCampanha').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => { const mcOrig = document.getElementById('mc-origem'); if(mcOrig) mcOrig.addEventListener('change', function() {
+  document.getElementById('mc-migrar-opcoes').style.display = this.value ? 'block' : 'none';
+  }); });
+
+async function criarCampanha() {
+  const nome = document.getElementById('mc-nome').value.trim();
+  const ano  = parseInt(document.getElementById('mc-ano').value) || new Date().getFullYear();
+  const cargo = document.getElementById('mc-cargo').value;
+  const origem = document.getElementById('mc-origem').value;
+  const copiar = document.getElementById('mc-copiar').value;
+
+  if (!nome) { toast('⚠️ Informe o nome da campanha', true); return; }
+
+  const id = nome.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  try {
+    const candidato = document.getElementById('mc-candidato').value.trim();
+    await db.collection('campanhas').doc(id).set({
+      nome, ano, cargo, candidato, criadoEm: new Date().toISOString()
+    });
+
+    campanhas[id] = { nome, ano, cargo, candidato };
+
+    // Copia dados da campanha de origem se selecionado
+    if (origem && campanhas[origem]) {
+      toast('📋 Copiando dados…');
+      const todos = await db.collection('campanhas').doc(origem)
+        .collection('liderancas').get();
+
+      for (let i = 0; i < todos.docs.length; i += 400) {
+        const batch = db.batch();
+        todos.docs.slice(i, i + 400).forEach(d => {
+          const data = {...d.data()};
+          // Se só estrutura, zera votos e custos
+          if (copiar === 'estrutura') {
+            data.votos = 0; data.v_entrada = 0;
+            data.custo_jul = 0; data.custo_ago = 0;
+            data.custo_set = 0; data.custo_out = 0;
+            data.total = 0; data.status = 'pendente';
+            data.reuniao_feita = 'nao'; data.reuniao_data = '';
+          }
+          const ref = db.collection('campanhas').doc(id).collection('liderancas').doc();
+          batch.set(ref, data);
+        });
+        await batch.commit();
+      }
+      toast(`✅ ${todos.size} registros copiados de ${campanhas[origem].nome}`);
+    }
+
+    fecharModalCampanha();
+    renderCampanhaTabs();
+    await trocarCampanha(id);
+    toast(`✅ Campanha "${nome}" criada!`);
+  } catch(e) {
+    console.error('Erro criar campanha:', e);
+    toast('❌ Erro ao criar campanha', true);
+  }
+}
+
+// Migrar pessoa para outra campanha
+async function migrarPessoa(fireId, localId, zona) {
+  const campanhasDisponiveis = Object.entries(campanhas)
+    .filter(([id]) => id !== campanhaAtual)
+    .map(([id, c]) => `${id}|${c.nome}`);
+
+  if (!campanhasDisponiveis.length) {
+    toast('⚠️ Crie outra campanha primeiro', true);
+    return;
+  }
+
+  const opcoes = campanhasDisponiveis.map(c => c.split('|')[1]).join('
+');
+  const escolha = prompt(`Migrar para qual campanha?
+
+${opcoes}
+
+Digite o nome exato:`);
+  if (!escolha) return;
+
+  const entrada = Object.entries(campanhas).find(([, c]) =>
+    c.nome.toLowerCase() === escolha.toLowerCase()
+  );
+
+  if (!entrada) { toast('⚠️ Campanha não encontrada', true); return; }
+
+  const [destId] = entrada;
+  const d = DB[zona].find(x => x.id === localId);
+  if (!d) return;
+
+  try {
+    const docData = {...d, status: 'pendente', votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0, reuniao_feita: 'nao', reuniao_data: ''};
+    delete docData._fireId;
+    await db.collection('campanhas').doc(destId).collection('liderancas').add(docData);
+    toast(`✅ ${d.nome} adicionado(a) em ${campanhas[destId].nome}!`);
+  } catch(e) {
+    toast('❌ Erro ao migrar', true);
+  }
 }
 
 // ===================== TOAST =====================
