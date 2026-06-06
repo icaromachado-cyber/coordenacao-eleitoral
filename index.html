@@ -1194,6 +1194,100 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 
 /* ============================================================
+   STATUS / REUNIÃO / PAGAMENTOS
+   ============================================================ */
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 10px;
+  font-size: .65rem; font-weight: 700;
+  font-family: 'Syne', sans-serif; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.status-ativo    { background: rgba(34,197,94,.15);  color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.status-inativo  { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+.status-pendente { background: rgba(234,179,8,.13);  color: #facc15; border: 1px solid rgba(234,179,8,.3); }
+
+.reuniao-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 10px; font-size: .65rem;
+}
+
+.reuniao-sim { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+.reuniao-nao { background: rgba(107,114,148,.1); color: var(--muted); border: 1px solid var(--border); }
+
+/* Aba de detalhes no drawer */
+.drawer-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px; margin-top: 12px;
+}
+
+.drawer-tab {
+  flex: 1; padding: 8px 4px;
+  text-align: center; font-size: .72rem;
+  font-weight: 500; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+
+.drawer-tab.active { color: var(--accent, #e8433a); border-bottom-color: var(--accent, #e8433a); }
+
+.drawer-tab-content { display: none; }
+.drawer-tab-content.active { display: block; }
+
+/* Histórico de pagamentos */
+.pag-mes {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(37,42,64,.6);
+  font-size: .8rem;
+}
+
+.pag-mes:last-child { border-bottom: none; }
+.pag-mes-nome { color: var(--muted); font-size: .72rem; }
+.pag-mes-valor { font-weight: 600; }
+.pag-mes-status { font-size: .68rem; padding: 2px 7px; border-radius: 8px; }
+.pag-pago   { background: rgba(34,197,94,.12); color: #4ade80; }
+.pag-aberto { background: rgba(234,179,8,.12); color: #facc15; }
+
+/* Reuniões no drawer */
+.reuniao-item {
+  background: var(--bg); border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.reuniao-item-data { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
+.reuniao-item-obs  { font-size: .78rem; color: var(--text); }
+
+.btn-add-sm {
+  width: 100%; background: rgba(255,255,255,.04);
+  border: 1px dashed var(--border); border-radius: 8px;
+  color: var(--muted); cursor: pointer; padding: 8px;
+  font-size: .78rem; font-family: 'DM Sans', sans-serif;
+  transition: all .15s; margin-top: 6px;
+}
+
+.btn-add-sm:hover { border-color: var(--accent, #e8433a); color: var(--accent, #e8433a); }
+
+/* Mini modal de reunião/pagamento */
+.mini-modal {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; margin-top: 10px;
+  display: none;
+}
+
+.mini-modal.open { display: block; }
+.mini-modal label { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); display: block; margin-bottom: 4px; margin-top: 10px; }
+.mini-modal input, .mini-modal textarea, .mini-modal select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: .82rem; padding: 8px 10px; outline: none;
+}
+.mini-modal textarea { resize: vertical; min-height: 60px; }
+
+/* ============================================================
    MOBILE RESPONSIVO (max-width: 768px)
    ============================================================ */
 @media (max-width: 768px) {
@@ -1540,6 +1634,8 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
           <th onclick="sortBy('colegio')" data-c="colegio">Colégio <span class="si">↕</span></th>
           <th onclick="sortBy('secao')" data-c="secao">Seção <span class="si">↕</span></th>
           <th onclick="sortBy('zona_eleitoral')" data-c="zona_eleitoral">Z.El. <span class="si">↕</span></th>
+          <th onclick="sortBy('status')" data-c="status">Status <span class="si">↕</span></th>
+          <th>Reunião</th>
           <th onclick="sortBy('votos')" data-c="votos" style="text-align:center">Votos <span class="si">↕</span></th>
           <th onclick="sortBy('custo_jul')" data-c="custo_jul" style="text-align:right">Jul <span class="si">↕</span></th>
           <th onclick="sortBy('custo_ago')" data-c="custo_ago" style="text-align:right">Ago <span class="si">↕</span></th>
@@ -1622,6 +1718,20 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
           <option value="rural">🟡 Zona Rural</option>
         </select>
       </div>
+      <div class="fg"><label>Status</label>
+        <select id="f-status">
+          <option value="ativo">✅ Ativo</option>
+          <option value="pendente">⚠️ Pendente contato</option>
+          <option value="inativo">❌ Inativo</option>
+        </select>
+      </div>
+      <div class="fg"><label>Reunião feita?</label>
+        <select id="f-reuniao">
+          <option value="nao">Não</option>
+          <option value="sim">Sim</option>
+        </select>
+      </div>
+      <div class="fg"><label>Data da reunião</label><input type="date" id="f-reuniao-data"></div>
       <div class="fg"><label>Votos</label><input type="number" id="f-votos" placeholder="0"></div>
       <div class="fg full"><label>Nome completo</label><input type="text" id="f-nome" placeholder="Nome da liderança"></div>
       <div class="fg"><label>Telefone</label><input type="text" id="f-tel" placeholder="(86) 9 ..."></div>
@@ -1887,6 +1997,23 @@ function fmtWhats(tel) {
 
 
 function fmtK(v) { return v>=1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0); }
+function statusBadge(s) {
+  const map = {
+    ativo:    ['✅','ativo','status-ativo'],
+    inativo:  ['❌','inativo','status-inativo'],
+    pendente: ['⚠️','pendente','status-pendente']
+  };
+  const [ico, label, cls] = map[s||'ativo'] || map['ativo'];
+  return `<span class="status-badge ${cls}">${ico} ${label}</span>`;
+}
+
+function reuniaoBadge(r, data) {
+  if (r === 'sim') {
+    return `<span class="reuniao-badge reuniao-sim">✅ ${data||'Sim'}</span>`;
+  }
+  return `<span class="reuniao-badge reuniao-nao">— Não</span>`;
+}
+
 function fmtR(v) { return v ? 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:0}) : '—'; }
 
 function fmtMaps(end) {
@@ -1958,6 +2085,8 @@ function renderTable() {
       <td class="muted-td" style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${d.colegio||''}">${d.colegio?d.colegio.substring(0,18)+(d.colegio.length>18?'…':''):'—'}</td>
       <td class="muted-td" style="text-align:center">${d.secao||'—'}</td>
       <td class="muted-td" style="text-align:center">${d.zona_eleitoral||'—'}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td>${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</td>
       <td class="votos-td" style="color:var(--accent,#e8433a)">${d.votos||'—'}</td>
       <td class="num-td ${custoClass(d.custo_jul)}">${d.custo_jul?'R$'+d.custo_jul.toLocaleString('pt-BR'):'—'}</td>
       <td class="num-td ${custoClass(d.custo_ago)}">${d.custo_ago?'R$'+d.custo_ago.toLocaleString('pt-BR'):'—'}</td>
@@ -2019,23 +2148,82 @@ function verDrawer(id, zona) {
     <div class="d-row"><span class="d-lbl">📋 Seção</span><span class="d-val">${d.secao||'—'}</span></div>
     <div class="d-row"><span class="d-lbl">🗂️ Zona El.</span><span class="d-val">${d.zona_eleitoral||'—'}</span></div>
     <div class="d-row"><span class="d-lbl">🗳️ Votos</span><span class="d-val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${d.votos||'—'}</span></div>
-    ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
-    ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${d.coord_area_nome}</span></div>` : ''}
-    ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
-    ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${d.lider_nome}</span></div>` : ''}
     <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Custos mensais</div>
     ${[['Julho',d.custo_jul],['Agosto',d.custo_ago],['Setembro',d.custo_set],['Outubro',d.custo_out]].map(([m,v])=>
       `<div class="d-row"><span class="d-lbl">${m}</span><span class="d-val">${fmtR(v)}</span></div>`
     ).join('')}
-    <div class="d-total-box">
-      <div class="d-total-lbl">Total pago</div>
-      <div class="d-total-val" style="${totalStyle(d.total)}">${fmtR(d.total)}</div>
-      <div class="cost-bar"><div class="cost-fill" style="width:${pct}%;background:var(--accent,#e8433a)"></div></div>
+
+    <div class="drawer-tabs">
+      <div class="drawer-tab active" onclick="switchTab(this,'tab-info')">📋 Info</div>
+      <div class="drawer-tab" onclick="switchTab(this,'tab-reunioes')">🤝 Reuniões</div>
+      <div class="drawer-tab" onclick="switchTab(this,'tab-pagamentos')">💰 Pagamentos</div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-outline" style="flex:1" onclick="abrirModal(${d.id},'${zona}');fecharDrawer()">✏️ Editar</button>
+
+    <!-- TAB INFO -->
+    <div class="drawer-tab-content active" id="tab-info">
+      <div class="d-row"><span class="d-lbl">Status</span><span class="d-val">${statusBadge(d.status)}</span></div>
+      <div class="d-row"><span class="d-lbl">Reunião</span><span class="d-val">${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</span></div>
+      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${d.coord_area_nome}</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
+      ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${d.lider_nome}</span></div>` : ''}
+      <div class="d-total-box">
+        <div class="d-total-lbl">Total pago</div>
+        <div class="d-total-val" style="${totalStyle(d.total)}">${fmtR(d.total)}</div>
+        <div class="cost-bar"><div class="cost-fill" style="width:${pct}%;background:var(--accent,#e8433a)"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-outline" style="flex:1;font-size:.78rem" onclick="abrirModal(${d.id},'${zona}');fecharDrawer()">✏️ Editar</button>
+      </div>
+    </div>
+
+    <!-- TAB REUNIÕES -->
+    <div class="drawer-tab-content" id="tab-reunioes">
+      <div id="lista-reunioes-${d.id}"></div>
+      <button class="btn-add-sm" onclick="toggleMiniModal('form-reuniao-${d.id}')">+ Registrar reunião</button>
+      <div class="mini-modal" id="form-reuniao-${d.id}">
+        <label>Data</label>
+        <input type="date" id="nr-data-${d.id}" value="${new Date().toISOString().slice(0,10)}">
+        <label>Observações</label>
+        <textarea id="nr-obs-${d.id}" placeholder="Como foi a reunião?"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-outline" style="flex:1;font-size:.75rem" onclick="toggleMiniModal('form-reuniao-${d.id}')">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1;font-size:.75rem" onclick="salvarReuniao('${d._fireId}',${d.id},'${zona}')">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PAGAMENTOS -->
+    <div class="drawer-tab-content" id="tab-pagamentos">
+      <div id="lista-pagamentos-${d.id}"></div>
+      <button class="btn-add-sm" onclick="toggleMiniModal('form-pag-${d.id}')">+ Registrar pagamento</button>
+      <div class="mini-modal" id="form-pag-${d.id}">
+        <label>Mês</label>
+        <select id="np-mes-${d.id}">
+          <option value="Jul">Julho</option>
+          <option value="Ago">Agosto</option>
+          <option value="Set">Setembro</option>
+          <option value="Out">Outubro</option>
+        </select>
+        <label>Valor (R$)</label>
+        <input type="number" id="np-valor-${d.id}" placeholder="0" step="50">
+        <label>Status</label>
+        <select id="np-status-${d.id}">
+          <option value="pago">✅ Pago</option>
+          <option value="aberto">⏳ Em aberto</option>
+        </select>
+        <label>Observação</label>
+        <input type="text" id="np-obs-${d.id}" placeholder="Opcional">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-outline" style="flex:1;font-size:.75rem" onclick="toggleMiniModal('form-pag-${d.id}')">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1;font-size:.75rem" onclick="salvarPagamento('${d._fireId}',${d.id},'${zona}')">Salvar</button>
+        </div>
+      </div>
     </div>
   `;
+  // Carrega reuniões e pagamentos
+  carregarReunioes(d._fireId, d.id);
+  carregarPagamentos(d._fireId, d.id);
   document.getElementById('drawer').classList.add('open');
 }
 
@@ -2069,6 +2257,9 @@ function abrirModal(id, zona) {
     document.getElementById('f-set').value = d.custo_set||'';
     document.getElementById('f-out').value = d.custo_out||'';
     document.getElementById('f-total').value = d.total||'';
+    document.getElementById('f-status').value = d.status||'ativo';
+    document.getElementById('f-reuniao').value = d.reuniao_feita||'nao';
+    document.getElementById('f-reuniao-data').value = d.reuniao_data||'';
     document.getElementById('f-colegio').value = d.colegio||'';
     document.getElementById('f-secao').value = d.secao||'';
     document.getElementById('f-zona-el').value = d.zona_eleitoral||'';
@@ -2121,6 +2312,9 @@ function salvar() {
     colegio: document.getElementById('f-colegio').value.trim().toUpperCase(),
     secao: document.getElementById('f-secao').value.trim(),
     zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
+    status: document.getElementById('f-status').value || 'ativo',
+    reuniao_feita: document.getElementById('f-reuniao').value || 'nao',
+    reuniao_data: document.getElementById('f-reuniao-data').value || '',
     coord_area_id: document.getElementById('f-coord-area').value || '',
     coord_area_nome: document.getElementById('f-coord-area').options[document.getElementById('f-coord-area').selectedIndex]?.text || '',
     lider_id: document.getElementById('f-lider').value || '',
@@ -2618,6 +2812,98 @@ function exportarDados() {
   XLSX.writeFile(wb, filename);
 
   toast(`✅ Exportado: ${filename}`);
+}
+
+// ===================== DRAWER TABS =====================
+function switchTab(el, tabId) {
+  const drawer = el.closest('.drawer-tabs').parentElement;
+  drawer.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+  drawer.querySelectorAll('.drawer-tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const tab = drawer.querySelector('#' + tabId);
+  if (tab) tab.classList.add('active');
+}
+
+function toggleMiniModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ===================== REUNIÕES =====================
+async function carregarReunioes(fireId, localId) {
+  const el = document.getElementById('lista-reunioes-' + localId);
+  if (!el || !fireId) return;
+  try {
+    const snap = await db.collection('liderancas').doc(fireId)
+      .collection('reunioes').orderBy('data', 'desc').limit(10).get();
+    if (snap.empty) {
+      el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhuma reunião registrada ainda.</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      return `<div class="reuniao-item">
+        <div class="reuniao-item-data">📅 ${r.data||'—'}</div>
+        <div class="reuniao-item-obs">${r.obs||'Sem observações'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('Erro reunioes:', e); }
+}
+
+async function salvarReuniao(fireId, localId, zona) {
+  const data = document.getElementById('nr-data-' + localId).value;
+  const obs  = document.getElementById('nr-obs-' + localId).value.trim();
+  if (!data) { toast('⚠️ Informe a data', true); return; }
+  try {
+    await db.collection('liderancas').doc(fireId)
+      .collection('reunioes').add({ data, obs, criadoEm: new Date().toISOString() });
+    // Marca reunião feita no registro principal
+    await db.collection('liderancas').doc(fireId).update({ reuniao_feita: 'sim', reuniao_data: data });
+    await recarregarZona(zona);
+    aplicarFiltros();
+    toggleMiniModal('form-reuniao-' + localId);
+    carregarReunioes(fireId, localId);
+    toast('✅ Reunião registrada!');
+  } catch(e) { toast('❌ Erro ao salvar reunião', true); }
+}
+
+// ===================== PAGAMENTOS =====================
+async function carregarPagamentos(fireId, localId) {
+  const el = document.getElementById('lista-pagamentos-' + localId);
+  if (!el || !fireId) return;
+  try {
+    const snap = await db.collection('liderancas').doc(fireId)
+      .collection('pagamentos').orderBy('criadoEm', 'desc').limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhum pagamento registrado ainda.</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      const cls = p.status === 'pago' ? 'pag-pago' : 'pag-aberto';
+      const ico = p.status === 'pago' ? '✅' : '⏳';
+      return `<div class="pag-mes">
+        <span class="pag-mes-nome">${p.mes||'—'} ${p.obs ? '· '+p.obs : ''}</span>
+        <span class="pag-mes-valor">R$ ${(p.valor||0).toLocaleString('pt-BR')}</span>
+        <span class="pag-mes-status ${cls}">${ico} ${p.status}</span>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('Erro pagamentos:', e); }
+}
+
+async function salvarPagamento(fireId, localId, zona) {
+  const mes    = document.getElementById('np-mes-' + localId).value;
+  const valor  = parseFloat(document.getElementById('np-valor-' + localId).value) || 0;
+  const status = document.getElementById('np-status-' + localId).value;
+  const obs    = document.getElementById('np-obs-' + localId).value.trim();
+  if (!valor) { toast('⚠️ Informe o valor', true); return; }
+  try {
+    await db.collection('liderancas').doc(fireId)
+      .collection('pagamentos').add({ mes, valor, status, obs, criadoEm: new Date().toISOString() });
+    toggleMiniModal('form-pag-' + localId);
+    carregarPagamentos(fireId, localId);
+    toast('✅ Pagamento registrado!');
+  } catch(e) { toast('❌ Erro ao salvar pagamento', true); }
 }
 
 // ===================== TOAST =====================
