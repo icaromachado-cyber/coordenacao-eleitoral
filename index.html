@@ -1192,6 +1192,179 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .btn-import { background: rgba(255,255,255,.05); border: 1px solid var(--border); color: var(--muted); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
+
+/* ============================================================
+   MOBILE RESPONSIVO (max-width: 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* Sidebar vira drawer lateral */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 500;
+    width: 280px;
+    box-shadow: 4px 0 24px rgba(0,0,0,.6);
+  }
+
+  .sidebar.mob-open { transform: translateX(0); }
+
+  /* Overlay para fechar sidebar */
+  .mob-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 499;
+    backdrop-filter: blur(2px);
+  }
+
+  .mob-overlay.active { display: block; }
+
+  /* Main ocupa tudo */
+  .main { margin-left: 0; }
+
+  /* Topbar mobile */
+  .topbar {
+    padding: 0 12px;
+    height: 54px;
+    gap: 8px;
+  }
+
+  .zone-title h2 { font-size: .85rem; }
+
+  .topbar-pills { display: none; }
+
+  /* Hamburguer button */
+  .mob-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Esconde textos na topbar, mantém ícones */
+  .topbar-actions { gap: 6px; }
+
+  .btn-tree-toggle,
+  .btn-map-toggle { padding: 7px 10px; font-size: .75rem; }
+
+  .btn-import span { display: none; }
+
+  .user-email { display: none; }
+  .user-avatar { width: 28px; height: 28px; font-size: .68rem; }
+
+  /* Summary strip em grid 2x3 */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+  }
+
+  .strip-card {
+    padding: 10px 12px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .strip-card:nth-child(2n) { border-right: none; }
+  .strip-card:last-child { grid-column: 1 / -1; border-bottom: none; }
+
+  .strip-value { font-size: 1.1rem; }
+  .strip-label { font-size: .6rem; }
+
+  /* Controls em coluna */
+  .controls-bar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .search-wrap { min-width: unset; }
+
+  .controls-bar select { flex: 1; font-size: .78rem; padding: 8px 8px; }
+
+  /* Tabela — scroll horizontal, colunas compactas */
+  .table-area { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  table { font-size: .75rem; min-width: 700px; }
+
+  th, td { padding: 9px 10px; }
+
+  .nome-td { max-width: 140px; }
+
+  /* Oculta colunas menos importantes no mobile */
+  th:nth-child(7),  td:nth-child(7),   /* Jul */
+  th:nth-child(8),  td:nth-child(8),   /* Ago */
+  th:nth-child(9),  td:nth-child(9),   /* Set */
+  th:nth-child(10), td:nth-child(10),  /* Out */
+  th:nth-child(4),  td:nth-child(4) {  /* Telefone */
+    display: none;
+  }
+
+  /* Pagination compacta */
+  .pagination { padding: 8px 12px; gap: 4px; flex-wrap: wrap; }
+  .pbn { min-width: 30px; height: 30px; font-size: .75rem; }
+  .p-info { font-size: .68rem; }
+
+  /* Modal ocupa tela toda */
+  .overlay { padding: 0; align-items: flex-end; }
+
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    padding: 20px 18px;
+  }
+
+  .fgrid { grid-template-columns: 1fr; }
+  .full { grid-column: 1; }
+  .fsep { grid-column: 1; }
+
+  /* Drawer ocupa tela toda no mobile */
+  .drawer { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+
+  /* Mapa ocupa tela toda */
+  .map-legend {
+    bottom: 10px; left: 10px;
+    padding: 8px 12px;
+    font-size: .68rem;
+  }
+
+  .map-info-bar { font-size: .7rem; padding: 5px 12px; top: 8px; }
+
+  /* Árvore mobile */
+  .tree-area { padding: 12px; }
+
+  .tree-ca-header { padding: 12px 14px; gap: 8px; }
+  .tree-ca-avatar { width: 32px; height: 32px; font-size: .9rem; }
+  .tree-ca-nome { font-size: .82rem; }
+  .tree-ca-counts { flex-wrap: wrap; gap: 4px; }
+  .tree-count-pill { font-size: .65rem; padding: 2px 7px; }
+
+  .tree-l-header { padding: 9px 12px; }
+  .tree-l { margin-left: 8px; }
+  .tree-m { margin-left: 10px; }
+
+  /* Login mobile */
+  .login-box { padding: 24px 20px; border-radius: 16px; }
+
+  /* Loading mobile */
+  #loading-overlay div:first-child { width: 32px; height: 32px; }
+}
+
+/* Hamburguer só aparece no mobile */
+.mob-menu-btn { display: none; }
+
+@media (max-width: 768px) {
+  .mob-menu-btn { display: flex; }
+}
+
 </style>
 <!-- Firebase SDK (compat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1219,6 +1392,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="login-footer">Coordenação — Raiane · Zona Norte</div>
   </div>
 </div>
+
+<!-- MOBILE SIDEBAR OVERLAY -->
+<div class="mob-overlay" id="mobOverlay" onclick="toggleSidebar()"></div>
 
 <!-- LOADING OVERLAY -->
 <div id="loading-overlay" style="position:fixed;inset:0;background:rgba(13,15,24,.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
@@ -1277,6 +1453,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 <div class="main">
   <!-- TOPBAR -->
   <div class="topbar">
+    <button class="mob-menu-btn" onclick="toggleSidebar()" title="Menu">☰</button>
     <div class="zone-title">
       <div class="zone-badge" id="zBadge"></div>
       <h2 id="zTitle">Zona Norte</h2>
@@ -1294,7 +1471,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
         <button class="btn-logout" onclick="fazerLogout()">Sair</button>
       </div>
       <label class="btn btn-import" style="cursor:pointer" title="Importar planilha desta zona">
-        📥 Importar
+        📥 <span>Importar</span>
         <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" onchange="importarArquivo(event)">
       </label>
       <button class="btn btn-import" onclick="exportarDados()" title="Exportar dados da zona atual em Excel">📤 Exportar</button>
@@ -2578,6 +2755,26 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) {
     fazerLogin();
   }
+});
+
+// ===================== MOBILE SIDEBAR =====================
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('mobOverlay');
+  sidebar.classList.toggle('mob-open');
+  overlay.classList.toggle('active');
+}
+
+// Fecha sidebar ao clicar em uma zona no mobile
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('mob-open');
+        document.getElementById('mobOverlay').classList.remove('active');
+      }
+    });
+  });
 });
 
 // ===================== START =====================
