@@ -1932,6 +1932,28 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
 }
 
 /* Hamburguer só aparece no mobile */
+.mz-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: .78rem;
+  color: var(--text);
+  transition: background .15s;
+  user-select: none;
+}
+
+.mz-item:hover { background: rgba(255,255,255,.05); }
+body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
+
+.mz-item input[type="checkbox"] {
+  accent-color: #3b82f6;
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+}
+
 .mob-menu-btn { display: none; }
 
 @media (max-width: 768px) {
@@ -2460,6 +2482,12 @@ function atualizarNavCounts() {
 
 // ===================== TROCA ZONA =====================
 function trocarZona(z) {
+  // Reset multi-zona when switching to a regular zone
+  if (z !== 'multi') {
+    multiZonaAtivo = false;
+    document.getElementById('multi-zona-panel').style.display = 'none';
+    document.querySelectorAll('#multi-zona-panel input').forEach(cb => cb.checked = false);
+  }
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navEl = document.getElementById('nav-' + z);
   if (navEl) navEl.classList.add('active');
@@ -2498,6 +2526,16 @@ function getDados() {
     const all = [];
     Object.entries(DB).forEach(([z, arr]) => {
       arr.forEach(d => all.push({...d, _zona: z}));
+    });
+    return all;
+  }
+  if (zonaAtual === 'multi') {
+    const selecionadas = Array.from(
+      document.querySelectorAll('#multi-zona-panel input:checked')
+    ).map(cb => cb.value);
+    const all = [];
+    selecionadas.forEach(z => {
+      (DB[z] || []).forEach(d => all.push({...d, _zona: z}));
     });
     return all;
   }
@@ -3968,6 +4006,56 @@ function toggleTheme() {
     });
   }
 })();
+
+// ===================== MULTI ZONA =====================
+let multiZonaAtivo = false;
+
+function toggleMultiZona() {
+  const panel = document.getElementById('multi-zona-panel');
+  const navItem = document.getElementById('nav-multi');
+  multiZonaAtivo = !multiZonaAtivo;
+  panel.style.display = multiZonaAtivo ? 'block' : 'none';
+  navItem.classList.toggle('active', multiZonaAtivo);
+
+  if (!multiZonaAtivo) {
+    // Desmarca todos e volta para todas
+    document.querySelectorAll('#multi-zona-panel input').forEach(cb => cb.checked = false);
+    trocarZona('todas');
+  }
+}
+
+function aplicarMultiZona() {
+  const selecionadas = Array.from(
+    document.querySelectorAll('#multi-zona-panel input:checked')
+  ).map(cb => cb.value);
+
+  if (selecionadas.length === 0) {
+    trocarZona('todas');
+    return;
+  }
+
+  if (selecionadas.length === 1) {
+    trocarZona(selecionadas[0]);
+    return;
+  }
+
+  // Múltiplas zonas selecionadas
+  zonaAtual = 'multi';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-multi').classList.add('active');
+
+  // Atualiza título
+  const nomes = selecionadas.map(z => ZONAS_CFG[z]?.label.replace('Zona ','') || z);
+  document.getElementById('zTitle').textContent = nomes.join(' + ');
+  document.getElementById('zBadge').style.background = '#3b82f6';
+
+  pg = 1;
+  aplicarFiltros();
+  if (window.innerWidth <= 768) {
+    document.querySelector('.sidebar').classList.remove('mob-open');
+    document.getElementById('mobOverlay').classList.remove('active');
+  }
+}
 
 // ===================== MOBILE SIDEBAR =====================
 function toggleSidebar() {
