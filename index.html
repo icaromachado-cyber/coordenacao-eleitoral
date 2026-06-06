@@ -1198,6 +1198,114 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 
 /* ============================================================
+   PAINEL DE ZONAS (visão todas)
+   ============================================================ */
+#zone-panel {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.zone-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-top: 3px solid #3b82f6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.zone-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+.zone-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.zone-card-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-card-name {
+  font-family: 'Syne', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+
+.zone-card-count {
+  font-size: .7rem;
+  color: var(--muted);
+  background: rgba(255,255,255,.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.zone-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.zone-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.zone-stat-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.zone-stat-lbl {
+  font-size: .65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.zone-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Light theme zone cards */
+body.theme-light .zone-card { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .zone-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+body.theme-light .zone-card-name { color: #1e2235; }
+body.theme-light .zone-card-count { background: #f0f2f8; color: #7880a0; }
+body.theme-light .zone-card-footer { border-top-color: #eef0f8; }
+
+@media (max-width: 768px) {
+  #zone-panel {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .zone-card { padding: 10px 12px; }
+  .zone-stat-val { font-size: .95rem; }
+}
+
+/* ============================================================
    TEMA CLARO
    ============================================================ */
 body.theme-light {
@@ -1632,7 +1740,7 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">Zonas</div>
-    <div class="nav-item active" onclick="trocarZona('norte')" id="nav-norte">
+    <div class="nav-item" onclick="trocarZona('norte')" id="nav-norte">
       <div class="nav-dot" style="background:#e8433a"></div>
       <span class="nav-name">Zona Norte</span>
       <span class="nav-count" id="nc-norte">0</span>
@@ -1658,7 +1766,7 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
       <span class="nav-count" id="nc-rural">0</span>
     </div>
     <div class="nav-label" style="margin-top:14px">Geral</div>
-    <div class="nav-item" onclick="trocarZona('todas')">
+    <div class="nav-item active" onclick="trocarZona('todas')" id="nav-todas">
       <div class="nav-dot" style="background:linear-gradient(135deg,#e8433a,#3b82f6)"></div>
       <span class="nav-name">Todas as Zonas</span>
       <span class="nav-count" id="nc-todas">0</span>
@@ -1709,19 +1817,19 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
       <div class="strip-sub">registros</div>
     </div>
     <div class="strip-card s-l">
-      <div class="strip-label">Lideranças (L)</div>
+      <div class="strip-label" id="lbl-l">Lideranças</div>
       <div class="strip-value" id="sc-l">0</div>
-      <div class="strip-sub">líderes</div>
+      <div class="strip-sub" id="sub-l">líderes</div>
     </div>
     <div class="strip-card s-m">
-      <div class="strip-label">Mobilizadores (M)</div>
+      <div class="strip-label" id="lbl-m">Mobilizadores</div>
       <div class="strip-value" id="sc-m">0</div>
-      <div class="strip-sub">mobilizadores</div>
+      <div class="strip-sub" id="sub-m">mobilizadores</div>
     </div>
     <div class="strip-card s-semam">
-      <div class="strip-label">SEMAM (LE/ME)</div>
+      <div class="strip-label" id="lbl-semam">Coordenadores</div>
       <div class="strip-value" id="sc-semam">0</div>
-      <div class="strip-sub">servidores</div>
+      <div class="strip-sub" id="sub-semam">CA ativos</div>
     </div>
     <div class="strip-card s-custo">
       <div class="strip-label">Custo Total</div>
@@ -1729,6 +1837,9 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
       <div class="strip-sub">investimento</div>
     </div>
   </div>
+
+  <!-- ZONE PANEL -->
+  <div id="zone-panel"></div>
 
   <!-- CONTROLS -->
   <div class="controls-bar">
@@ -1993,7 +2104,7 @@ async function carregarDoFirebase() {
     });
     mostrarLoading(false);
     atualizarNavCounts();
-    trocarZona('norte');
+    trocarZona('todas');
   } catch(e) {
     console.error('Erro ao carregar Firebase:', e);
     DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
@@ -2001,7 +2112,7 @@ async function carregarDoFirebase() {
     dbCarregado = true;
     mostrarLoading(false);
     atualizarNavCounts();
-    trocarZona('norte');
+    trocarZona('todas');
     toast('⚠️ Usando dados locais — sem conexão com banco', true);
   }
 }
@@ -2170,15 +2281,60 @@ function totalStyle(v) {
 function renderCards() {
   const src = filtrado;
   document.getElementById('sc-total').textContent = src.length;
-  document.getElementById('sc-l').textContent = src.filter(d=>d.tipo==='L').length;
-  document.getElementById('sc-m').textContent = src.filter(d=>d.tipo==='M').length;
-  document.getElementById('sc-semam').textContent = src.filter(d=>d.tipo==='LE'||d.tipo==='ME').length;
+  document.getElementById('sc-l').textContent = src.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
+  document.getElementById('sc-m').textContent = src.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
+  document.getElementById('sc-semam').textContent = src.filter(d=>d.tipo==='CA').length;
   const ct = src.reduce((s,d)=>s+d.total,0);
   document.getElementById('sc-custo').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
 
   const totalVotos = src.reduce((s,d)=>s+(d.votos||0),0);
   document.getElementById('tp1').innerHTML = `Votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong>`;
   document.getElementById('tp2').innerHTML = `Custo médio: <strong>R$ ${src.length?Math.round(ct/src.length).toLocaleString('pt-BR'):'0'}</strong>`;
+
+  // Painel de zonas quando estiver em "Todas"
+  renderZonePanel();
+}
+
+function renderZonePanel() {
+  const panel = document.getElementById('zone-panel');
+  if (!panel) return;
+
+  if (zonaAtual !== 'todas') {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'grid';
+
+  const zonas = ['norte','leste','sul','sudeste','rural'];
+  panel.innerHTML = zonas.map(z => {
+    const cfg = ZONAS_CFG[z];
+    const dados = DB[z] || [];
+    const total = dados.length;
+    const lids = dados.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
+    const mobs = dados.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
+    const votos = dados.reduce((s,d)=>s+(d.votos||0),0);
+    const custo = dados.reduce((s,d)=>s+d.total,0);
+    const ativos = dados.filter(d=>d.status==='ativo'||!d.status).length;
+
+    return `<div class="zone-card" onclick="trocarZona('${z}')" style="border-top-color:${cfg.cor}">
+      <div class="zone-card-header">
+        <div class="zone-card-dot" style="background:${cfg.cor}"></div>
+        <div class="zone-card-name">${cfg.label}</div>
+        <div class="zone-card-count">${total} reg.</div>
+      </div>
+      <div class="zone-card-stats">
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#60a5fa">${lids}</span><span class="zone-stat-lbl">Lideranças</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#4ade80">${mobs}</span><span class="zone-stat-lbl">Mobilizadores</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:${cfg.cor}">${votos}</span><span class="zone-stat-lbl">Votos</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#f59e0b">R$${custo>=1000?(custo/1000).toFixed(0)+'K':custo}</span><span class="zone-stat-lbl">Custo</span></div>
+      </div>
+      <div class="zone-card-footer">
+        <span style="color:#4ade80;font-size:.7rem">✅ ${ativos} ativos</span>
+        <span style="color:#3b82f6;font-size:.7rem;cursor:pointer">Ver zona →</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ===================== RENDER TABLE =====================
