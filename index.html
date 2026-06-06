@@ -3582,13 +3582,8 @@ async function migrarPessoa(fireId, localId, zona) {
     return;
   }
 
-  const opcoes = campanhasDisponiveis.map(c => c.split('|')[1]).join('
-');
-  const escolha = prompt(`Migrar para qual campanha?
-
-${opcoes}
-
-Digite o nome exato:`);
+  const opcoes = campanhasDisponiveis.map(c => c.split('|')[1]).join('\n');
+  const escolha = prompt('Migrar para qual campanha?\n\n' + opcoes + '\n\nDigite o nome exato:');
   if (!escolha) return;
 
   const entrada = Object.entries(campanhas).find(([, c]) =>
