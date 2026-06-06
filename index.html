@@ -2323,6 +2323,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ===================== ADMIN UTILS =====================
+async function limparCampanha(id) {
+  const nome = campanhas[id]?.nome || id;
+  if (!confirm(`⚠️ Limpar TODOS os dados de "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  
+  toast('🗑️ Limpando campanha…');
+  try {
+    const snap = await db.collection('campanhas').doc(id).collection('liderancas').get();
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const batch = db.batch();
+      snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    await trocarCampanha(id);
+    toast(`✅ "${nome}" limpa — ${snap.size} registros removidos`);
+  } catch(e) {
+    toast('❌ Erro ao limpar campanha', true);
+  }
+}
+
 // ===================== CAMPANHAS =====================
 let campanhaAtual = null; // ID da campanha ativa
 let campanhas = {}; // {id: {nome, ano, cargo}}
@@ -3592,12 +3612,15 @@ function renderCampanhaTabs() {
   container.innerHTML = Object.entries(campanhas).map(([id, camp]) => {
     const cor = cargoCores[camp.cargo] || '#6b7294';
     const isActive = id === campanhaAtual;
-    return `<button class="campanha-tab ${isActive ? 'active' : ''}"
-      onclick="trocarCampanha('${id}')"
-      title="${camp.candidato ? 'Candidato: '+camp.candidato : ''}"
-      style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
-      ${camp.nome}${camp.candidato ? ` · ${camp.candidato.split(' ')[0]}` : ''}
-    </button>`;
+    return `<div style="display:flex;align-items:center;gap:2px">
+      <button class="campanha-tab ${isActive ? 'active' : ''}"
+        onclick="trocarCampanha('${id}')"
+        title="${camp.candidato ? 'Candidato: '+camp.candidato : ''}"
+        style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
+        ${camp.nome}${camp.candidato ? ` · ${camp.candidato.split(' ')[0]}` : ''}
+      </button>
+      ${isActive ? `<button onclick="limparCampanha('${id}')" title="Limpar dados desta campanha" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--muted)'">🗑</button>` : ''}
+    </div>`;
   }).join('');
 
   // Atualiza select de origem no modal
