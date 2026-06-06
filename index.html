@@ -1198,6 +1198,129 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 
 /* ============================================================
+   TEMA CLARO
+   ============================================================ */
+body.theme-light {
+  --bg: #f0f2f8;
+  --surface: #ffffff00;
+  --surface-solid: #ffffff;
+  --surface2: #ffffff;
+  --border: #dde1ee;
+  --text: #1e2235;
+  --muted: #7880a0;
+  background: #f0f2f8;
+  color: #1e2235;
+}
+
+body.theme-light .sidebar { background: #1e3a5f; border-right-color: #1a3358; }
+body.theme-light .sidebar-logo { background: linear-gradient(135deg, #1a2d4a 0%, #1e3a5f 100%); }
+body.theme-light .nav-item .nav-name { color: #c8d8f0; }
+body.theme-light .nav-item .nav-count { color: #8aabcf; background: rgba(255,255,255,.08); }
+body.theme-light .nav-item:hover { background: rgba(255,255,255,.08); }
+body.theme-light .nav-item.active { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.4); }
+body.theme-light .nav-label { color: #7090b0; }
+body.theme-light .sidebar-footer { color: #7090b0; border-top-color: rgba(255,255,255,.1); }
+
+body.theme-light .topbar { background: #ffffff; border-bottom-color: #dde1ee; }
+body.theme-light .summary-strip { background: #ffffff; border-bottom-color: #dde1ee; }
+body.theme-light .strip-card { border-right-color: #dde1ee; }
+body.theme-light .strip-value { color: #1e2235; }
+body.theme-light .strip-label { color: #7880a0; }
+body.theme-light .strip-sub { color: #7880a0; }
+
+body.theme-light .controls-bar { background: #f0f2f8; border-bottom-color: #dde1ee; }
+body.theme-light .search-wrap input { background: #ffffff; border-color: #dde1ee; color: #1e2235; }
+body.theme-light .search-wrap input::placeholder { color: #a0a8c0; }
+body.theme-light select { background: #ffffff; border-color: #dde1ee; color: #1e2235; }
+
+body.theme-light .table-area { background: #f8f9fd; }
+body.theme-light thead { background: #eef0f8; }
+body.theme-light th { color: #7880a0; border-bottom-color: #dde1ee; }
+body.theme-light td { border-bottom-color: #eef0f8; color: #1e2235; }
+body.theme-light tbody tr:hover td { background: rgba(59,130,246,.04); }
+body.theme-light .nome-td { color: #1e2235; }
+body.theme-light .muted-td { color: #7880a0; }
+
+body.theme-light .modal { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .fg input, body.theme-light .fg select, body.theme-light .fgrid select { background: #f0f2f8; border-color: #dde1ee; color: #1e2235; }
+body.theme-light .fsep { color: #7880a0; border-bottom-color: #dde1ee; }
+body.theme-light .modal h2 { color: #1e2235; }
+
+body.theme-light .drawer { background: #ffffff; border-left-color: #dde1ee; }
+body.theme-light .d-lbl { color: #7880a0; }
+body.theme-light .d-val { color: #1e2235; }
+body.theme-light .d-row { border-bottom-color: #eef0f8; }
+body.theme-light .d-name { color: #1e2235; }
+body.theme-light .d-total-box { background: #f0f2f8; border: 1px solid #dde1ee; border-radius: 10px; padding: 12px 14px; }
+body.theme-light .d-total-lbl { color: #7880a0; }
+body.theme-light .drawer-tabs { border-bottom-color: #dde1ee; }
+body.theme-light .drawer-tab { color: #7880a0; }
+body.theme-light .cost-bar { background: #dde1ee; border-color: #dde1ee; }
+
+body.theme-light .btn-outline { border-color: #dde1ee; color: #7880a0; }
+body.theme-light .btn-outline:hover { border-color: #3b82f6; color: #3b82f6; }
+body.theme-light .btn-ico { color: #7880a0; }
+body.theme-light .btn-ico:hover { border-color: #dde1ee; color: #1e2235; }
+
+body.theme-light .pagination { background: #f0f2f8; border-top-color: #dde1ee; }
+body.theme-light .pbn { border-color: #dde1ee; color: #7880a0; background: #ffffff; }
+body.theme-light .pbn:hover { border-color: #3b82f6; color: #3b82f6; }
+body.theme-light .p-info { color: #7880a0; }
+
+body.theme-light .tree-area { background: #f0f2f8; }
+body.theme-light .tree-ca { background: #ffffff; border-color: rgba(59,130,246,.2); }
+body.theme-light .tree-ca-header:hover { background: rgba(59,130,246,.04); }
+body.theme-light .tree-ca-nome { color: #1e2235; }
+body.theme-light .tree-ca-sub { color: #7880a0; }
+body.theme-light .tree-count-pill { background: #f0f2f8; border-color: #dde1ee; color: #7880a0; }
+body.theme-light .tree-count-pill strong { color: #1e2235; }
+body.theme-light .tree-l { background: rgba(59,130,246,.04); border-color: rgba(59,130,246,.15); }
+body.theme-light .tree-l-nome { color: #1e2235; }
+body.theme-light .tree-l-sub { color: #7880a0; }
+body.theme-light .tree-m { background: rgba(34,197,94,.04); border-color: rgba(34,197,94,.12); }
+body.theme-light .tree-m-nome { color: #1e2235; }
+body.theme-light .tree-m-bairro { color: #7880a0; }
+body.theme-light .tree-orphans { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .tree-orphans-header h4 { color: #7880a0; }
+body.theme-light .orphan-name { color: #1e2235; }
+body.theme-light .orphan-bairro { color: #7880a0; }
+body.theme-light .orphan-item { border-bottom-color: #eef0f8; }
+body.theme-light .tree-header h3 { color: #1e2235; }
+body.theme-light .tree-search { background: #ffffff; border-color: #dde1ee; color: #1e2235; }
+body.theme-light .tree-stat { background: #ffffff; border-color: #dde1ee; color: #7880a0; }
+body.theme-light .tree-stat strong { color: #1e2235; }
+
+body.theme-light .map-legend { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .map-legend h4 { color: #7880a0; }
+body.theme-light .legend-item { color: #1e2235; }
+
+body.theme-light .zone-title h2 { color: #1e2235; }
+body.theme-light .zone-badge { border: 2px solid rgba(0,0,0,.1); }
+body.theme-light .pill { background: #f0f2f8; border-color: #dde1ee; color: #7880a0; }
+body.theme-light .pill strong { color: #1e2235; }
+body.theme-light .user-email { color: #7880a0; }
+body.theme-light .btn-logout { border-color: #dde1ee; color: #7880a0; }
+body.theme-light .btn-logout:hover { border-color: #3b82f6; color: #3b82f6; }
+body.theme-light .btn-map-toggle, body.theme-light .btn-tree-toggle { background: #f0f2f8; border-color: #dde1ee; color: #7880a0; }
+body.theme-light .mob-menu-btn { background: #f0f2f8; border-color: #dde1ee; color: #1e2235; }
+
+body.theme-light .login-screen { background: #f0f2f8; }
+body.theme-light .login-box { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .login-logo h1 { color: #1e2235; }
+body.theme-light .login-logo p { color: #7880a0; }
+body.theme-light .login-field label { color: #7880a0; }
+body.theme-light .login-field input { background: #f0f2f8; border-color: #dde1ee; color: #1e2235; }
+body.theme-light .login-footer { color: #7880a0; }
+
+body.theme-light .toast { background: #ffffff; }
+body.theme-light .reuniao-item { background: #f0f2f8; border-color: #dde1ee; }
+body.theme-light .reuniao-item-obs { color: #1e2235; }
+body.theme-light .mini-modal { background: #f0f2f8; border-color: #dde1ee; }
+body.theme-light .mini-modal input, body.theme-light .mini-modal textarea, body.theme-light .mini-modal select { background: #ffffff; border-color: #dde1ee; color: #1e2235; }
+body.theme-light .btn-add-sm { background: rgba(255,255,255,.8); border-color: #dde1ee; color: #7880a0; }
+body.theme-light .drawer-tab-content { color: #1e2235; }
+
+/* ============================================================
    STATUS / REUNIÃO / PAGAMENTOS
    ============================================================ */
 
@@ -1487,7 +1610,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
     <button class="login-btn" id="loginBtn" onclick="fazerLogin()">Entrar</button>
     <div class="login-error" id="loginError"></div>
-    <div class="login-footer">Coordenação — Raiane · Zona Norte</div>
+
   </div>
 </div>
 
@@ -1561,6 +1684,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="pill" id="tp2"></div>
     </div>
     <div class="topbar-actions">
+      <button class="btn-tree-toggle" id="btnTheme" onclick="toggleTheme()" title="Alternar tema">☀️</button>
       <button class="btn-tree-toggle" id="btnTreeToggle" onclick="toggleTreeView()">🌳 Árvore</button>
       <button class="btn-map-toggle" id="btnMapToggle" onclick="toggleMapView()">🗺️ Mapa</button>
       <div class="user-info">
@@ -1763,7 +1887,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="fg"><label>Agosto</label><input type="number" id="f-ago" placeholder="0" step="50"></div>
       <div class="fg"><label>Setembro</label><input type="number" id="f-set" placeholder="0" step="50"></div>
       <div class="fg"><label>Outubro</label><input type="number" id="f-out" placeholder="0" step="50"></div>
-      <div class="fg"><label>Total pago (B.U.)</label><input type="number" id="f-total" placeholder="0" step="100"></div>
+      <div class="fg"><label>Total pago</label><input type="number" id="f-total" placeholder="0" step="100"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
@@ -2172,7 +2296,7 @@ function verDrawer(id, zona) {
       ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
       ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${d.lider_nome}</span></div>` : ''}
       <div class="d-total-box">
-        <div class="d-total-lbl">Total pago</div>
+        <div class="d-total-lbl">💰 Total investido</div>
         <div class="d-total-val" style="${totalStyle(d.total)}">${fmtR(d.total)}</div>
         <div class="cost-bar"><div class="cost-fill" style="width:${pct}%;background:var(--accent,#e8433a)"></div></div>
       </div>
@@ -2796,7 +2920,7 @@ function exportarDados() {
     'Custo Ago': d.custo_ago || 0,
     'Custo Set': d.custo_set || 0,
     'Custo Out': d.custo_out || 0,
-    'Total Pago': d.total || 0,
+    'Total': d.total || 0,
   }));
 
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -3046,6 +3170,26 @@ document.addEventListener('keydown', e => {
     fazerLogin();
   }
 });
+
+// ===================== TEMA =====================
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('theme-light');
+  document.getElementById('btnTheme').textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Aplica tema salvo ao carregar
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    // Botão será atualizado após DOM carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('btnTheme');
+      if (btn) btn.textContent = '🌙';
+    });
+  }
+})();
 
 // ===================== MOBILE SIDEBAR =====================
 function toggleSidebar() {
