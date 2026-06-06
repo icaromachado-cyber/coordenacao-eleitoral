@@ -2087,6 +2087,7 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
         <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" onchange="importarArquivo(event)">
       </label>
       <button class="btn btn-import" onclick="exportarDados()" title="Exportar dados da zona atual em Excel">📤 Exportar</button>
+      <button class="btn btn-import" onclick="migrarPorBairro()" title="Migrar pessoas para zonas corretas baseado no bairro">🔄 Organizar Zonas</button>
       <button class="btn btn-primary" onclick="abrirModal(null)">+ Novo</button>
     </div>
   </div>
@@ -2362,6 +2363,128 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ===================== ADMIN UTILS =====================
+
+// Mapa completo bairro → zona (baseado nos dados da Prefeitura de Teresina)
+const BAIRRO_ZONA_MAP = {
+  // NORTE
+  'AEROPORTO':'norte','ÁGUA MINERAL':'norte','AGUA MINERAL':'norte','ALTO ALEGRE':'norte',
+  'AROEIRAS':'norte','AROEIRA':'norte','BOA ESPERANCA':'norte','BOA ESPERANÇA':'norte',
+  'BUENOS AIRES':'norte','BUENO AIRES':'norte','CABRAL':'norte','CHAPADINHA':'norte',
+  'CIDADE INDUSTRIAL':'norte','EMBRAPA':'norte','ITAPERU':'norte',
+  'JACINTA ANDRADE':'norte','JARDIM EUROPA':'norte','LEONEL BRIZOLA':'norte',
+  'LINDALMA SOARES':'norte','MAFRENSE':'norte','MAFUÁ':'norte','MAFUA':'norte',
+  'MARQUES':'norte','MARQUÊS':'norte','MATADOURO':'norte','MATINHA':'norte',
+  'MEMORARE':'norte','MOCAMBINHO':'norte','MOCAMBINHO 2':'norte',
+  'MOCAMBINHO I':'norte','MOCAMBINHO II':'norte','MONTE ALEGRE':'norte',
+  'MONTE VERDE':'norte','MORRO DA ESPERANÇA':'norte','NOVA BRASILIA':'norte',
+  'NOVA BRASÍLIA':'norte','OLARIAS':'norte','PARQUE ALVORADA':'norte',
+  'PARQUE AFONSO GIL':'norte','PARQUE BRASIL':'norte',
+  'PARQUE BRASIL, SANTA MARIA':'norte','PARQUE MÃOO SANTA':'norte',
+  'PARQUE STAEL':'norte','PORENQUANTO':'norte','POTI VELHO':'norte','POTY VELHO':'norte',
+  'PRIMAVERA':'norte','PRIMAVERA 2':'norte','REAL COPAGRE':'norte',
+  'SANTA BARBARA':'norte','SANTA MARIA':'norte','SANTA MARIA DA CODIPI':'norte',
+  'SANTA  MARIA DA CODIPI':'norte','SANTA ROSA':'norte','SANTA SOFIA':'norte',
+  'SÃO JOAQUIM':'norte','SAO JOAQUIM':'norte','TORQUARTO NETO':'norte',
+  'TORQUATO NETO':'norte','VALE QUEM TEM':'norte','VILA BANDEIRANTES 2':'norte',
+  'VILA MARIA':'norte','VILA OPERARIA':'norte','VILA OPERÁRIA':'norte',
+  'VILA SÃO FRANCISCO':'norte','FRANCISCA TRINDADE':'norte',
+  'CONJ. VILA NOVA CONQUISTA':'norte','RISOLETA':'norte','RISOLETA NEVES':'norte',
+  'ACARAPE':'norte','BOM JESUS':'norte',
+  // SUL
+  'ANGELIM':'sul','ANGÉLICA':'sul','AREIAS':'sul','BELA VISTA':'sul','BRASILAR':'sul',
+  'CATARINA':'sul','CENTRO SUL':'sul','CIDADE NOVA':'sul','CRISTO REI':'sul',
+  'DISTRITO INDUSTRIAL':'sul','ESPLANADA':'sul','LOURIVAL PARENTE':'sul',
+  'MACAÚBA':'sul','MACAUBA':'sul','MONTE CASTELO':'sul','MORADA NOVA':'sul',
+  'NOSSA SENHORA DAS GRAÇAS':'sul','PARQUE JACINTA':'sul','PARQUE JULIANA':'sul',
+  'PARQUE PIAUÍ':'sul','PARQUE SÃO JOÃO':'sul','PARQUE SUL':'sul',
+  'PEDRA MIÚDA':'sul','PIÇARRA':'sul','PIO XII':'sul','POLO INDUSTRIAL SUL':'sul',
+  'PORTAL DA ALEGRIA':'sul','PROMORAR':'sul','REDENÇÃO':'sul','SACI':'sul',
+  'SANTA CRUZ':'sul','SANTA LUZIA':'sul','SANTO ANTÔNIO':'sul',
+  'SÃO LOURENÇO':'sul','SÃO PEDRO':'sul','TABULETA':'sul',
+  'TRÊS ANDARES':'sul','TRIUNFO':'sul','VERMELHA':'sul',
+  // LESTE
+  'ÁRVORES VERDES':'leste','ARVORES VERDES':'leste','CAMPESTRE':'leste',
+  'CIDADE JARDIM':'leste','FÁTIMA':'leste','FATIMA':'leste','HORTO':'leste',
+  'ILHOTAS':'leste','ININGA':'leste','JOCKEY':'leste','JOQUEI':'leste','JÓQUEI':'leste',
+  'MORADA DO SOL':'leste','MORROS':'leste','NOIVOS':'leste','NOVO URUGUAI':'leste',
+  'PARQUE UNIVERSITÁRIO':'leste','PEDRA MOLE':'leste','PIÇARREIRA':'leste',
+  'PLANALTO':'leste','PORTO DO CENTRO':'leste','RECANTO DAS PALMEIRAS':'leste',
+  'SAMAPI':'leste','SANTA ISABEL':'leste','SANTA LIA':'leste',
+  'SÃO CRISTÓVÃO':'leste','SAO CRISTOVAO':'leste','SÃO JOÃO':'leste',
+  'SAO JOAO':'leste','SATELITE':'leste','SATÉLITE':'leste','SOCOPO':'leste',
+  'TABAJARAS':'leste','URUGUAI':'leste','VALE DO GAVIÃO':'leste',
+  'VERDE LAR':'leste','VILA SANTA BÁRBARA':'leste','VILA URUGUAI':'leste',
+  'ZOOBOTÂNICO':'leste',
+  // SUDESTE
+  'BEIRA RIO':'sudeste','BOM PRINCÍPIO':'sudeste','COLORADO':'sudeste',
+  'COMPRIDA':'sudeste','DIRCEU':'sudeste','DIRCEU I':'sudeste','DIRCEU II':'sudeste',
+  'DIRCEU2/ ITARARÉ':'sudeste','DIRCEU ARCOVERDE':'sudeste','EXTREMA':'sudeste',
+  'FLOR DO CAMPO':'sudeste','GURUPI':'sudeste','ITARARÉ':'sudeste',
+  'LIVRAMENTO':'sudeste','NOVO HORIZONTE':'sudeste','PARQUE IDEAL':'sudeste',
+  'PARQUE POTY':'sudeste','REDONDA':'sudeste','RENASCENÇA':'sudeste',
+  'RENASCENCA':'sudeste','SANTANA':'sudeste','SÃO RAIMUNDO':'sudeste',
+  'SÃO SEBASTIÃO':'sudeste','SAO SEBASTIAO':'sudeste','TANCREDO NEVES':'sudeste',
+  'TODOS OS SANTOS':'sudeste','VERDE CAP':'sudeste',
+  // RURAL
+  'ZONA RURAL':'rural','ÁREA RURAL':'rural','CAMPO LARGO':'rural',
+  'CURRALINHOS':'rural','MARACANÃ':'rural',
+};
+
+async function migrarPorBairro() {
+  if (!confirm('Migrar automaticamente todas as pessoas para as zonas corretas baseado no bairro?\n\nIsso vai mover pessoas da Zona Norte para Sul, Leste, Sudeste e Rural conforme o bairro cadastrado.')) return;
+
+  toast('🔄 Iniciando migração por bairro…');
+  let moved = 0, unchanged = 0;
+
+  try {
+    // Busca todos da campanha atual
+    const todos = await colecao().get();
+    const updates = [];
+
+    todos.docs.forEach(doc => {
+      const d = doc.data();
+      const bairro = (d.bairro || '').trim().toUpperCase();
+      const zonaCorreta = BAIRRO_ZONA_MAP[bairro];
+
+      if (zonaCorreta && zonaCorreta !== d._zona) {
+        updates.push({ ref: doc.ref, novaZona: zonaCorreta, data: d });
+        moved++;
+      } else {
+        unchanged++;
+      }
+    });
+
+    if (!updates.length) {
+      toast('✅ Todos já estão nas zonas corretas!');
+      return;
+    }
+
+    // Move cada pessoa: deleta da zona atual, cria na zona correta
+    // Usa subcoleção por zona via _zona field update (mais simples)
+    for (let i = 0; i < updates.length; i += 400) {
+      const batch = db.batch();
+      updates.slice(i, i + 400).forEach(u => {
+        batch.update(u.ref, { _zona: u.novaZona });
+      });
+      await batch.commit();
+    }
+
+    // Recarrega todas as zonas
+    const zonas = ['norte','leste','sul','sudeste','rural'];
+    const snaps = await Promise.all(zonas.map(z => colecao().where('_zona','==',z).get()));
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+
+    atualizarNavCounts();
+    aplicarFiltros();
+    toast(`✅ ${moved} pessoas migradas · ${unchanged} já estavam corretas`);
+  } catch(e) {
+    console.error('Erro migração:', e);
+    toast('❌ Erro na migração', true);
+  }
+}
 async function limparCampanha(id) {
   const nome = campanhas[id]?.nome || id;
   if (!confirm(`⚠️ Limpar TODOS os dados de "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
