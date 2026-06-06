@@ -1320,6 +1320,111 @@ body.theme-light .mc-field input, body.theme-light .mc-field select { background
 body.theme-light .mc-footer { border-top-color: #dde1ee; }
 
 /* Migrar badge no drawer */
+/* Modal de seleção de campanhas */
+.modal-camps-sel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-camps-sel.open { display: flex; }
+
+.modal-camps-sel-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 28px;
+  width: 100%;
+  max-width: 420px;
+  animation: su .2s ease;
+}
+
+body.theme-light .modal-camps-sel-box { background: #fff; border-color: #dde1ee; }
+
+.modal-camps-sel-box h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+body.theme-light .modal-camps-sel-box h3 { color: #1e2235; }
+
+.modal-camps-sel-box p {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.camp-check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.camp-check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+
+body.theme-light .camp-check-item { background: #f0f2f8; border-color: #dde1ee; }
+
+.camp-check-item:hover { border-color: #3b82f6; }
+.camp-check-item.selected { background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.35); }
+
+.camp-check-item input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.camp-check-nome {
+  font-size: .83rem;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+body.theme-light .camp-check-nome { color: #1e2235; }
+
+.camp-check-cargo {
+  font-size: .68rem;
+  color: var(--muted);
+  padding: 2px 8px;
+  background: rgba(255,255,255,.05);
+  border-radius: 8px;
+}
+
+body.theme-light .camp-check-cargo { background: rgba(0,0,0,.05); }
+
+.mcs-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+body.theme-light .mcs-footer { border-top-color: #dde1ee; }
+
 .migrar-zona-btn {
   width: 100%;
   margin-top: 8px;
@@ -2380,7 +2485,7 @@ function getDados() {
 }
 
 function norm(s) {
-  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
 function aplicarFiltros() {
@@ -2847,6 +2952,20 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
       ? `✅ Transferido para ${ZONAS_CFG[zonaDestino].label}!`
       : editIdOrig !== null ? '✅ Salvo!' : '✅ Cadastrado!';
     toast(msg);
+
+    // Se é cadastro novo, pergunta se quer adicionar em outras campanhas
+    if (editIdOrig === null) {
+      const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
+      if (outrasCamps.length > 0) {
+        setTimeout(() => {
+          abrirModalCampsSel(
+            reg,
+            '📅 Adicionar em outras campanhas?',
+            `"${reg.nome.split(' ')[0]}" foi cadastrado(a). Deseja adicioná-lo(a) em outras campanhas também?`
+          );
+        }, 600);
+      }
+    }
   } catch(e) {
     console.error('Erro Firebase salvar:', e);
     toast('❌ Erro ao salvar. Verifique a conexão.', true);
@@ -3099,42 +3218,58 @@ function toggleTreeView() {
 }
 
 function renderArvore() {
-  const q = (document.getElementById('treeSearch')?.value || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const q = (document.getElementById('treeSearch')?.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const dados = getDados();
 
-  const coords = dados.filter(d => d.tipo === 'CA');
+  // CA inclui tipo CA e também quem tem lideranças vinculadas por coord_area_id
+  let coords = dados.filter(d => d.tipo === 'CA');
   const liderancas = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE');
   const mobilizadores = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME');
 
+  // Se não tem CA mas tem vínculos via coord_area_id, reconstrói coordenadores a partir dos vínculos
+  if (coords.length === 0) {
+    const coordIds = [...new Set(liderancas.map(l => l.coord_area_id).filter(Boolean))];
+    coords = coordIds.map(id => {
+      // Busca o registro por _fireId ou por coord_area_nome
+      const found = dados.find(d => d._fireId === id || String(d.id) === id);
+      if (found) return found;
+      // Fallback: cria nó virtual com o nome
+      const nome = liderancas.find(l => l.coord_area_id === id)?.coord_area_nome || 'Coordenador';
+      return { id: id, _fireId: id, tipo: 'CA', nome, _virtual: true };
+    }).filter(Boolean);
+  }
+
   // Stats
   const totalVotos = dados.reduce((s,d) => s+(d.votos||0), 0);
+  const semVinculo = liderancas.filter(l => !l.coord_area_id).length;
   document.getElementById('treeStats').innerHTML = `
     <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
     <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
     <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
     <div class="tree-stat">Total de votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong></div>
+    ${semVinculo > 0 ? `<div class="tree-stat" style="border-color:rgba(234,179,8,.3)">⚠️ Sem vínculo: <strong style="color:#f59e0b">${semVinculo}</strong></div>` : ''}
   `;
 
   let html = '';
 
-  // Sem coordenador cadastrado — mostra aviso
-  if (coords.length === 0) {
+  // Sem coordenador e sem vínculos — mostra aviso
+  if (coords.length === 0 && liderancas.filter(l => l.coord_area_id).length === 0) {
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);margin-bottom:16px">
       <div style="font-size:1.5rem;margin-bottom:8px">🏛️</div>
-      <div style="font-size:.85rem">Nenhum Coordenador de Área cadastrado ainda.</div>
-      <div style="font-size:.75rem;margin-top:6px">Cadastre um CA usando o botão "+ Novo" e selecione o tipo <strong>Coordenador de Área (CA)</strong>.</div>
+      <div style="font-size:.85rem">Nenhuma hierarquia definida ainda.</div>
+      <div style="font-size:.75rem;margin-top:6px">Edite as lideranças e vincule-as a um coordenador de área.</div>
     </div>`;
   }
 
   // Nó de cada Coordenador
   coords.forEach((ca, ci) => {
     const nomeCA = ca.nome || '';
-    if (q && !nomeCA.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)) {
+    if (q && !nomeCA.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q)) {
       // Verifica se alguma liderança/mob bate
       const lidsCa = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
       const mobsCa = mobilizadores.filter(m => lidsCa.some(l => l._fireId === m.lider_id || String(l.id) === m.lider_id));
       const algumBate = [...lidsCa, ...mobsCa].some(d =>
-        (d.nome||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)
+        (d.nome||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q)
       );
       if (!algumBate) return;
     }
@@ -3524,7 +3659,7 @@ async function criarCampanha() {
   if (!nome) { toast('⚠️ Informe o nome da campanha', true); return; }
 
   const id = nome.toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   try {
@@ -3572,38 +3707,86 @@ async function criarCampanha() {
 }
 
 // Migrar pessoa para outra campanha
-async function migrarPessoa(fireId, localId, zona) {
-  const campanhasDisponiveis = Object.entries(campanhas)
-    .filter(([id]) => id !== campanhaAtual)
-    .map(([id, c]) => `${id}|${c.nome}`);
+function migrarPessoa(fireId, localId, zona) {
+  const d = DB[zona].find(x => x.id === localId);
+  if (!d) return;
 
-  if (!campanhasDisponiveis.length) {
+  const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
+  if (!outrasCamps.length) {
     toast('⚠️ Crie outra campanha primeiro', true);
     return;
   }
 
-  const opcoes = campanhasDisponiveis.map(c => c.split('|')[1]).join('\n');
-  const escolha = prompt('Migrar para qual campanha?\n\n' + opcoes + '\n\nDigite o nome exato:');
-  if (!escolha) return;
-
-  const entrada = Object.entries(campanhas).find(([, c]) =>
-    c.nome.toLowerCase() === escolha.toLowerCase()
+  abrirModalCampsSel(
+    d,
+    `📅 Adicionar "${d.nome.split(' ')[0]}" em outras campanhas`,
+    'Selecione em quais campanhas esta pessoa vai participar:'
   );
+}
 
-  if (!entrada) { toast('⚠️ Campanha não encontrada', true); return; }
+// ===================== SELEÇÃO MÚLTIPLA DE CAMPANHAS =====================
+let _mcsPessoa = null; // dados da pessoa a ser adicionada
+let _mcsCallback = null; // callback após confirmação
 
-  const [destId] = entrada;
-  const d = DB[zona].find(x => x.id === localId);
-  if (!d) return;
+function abrirModalCampsSel(pessoa, titulo, desc, callback) {
+  _mcsPessoa = pessoa;
+  _mcsCallback = callback;
 
-  try {
-    const docData = {...d, status: 'pendente', votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0, reuniao_feita: 'nao', reuniao_data: ''};
-    delete docData._fireId;
-    await db.collection('campanhas').doc(destId).collection('liderancas').add(docData);
-    toast(`✅ ${d.nome} adicionado(a) em ${campanhas[destId].nome}!`);
-  } catch(e) {
-    toast('❌ Erro ao migrar', true);
+  document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outras campanhas';
+  document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais campanhas esta pessoa vai participar:';
+
+  // Lista todas campanhas exceto a atual
+  const outras = Object.entries(campanhas).filter(([id]) => id !== campanhaAtual);
+
+  const lista = document.getElementById('mcs-lista');
+  if (!outras.length) {
+    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhuma outra campanha disponível. Crie campanhas primeiro.</div>';
+  } else {
+    const cargoCores = { 'Vereador':'#22c55e','Governador':'#a855f7','Senador':'#f59e0b','Deputado Estadual':'#3b82f6','Deputado Federal':'#ef4444' };
+    lista.innerHTML = outras.map(([id, camp]) => {
+      const cor = cargoCores[camp.cargo] || '#6b7294';
+      return `<label class="camp-check-item" onclick="this.classList.toggle('selected');this.querySelector('input').checked=!this.querySelector('input').checked">
+        <input type="checkbox" value="${id}" onclick="event.stopPropagation()">
+        <span class="camp-check-nome">${camp.nome}${camp.candidato?' · '+camp.candidato.split(' ')[0]:''}</span>
+        <span class="camp-check-cargo" style="color:${cor}">${camp.cargo}</span>
+      </label>`;
+    }).join('');
   }
+
+  document.getElementById('modalCampsSel').classList.add('open');
+}
+
+function fecharModalCampsSel() {
+  document.getElementById('modalCampsSel').classList.remove('open');
+  _mcsPessoa = null;
+  _mcsCallback = null;
+}
+
+async function confirmarCampsSel() {
+  const checkboxes = document.querySelectorAll('#mcs-lista input[type="checkbox"]:checked');
+  const campsSelecionadas = Array.from(checkboxes).map(cb => cb.value);
+
+  fecharModalCampsSel();
+
+  if (!campsSelecionadas.length || !_mcsPessoa) return;
+
+  let count = 0;
+  for (const campId of campsSelecionadas) {
+    try {
+      const docData = {..._mcsPessoa,
+        status: 'pendente',
+        votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0,
+        reuniao_feita: 'nao', reuniao_data: '',
+        _campanha: campId
+      };
+      delete docData._fireId;
+      await db.collection('campanhas').doc(campId).collection('liderancas').add(docData);
+      count++;
+    } catch(e) { console.error('Erro ao adicionar em campanha:', campId, e); }
+  }
+
+  if (count > 0) toast(`✅ Adicionado(a) em ${count} campanha${count>1?'s':''}!`);
+  if (_mcsCallback) _mcsCallback();
 }
 
 // ===================== TOAST =====================
@@ -3984,5 +4167,18 @@ async function renderMapa() {
 }
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- MODAL SELEÇÃO DE CAMPANHAS -->
+<div class="modal-camps-sel" id="modalCampsSel">
+  <div class="modal-camps-sel-box">
+    <h3 id="mcs-titulo">📅 Adicionar em outras campanhas</h3>
+    <p id="mcs-desc">Selecione em quais campanhas esta pessoa também vai participar:</p>
+    <div class="camp-check-list" id="mcs-lista"></div>
+    <div class="mcs-footer">
+      <button class="btn btn-outline" onclick="fecharModalCampsSel()">Pular</button>
+      <button class="btn btn-primary" onclick="confirmarCampsSel()">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
