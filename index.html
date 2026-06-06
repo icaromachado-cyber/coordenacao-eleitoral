@@ -902,6 +902,27 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   color: #3b82f6;
 }
 
+/* MAP FULLSCREEN */
+.map-fullscreen .sidebar { display: none; }
+.map-fullscreen .main { margin-left: 0 !important; }
+.map-fullscreen .campanha-bar { display: none !important; }
+.map-fullscreen .summary-strip { display: none !important; }
+.map-fullscreen .controls-bar { display: none !important; }
+.map-fullscreen .table-area { display: none !important; }
+.map-fullscreen .tree-area { display: none !important; }
+.map-fullscreen .pagination { display: none !important; }
+.map-fullscreen .topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+}
+.map-fullscreen .map-area {
+  position: fixed !important;
+  top: 54px; left: 0; right: 0; bottom: 0;
+  z-index: 999;
+}
+.map-fullscreen #map { width: 100% !important; height: 100% !important; }
+
 /* MAP VIEW */
 .map-area {
   flex: 1;
@@ -3406,6 +3427,7 @@ function toggleTreeView() {
     document.getElementById('mapArea').classList.remove('active');
     document.querySelector('.table-area').classList.remove('hidden');
     document.getElementById('pag').style.display = '';
+    document.body.classList.remove('map-fullscreen');
   }
 
   treeView = !treeView;
@@ -4270,13 +4292,18 @@ function toggleMapView() {
     tableArea.classList.add('hidden');
     pag.style.display = 'none';
     mapArea.classList.add('active');
-    iniciarMapa();
+    document.body.classList.add('map-fullscreen');
+    setTimeout(() => {
+      if (leafletMap) leafletMap.invalidateSize();
+      iniciarMapa();
+    }, 100);
   } else {
     btn.classList.remove('active');
     btn.textContent = '🗺️ Mapa';
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     mapArea.classList.remove('active');
+    document.body.classList.remove('map-fullscreen');
   }
 }
 
