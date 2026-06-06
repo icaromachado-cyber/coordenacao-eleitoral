@@ -2005,9 +2005,16 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
     <p>Gestão por Zona</p>
   </div>
   <nav class="sidebar-nav">
-    <div class="nav-label">Zonas</div>
+    <div class="nav-label">Visão Geral</div>
+    <div class="nav-item active" onclick="trocarZona('todas')" id="nav-todas">
+      <div class="nav-dot" style="background:linear-gradient(135deg,#3b82f6,#a855f7)"></div>
+      <span class="nav-name">Todas as Zonas</span>
+      <span class="nav-count" id="nc-todas">0</span>
+    </div>
+
+    <div class="nav-label" style="margin-top:10px">Zonas</div>
     <div class="nav-item" onclick="trocarZona('norte')" id="nav-norte">
-      <div class="nav-dot" style="background:#e8433a"></div>
+      <div class="nav-dot" style="background:#ef4444"></div>
       <span class="nav-name">Zona Norte</span>
       <span class="nav-count" id="nc-norte">0</span>
     </div>
@@ -2027,19 +2034,28 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
       <span class="nav-count" id="nc-sudeste">0</span>
     </div>
     <div class="nav-item" onclick="trocarZona('rural')" id="nav-rural">
-      <div class="nav-dot" style="background:#eab308"></div>
+      <div class="nav-dot" style="background:#f59e0b"></div>
       <span class="nav-name">Zona Rural</span>
       <span class="nav-count" id="nc-rural">0</span>
     </div>
-    <div class="nav-label" style="margin-top:14px">Geral</div>
-    <div class="nav-item active" onclick="trocarZona('todas')" id="nav-todas">
-      <div class="nav-dot" style="background:linear-gradient(135deg,#e8433a,#3b82f6)"></div>
-      <span class="nav-name">Todas as Zonas</span>
-      <span class="nav-count" id="nc-todas">0</span>
+
+    <div class="nav-label" style="margin-top:10px">Filtro Múltiplo</div>
+    <div class="nav-item" onclick="toggleMultiZona()" id="nav-multi">
+      <div class="nav-dot" style="background:#60a5fa"></div>
+      <span class="nav-name">Selecionar Zonas</span>
+      <span style="font-size:.65rem;color:var(--muted)">▾</span>
+    </div>
+    <div id="multi-zona-panel" style="display:none;padding:6px 10px 8px 10px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label class="mz-item"><input type="checkbox" value="norte" onchange="aplicarMultiZona()"> <span style="color:#ef4444">●</span> Norte</label>
+        <label class="mz-item"><input type="checkbox" value="leste" onchange="aplicarMultiZona()"> <span style="color:#3b82f6">●</span> Leste</label>
+        <label class="mz-item"><input type="checkbox" value="sul" onchange="aplicarMultiZona()"> <span style="color:#22c55e">●</span> Sul</label>
+        <label class="mz-item"><input type="checkbox" value="sudeste" onchange="aplicarMultiZona()"> <span style="color:#a855f7">●</span> Sudeste</label>
+        <label class="mz-item"><input type="checkbox" value="rural" onchange="aplicarMultiZona()"> <span style="color:#f59e0b">●</span> Rural</label>
+      </div>
     </div>
   </nav>
   <div class="sidebar-footer">
-    Raiane · Coordenação Zona Norte
     <div id="sync-status" style="margin-top:6px;font-size:.68rem;color:var(--muted)">🔄 Conectando…</div>
   </div>
 </div>
