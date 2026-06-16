@@ -1314,6 +1314,17 @@ body.theme-light .campanha-bar { background: #e8eaf5; border-bottom-color: #dde1
   overflow-x: auto;
 }
 
+.campanha-select {
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+  height: 28px;
+  padding: 3px 10px;
+  font-size: .72rem;
+  background: rgba(255,255,255,.04);
+  border-color: var(--border);
+}
+
 .campanha-tab {
   padding: 3px 10px;
   border-radius: 6px;
@@ -1361,6 +1372,10 @@ body.theme-light .campanha-tab.active { background: rgba(59,130,246,.1); border-
 }
 
 .btn-nova-campanha:hover { border-color: #3b82f6; color: #3b82f6; }
+.btn-nova-campanha:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
 
 /* Modal de campanha */
 .modal-campanha {
