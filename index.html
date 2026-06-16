@@ -132,6 +132,7 @@
       <details class="tools-menu">
         <summary>Ferramentas</summary>
         <div class="tools-menu-list">
+          <button class="btn btn-import" id="btnDashboardToggle">📊 Dashboard</button>
           <button class="btn btn-import" id="btnTreeToggle">🌳 Árvore</button>
           <button class="btn btn-import" id="btnMapToggle">🗺️ Mapa</button>
           <label class="btn btn-import" title="Importar planilha desta região">
@@ -245,6 +246,36 @@
 
   <!-- PAGINATION -->
   <div class="pagination" id="pag"></div>
+
+  <!-- DASHBOARD VIEW -->
+  <div class="dashboard-area" id="dashboardArea">
+    <div class="dashboard-header">
+      <div>
+        <span class="dashboard-kicker">Visão do ciclo</span>
+        <h3 id="dashboardTitle">Dashboard</h3>
+      </div>
+      <button class="btn btn-outline" id="btnDashboardClose">Voltar para lista</button>
+    </div>
+    <div class="dashboard-grid" id="dashboardCards"></div>
+    <div class="dashboard-panels">
+      <div class="dashboard-panel">
+        <h4>Por região</h4>
+        <div id="dashboardRegioes"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Por perfil</h4>
+        <div id="dashboardPerfis"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Status</h4>
+        <div id="dashboardStatus"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Top bairros</h4>
+        <div id="dashboardBairros"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- MAP VIEW -->
   <div class="map-area" id="mapArea">

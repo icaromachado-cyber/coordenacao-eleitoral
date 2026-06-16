@@ -1119,6 +1119,134 @@ function getEquipeDeUm(d) {
   return [];
 }
 
+// ===================== DASHBOARD =====================
+let dashboardView = false;
+
+function dadosDoCicloAtual() {
+  return Object.values(DB).flat();
+}
+
+function closeDashboardView() {
+  if (!dashboardView) return;
+  dashboardView = false;
+  document.getElementById('btnDashboardToggle')?.classList.remove('active');
+  const btn = document.getElementById('btnDashboardToggle');
+  if (btn) btn.textContent = '📊 Dashboard';
+  document.getElementById('dashboardArea')?.classList.remove('active');
+  document.querySelector('.table-area')?.classList.remove('hidden');
+  document.getElementById('pag').style.display = '';
+  document.querySelector('.controls-bar').style.display = '';
+}
+
+function toggleDashboardView() {
+  if (mapView) {
+    mapView = false;
+    document.getElementById('btnMapToggle').classList.remove('active');
+    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
+    document.getElementById('mapArea').classList.remove('active');
+    document.body.classList.remove('map-fullscreen');
+  }
+  if (treeView) {
+    treeView = false;
+    document.getElementById('btnTreeToggle').classList.remove('active');
+    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('treeArea').classList.remove('active');
+  }
+
+  dashboardView = !dashboardView;
+  const btn = document.getElementById('btnDashboardToggle');
+  const dashboardArea = document.getElementById('dashboardArea');
+  const tableArea = document.querySelector('.table-area');
+  const pag = document.getElementById('pag');
+  const ctrlBar = document.querySelector('.controls-bar');
+
+  if (dashboardView) {
+    btn.classList.add('active');
+    btn.textContent = '📋 Lista';
+    tableArea.classList.add('hidden');
+    pag.style.display = 'none';
+    ctrlBar.style.display = 'none';
+    dashboardArea.classList.add('active');
+    renderDashboard();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '📊 Dashboard';
+    tableArea.classList.remove('hidden');
+    pag.style.display = '';
+    ctrlBar.style.display = '';
+    dashboardArea.classList.remove('active');
+  }
+}
+
+function countBy(items, getter) {
+  return items.reduce((acc, item) => {
+    const key = getter(item) || 'Sem informação';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function renderBars(elId, rows, color) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = '<div class="dash-empty">Sem dados neste ciclo.</div>';
+    return;
+  }
+  const max = Math.max(...rows.map(([, value]) => value), 1);
+  el.innerHTML = rows.map(([label, value]) => `
+    <div class="dash-bar-row">
+      <span class="dash-bar-label">${h(label)}</span>
+      <span class="dash-bar-track"><span class="dash-bar-fill" style="width:${Math.max(4, (value / max) * 100)}%;background:${color || 'var(--accent,#3b82f6)'}"></span></span>
+      <span class="dash-bar-value">${value}</span>
+    </div>
+  `).join('');
+}
+
+function renderDashboard() {
+  const dados = dadosDoCicloAtual();
+  const total = dados.length;
+  const referencias = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE').length;
+  const equipe = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME').length;
+  const coordenacao = dados.filter(d => d.tipo === 'CA').length;
+  const apoios = dados.reduce((sum, d) => sum + (d.votos || 0), 0);
+  const recursos = dados.reduce((sum, d) => sum + (d.total || 0), 0);
+  const pendentes = dados.filter(d => d.status === 'pendente').length;
+  const semContato = dados.filter(d => !(d.telefone || '').replace(/\D/g, '')).length;
+  const semBairro = dados.filter(d => !d.bairro).length;
+  const cicloNome = nomeCiclo(campanhaAtual, campanhas[campanhaAtual]);
+
+  document.getElementById('dashboardTitle').textContent = cicloNome;
+  document.getElementById('dashboardCards').innerHTML = [
+    ['Total', total.toLocaleString('pt-BR'), 'registros no ciclo'],
+    ['Referências', referencias.toLocaleString('pt-BR'), 'pontos de contato'],
+    ['Equipe', equipe.toLocaleString('pt-BR'), 'campo operacional'],
+    ['Coordenação', coordenacao.toLocaleString('pt-BR'), 'regionais'],
+    ['Apoios', apoios.toLocaleString('pt-BR'), 'previstos'],
+    ['Recursos', 'R$ ' + recursos.toLocaleString('pt-BR'), 'total aplicado'],
+    ['Pendentes', pendentes.toLocaleString('pt-BR'), 'precisam de revisão'],
+    ['Sem contato', semContato.toLocaleString('pt-BR'), `${semBairro} sem bairro`]
+  ].map(([label, value, sub]) => `
+    <div class="dashboard-card">
+      <div class="dashboard-card-label">${h(label)}</div>
+      <div class="dashboard-card-value">${h(value)}</div>
+      <div class="dashboard-card-sub">${h(sub)}</div>
+    </div>
+  `).join('');
+
+  const regioes = Object.entries(ZONAS_CFG).map(([zona, cfg]) => [cfg.label, (DB[zona] || []).length]);
+  const perfis = Object.entries(countBy(dados, d => tipoLabel(d.tipo))).sort((a,b) => b[1] - a[1]);
+  const status = Object.entries(countBy(dados, d => d.status || 'ativo')).sort((a,b) => b[1] - a[1]);
+  const bairros = Object.entries(countBy(dados.filter(d => d.bairro), d => d.bairro))
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 8);
+
+  renderBars('dashboardRegioes', regioes, '#3b82f6');
+  renderBars('dashboardPerfis', perfis, '#22c55e');
+  renderBars('dashboardStatus', status, '#f59e0b');
+  renderBars('dashboardBairros', bairros, '#a855f7');
+}
+
 // ===================== ÁRVORE HIERÁRQUICA =====================
 let treeView = false;
 
@@ -1133,6 +1261,7 @@ function toggleTreeView() {
     document.getElementById('pag').style.display = '';
     document.body.classList.remove('map-fullscreen');
   }
+  closeDashboardView();
 
   treeView = !treeView;
   const btn = document.getElementById('btnTreeToggle');
@@ -1587,6 +1716,7 @@ async function trocarCampanha(id) {
   mostrarLoading(false);
   atualizarNavCounts();
   aplicarFiltros();
+  if (dashboardView) renderDashboard();
   toast(`📁 Ciclo: ${nomeCiclo(id, campanhas[id])}`);
 }
 
@@ -1905,6 +2035,8 @@ function bindStaticEvents() {
   on('mobOverlay', 'click', toggleSidebar);
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
+  on('btnDashboardToggle', 'click', toggleDashboardView);
+  on('btnDashboardClose', 'click', closeDashboardView);
   on('btnTreeToggle', 'click', toggleTreeView);
   on('btnMapToggle', 'click', toggleMapView);
   on('btnLogout', 'click', fazerLogout);
@@ -2218,6 +2350,7 @@ function toggleMapView() {
     document.getElementById('pag').style.display = '';
     document.querySelector('.controls-bar').style.display = '';
   }
+  closeDashboardView();
   mapView = !mapView;
   const btn = document.getElementById('btnMapToggle');
   const tableArea = document.querySelector('.table-area');
