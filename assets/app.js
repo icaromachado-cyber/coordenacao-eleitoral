@@ -1,0 +1,2199 @@
+// ===================== FIREBASE CONFIG =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDBg5pyAFWljMcty6qRYU6fONB6fm2xts8",
+  authDomain: "coordenacao-eleitoral.firebaseapp.com",
+  projectId: "coordenacao-eleitoral",
+  storageBucket: "coordenacao-eleitoral.firebasestorage.app",
+  messagingSenderId: "784517014215",
+  appId: "1:784517014215:web:e37569899a5d598f0154e2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const {
+  escapeHtml: h,
+  escapeAttr: a,
+  normalizeText,
+  parseNonNegativeNumber,
+  validateRecordInput,
+  formatFirebaseError
+} = window.AppUtils;
+
+// ===================== ADMIN UTILS =====================
+
+// Mapa completo bairro → zona (baseado nos dados da Prefeitura de Teresina)
+const BAIRRO_ZONA_MAP = {
+  // NORTE
+  'AEROPORTO':'norte','ÁGUA MINERAL':'norte','AGUA MINERAL':'norte','ALTO ALEGRE':'norte',
+  'AROEIRAS':'norte','AROEIRA':'norte','BOA ESPERANCA':'norte','BOA ESPERANÇA':'norte',
+  'BUENOS AIRES':'norte','BUENO AIRES':'norte','CABRAL':'norte','CHAPADINHA':'norte',
+  'CIDADE INDUSTRIAL':'norte','EMBRAPA':'norte','ITAPERU':'norte',
+  'JACINTA ANDRADE':'norte','JARDIM EUROPA':'norte','LEONEL BRIZOLA':'norte',
+  'LINDALMA SOARES':'norte','MAFRENSE':'norte','MAFUÁ':'norte','MAFUA':'norte',
+  'MARQUES':'norte','MARQUÊS':'norte','MATADOURO':'norte','MATINHA':'norte',
+  'MEMORARE':'norte','MOCAMBINHO':'norte','MOCAMBINHO 2':'norte',
+  'MOCAMBINHO I':'norte','MOCAMBINHO II':'norte','MONTE ALEGRE':'norte',
+  'MONTE VERDE':'norte','MORRO DA ESPERANÇA':'norte','NOVA BRASILIA':'norte',
+  'NOVA BRASÍLIA':'norte','OLARIAS':'norte','PARQUE ALVORADA':'norte',
+  'PARQUE AFONSO GIL':'norte','PARQUE BRASIL':'norte',
+  'PARQUE BRASIL, SANTA MARIA':'norte','PARQUE MÃOO SANTA':'norte',
+  'PARQUE STAEL':'norte','PORENQUANTO':'norte','POTI VELHO':'norte','POTY VELHO':'norte',
+  'PRIMAVERA':'norte','PRIMAVERA 2':'norte','REAL COPAGRE':'norte',
+  'SANTA BARBARA':'norte','SANTA MARIA':'norte','SANTA MARIA DA CODIPI':'norte',
+  'SANTA  MARIA DA CODIPI':'norte','SANTA ROSA':'norte','SANTA SOFIA':'norte',
+  'SÃO JOAQUIM':'norte','SAO JOAQUIM':'norte','TORQUARTO NETO':'norte',
+  'TORQUATO NETO':'norte','VALE QUEM TEM':'norte','VILA BANDEIRANTES 2':'norte',
+  'VILA MARIA':'norte','VILA OPERARIA':'norte','VILA OPERÁRIA':'norte',
+  'VILA SÃO FRANCISCO':'norte','FRANCISCA TRINDADE':'norte',
+  'CONJ. VILA NOVA CONQUISTA':'norte','RISOLETA':'norte','RISOLETA NEVES':'norte',
+  'ACARAPE':'norte','BOM JESUS':'norte',
+  // SUL
+  'ANGELIM':'sul','ANGÉLICA':'sul','AREIAS':'sul','BELA VISTA':'sul','BRASILAR':'sul',
+  'CATARINA':'sul','CENTRO SUL':'sul','CIDADE NOVA':'sul','CRISTO REI':'sul',
+  'DISTRITO INDUSTRIAL':'sul','ESPLANADA':'sul','LOURIVAL PARENTE':'sul',
+  'MACAÚBA':'sul','MACAUBA':'sul','MONTE CASTELO':'sul','MORADA NOVA':'sul',
+  'NOSSA SENHORA DAS GRAÇAS':'sul','PARQUE JACINTA':'sul','PARQUE JULIANA':'sul',
+  'PARQUE PIAUÍ':'sul','PARQUE SÃO JOÃO':'sul','PARQUE SUL':'sul',
+  'PEDRA MIÚDA':'sul','PIÇARRA':'sul','PIO XII':'sul','POLO INDUSTRIAL SUL':'sul',
+  'PORTAL DA ALEGRIA':'sul','PROMORAR':'sul','REDENÇÃO':'sul','SACI':'sul',
+  'SANTA CRUZ':'sul','SANTA LUZIA':'sul','SANTO ANTÔNIO':'sul',
+  'SÃO LOURENÇO':'sul','SÃO PEDRO':'sul','TABULETA':'sul',
+  'TRÊS ANDARES':'sul','TRIUNFO':'sul','VERMELHA':'sul',
+  // LESTE
+  'ÁRVORES VERDES':'leste','ARVORES VERDES':'leste','CAMPESTRE':'leste',
+  'CIDADE JARDIM':'leste','FÁTIMA':'leste','FATIMA':'leste','HORTO':'leste',
+  'ILHOTAS':'leste','ININGA':'leste','JOCKEY':'leste','JOQUEI':'leste','JÓQUEI':'leste',
+  'MORADA DO SOL':'leste','MORROS':'leste','NOIVOS':'leste','NOVO URUGUAI':'leste',
+  'PARQUE UNIVERSITÁRIO':'leste','PEDRA MOLE':'leste','PIÇARREIRA':'leste',
+  'PLANALTO':'leste','PORTO DO CENTRO':'leste','RECANTO DAS PALMEIRAS':'leste',
+  'SAMAPI':'leste','SANTA ISABEL':'leste','SANTA LIA':'leste',
+  'SÃO CRISTÓVÃO':'leste','SAO CRISTOVAO':'leste','SÃO JOÃO':'leste',
+  'SAO JOAO':'leste','SATELITE':'leste','SATÉLITE':'leste','SOCOPO':'leste',
+  'TABAJARAS':'leste','URUGUAI':'leste','VALE DO GAVIÃO':'leste',
+  'VERDE LAR':'leste','VILA SANTA BÁRBARA':'leste','VILA URUGUAI':'leste',
+  'ZOOBOTÂNICO':'leste',
+  // SUDESTE
+  'BEIRA RIO':'sudeste','BOM PRINCÍPIO':'sudeste','COLORADO':'sudeste',
+  'COMPRIDA':'sudeste','DIRCEU':'sudeste','DIRCEU I':'sudeste','DIRCEU II':'sudeste',
+  'DIRCEU2/ ITARARÉ':'sudeste','DIRCEU ARCOVERDE':'sudeste','EXTREMA':'sudeste',
+  'FLOR DO CAMPO':'sudeste','GURUPI':'sudeste','ITARARÉ':'sudeste',
+  'LIVRAMENTO':'sudeste','NOVO HORIZONTE':'sudeste','PARQUE IDEAL':'sudeste',
+  'PARQUE POTY':'sudeste','REDONDA':'sudeste','RENASCENÇA':'sudeste',
+  'RENASCENCA':'sudeste','SANTANA':'sudeste','SÃO RAIMUNDO':'sudeste',
+  'SÃO SEBASTIÃO':'sudeste','SAO SEBASTIAO':'sudeste','TANCREDO NEVES':'sudeste',
+  'TODOS OS SANTOS':'sudeste','VERDE CAP':'sudeste',
+  // RURAL
+  'ZONA RURAL':'rural','ÁREA RURAL':'rural','CAMPO LARGO':'rural',
+  'CURRALINHOS':'rural','MARACANÃ':'rural',
+};
+
+async function migrarPorBairro() {
+  if (!confirm('Migrar automaticamente todas as pessoas para as zonas corretas baseado no bairro?\n\nIsso vai mover pessoas da Zona Norte para Sul, Leste, Sudeste e Rural conforme o bairro cadastrado.')) return;
+
+  toast('🔄 Iniciando migração por bairro…');
+  let moved = 0, unchanged = 0;
+
+  try {
+    // Busca todos da campanha atual
+    const todos = await colecao().get();
+    const updates = [];
+
+    todos.docs.forEach(doc => {
+      const d = doc.data();
+      const bairro = (d.bairro || '').trim().toUpperCase();
+      const zonaCorreta = BAIRRO_ZONA_MAP[bairro];
+
+      if (zonaCorreta && zonaCorreta !== d._zona) {
+        updates.push({ ref: doc.ref, novaZona: zonaCorreta, data: d });
+        moved++;
+      } else {
+        unchanged++;
+      }
+    });
+
+    if (!updates.length) {
+      toast('✅ Todos já estão nas zonas corretas!');
+      return;
+    }
+
+    // Move cada pessoa: deleta da zona atual, cria na zona correta
+    // Usa subcoleção por zona via _zona field update (mais simples)
+    for (let i = 0; i < updates.length; i += 400) {
+      const batch = db.batch();
+      updates.slice(i, i + 400).forEach(u => {
+        batch.update(u.ref, { _zona: u.novaZona });
+      });
+      await batch.commit();
+    }
+
+    // Recarrega todas as zonas
+    const zonas = ['norte','leste','sul','sudeste','rural'];
+    const snaps = await Promise.all(zonas.map(z => colecao().where('_zona','==',z).get()));
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+
+    atualizarNavCounts();
+    aplicarFiltros();
+    toast(`✅ ${moved} pessoas migradas · ${unchanged} já estavam corretas`);
+  } catch(e) {
+    console.error('Erro migração:', e);
+    toast('❌ Erro na migração', true);
+  }
+}
+async function limparCampanha(id) {
+  const nome = campanhas[id]?.nome || id;
+  if (!confirm(`⚠️ Limpar TODOS os dados de "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  
+  toast('🗑️ Limpando campanha…');
+  try {
+    const snap = await db.collection('campanhas').doc(id).collection('liderancas').get();
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const batch = db.batch();
+      snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    await trocarCampanha(id);
+    toast(`✅ "${nome}" limpa — ${snap.size} registros removidos`);
+  } catch(e) {
+    toast('❌ Erro ao limpar campanha', true);
+  }
+}
+
+// ===================== CAMPANHAS =====================
+let campanhaAtual = null; // ID da campanha ativa
+let campanhas = {}; // {id: {nome, ano, cargo}}
+
+// Retorna a coleção correta baseada na campanha ativa
+function colecao() {
+  return db.collection('campanhas').doc(campanhaAtual || 'default').collection('liderancas');
+}
+
+// ===================== DADOS =====================
+const ZONAS_CFG = {
+  norte:   { label: 'Zona Norte',    cor: '#e8433a' },
+  leste:   { label: 'Zona Leste',    cor: '#3b82f6' },
+  sul:     { label: 'Zona Sul',      cor: '#22c55e' },
+  sudeste: { label: 'Zona Sudeste',  cor: '#a855f7' },
+  rural:   { label: 'Zona Rural',    cor: '#eab308' }
+};
+
+const DADOS_NORTE = window.DADOS_NORTE || [];
+
+// Banco em memória por zona
+// DB em memória (espelho do Firestore)
+const DB = {
+  norte:   [],
+  leste:   [],
+  sul:     [],
+  sudeste: [],
+  rural:   []
+};
+
+// Flag de carregamento
+let dbCarregado = false;
+
+const BAIRROS_TERESINA = {"norte": ["ACARAPE", "AEROPORTO", "AGUA MINERAL", "ALTO ALEGRE", "AROEIRA", "AROEIRAS", "BOA ESPERANCA", "BOA ESPERANÇA", "BOM JESUS", "BUENO AIRES", "BUENOS AIRES", "CABRAL", "CENTRO NORTE", "CHAPADINHA", "CIDADE INDUSTRIAL", "CONJ. VILA NOVA CONQUISTA", "EMBRAPA", "FRANCISCA TRINDADE", "ITAPERU", "JACINTA ANDRADE", "JARDIM EUROPA", "LEONEL BRIZOLA", "LINDALMA SOARES", "MAFRENSE", "MAFUA", "MAFUÁ", "MARQUES", "MARQUÊS", "MATADOURO", "MATINHA", "MEMORARE", "MOCAMBINHO", "MOCAMBINHO 2", "MOCAMBINHO I", "MOCAMBINHO II", "MONTE ALEGRE", "MONTE VERDE", "MORRO DA ESPERANÇA", "NOVA BRASILIA", "NOVA BRASÍLIA", "OLARIAS", "PARQUE AFONSO GIL", "PARQUE ALVORADA", "PARQUE BRASIL", "PARQUE BRASIL, SANTA MARIA", "PARQUE MÃOO SANTA", "PARQUE STAEL", "PORENQUANTO", "POTI VELHO", "POTY VELHO", "PRIMAVERA", "PRIMAVERA 2", "REAL COPAGRE", "RISOLETA", "RISOLETA NEVES", "SANTA  MARIA DA CODIPI", "SANTA BARBARA", "SANTA MARIA", "SANTA MARIA DA CODIPI", "SANTA ROSA", "SANTA SOFIA", "SAO JOAQUIM", "SATELITE", "SÃO JOAQUIM", "TORQUARTO NETO", "TORQUATO NETO", "VALE QUEM TEM", "VILA BANDEIRANTES 2", "VILA MARIA", "VILA OPERARIA", "VILA OPERÁRIA", "VILA SÃO FRANCISCO", "ÁGUA MINERAL"], "sul": ["ANGELIM", "ANGÉLICA", "AREIAS", "BELA VISTA", "BRASILAR", "CATARINA", "CENTRO SUL", "CIDADE NOVA", "CRISTO REI", "DISTRITO INDUSTRIAL", "ESPLANADA", "LOURIVAL PARENTE", "MACAUBA", "MACAÚBA", "MONTE CASTELO", "MORADA NOVA", "NOSSA SENHORA DAS GRAÇAS", "PARQUE JACINTA", "PARQUE JULIANA", "PARQUE PIAUÍ", "PARQUE SUL", "PARQUE SÃO JOÃO", "PEDRA MIÚDA", "PIO XII", "PIÇARRA", "POLO INDUSTRIAL SUL", "PORTAL DA ALEGRIA", "PROMORAR", "REDENCO", "REDENÇÃO", "SACI", "SANTA CRUZ", "SANTA LUZIA", "SANTO ANTÔNIO", "SÃO LOURENÇO", "SÃO PEDRO", "TABULETA", "TRIUNFO", "TRÊS ANDARES", "VERMELHA"], "leste": ["ARVORES VERDES", "CAMPESTRE", "CIDADE JARDIM", "FATIMA", "FÁTIMA", "HORTO", "ILHOTAS", "ININGA", "JOCKEY", "JOQUEI", "JÓQUEI", "MORADA DO SOL", "MORROS", "NOIVOS", "NOVO URUGUAI", "PARQUE UNIVERSITÁRIO", "PEDRA MOLE", "PIÇARREIRA", "PLANALTO", "PORTO DO CENTRO", "RECANTO DAS PALMEIRAS", "SAMAPI", "SANTA ISABEL", "SANTA LIA", "SAO CRISTOVAO", "SAO JOAO", "SOCOPO", "SÃO CRISTÓVÃO", "SÃO JOÃO", "TABAJARAS", "URUGUAI", "VALE DO GAVIÃO", "VERDE LAR", "VILA SANTA BÁRBARA", "VILA URUGUAI", "ZOOBOTÂNICO", "ÁRVORES VERDES"], "sudeste": ["BEIRA RIO", "BOM PRINCÍPIO", "COLORADO", "COMPRIDA", "DIRCEU", "DIRCEU ARCOVERDE", "DIRCEU I", "DIRCEU II", "DIRCEU2/ ITARARÉ", "EXTREMA", "FLOR DO CAMPO", "GURUPI", "ITARARÉ", "LIVRAMENTO", "NOVO HORIZONTE", "PARQUE IDEAL", "PARQUE POTY", "REDONDA", "RENASCENCA", "RENASCENÇA", "SANTANA", "SAO SEBASTIAO", "SÃO RAIMUNDO", "SÃO SEBASTIÃO", "TANCREDO NEVES", "TODOS OS SANTOS", "VERDE CAP"], "rural": ["CAMPO LARGO", "CURRALINHOS", "DISTRITO DE BATALHA", "DISTRITO DE BRAÇO", "DISTRITO DE ÁGUA BRANCA", "GABRIEL FERREIRA", "MARACANÃ", "MOCAMBINHO RURAL", "ZONA RURAL", "ÁREA RURAL"]};
+
+const BAIRROS_NORTE = BAIRROS_TERESINA.norte;
+
+const BAIRROS = {
+  norte:   [...BAIRROS_TERESINA.norte],
+  leste:   [...BAIRROS_TERESINA.leste],
+  sul:     [...BAIRROS_TERESINA.sul],
+  sudeste: [...BAIRROS_TERESINA.sudeste],
+  rural:   [...BAIRROS_TERESINA.rural]
+};
+
+// ===================== ESTADO =====================
+let zonaAtual = 'norte';
+let filtrado = [];
+let sortCol = 'id';
+let sortAsc = true;
+let pg = 1;
+const PER = 50;
+let editId = null;
+
+// ===================== INIT =====================
+function init() {
+  mostrarLoading(true);
+  carregarDoFirebase();
+}
+
+function mostrarLoading(show) {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+async function carregarDoFirebase() {
+  try {
+    // Carrega campanhas disponíveis
+    await carregarCampanhas();
+
+    // Verifica se banco está vazio e migra se necessário
+    const snapCheck = await colecao().limit(1).get();
+    if (snapCheck.empty) {
+      await migrarDadosNorte();
+    }
+
+    // Carrega todas as zonas em paralelo
+    const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+    const snaps = await Promise.all(
+      zonas.map(z => colecao().where('_zona', '==', z).get())
+    );
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+
+    dbCarregado = true;
+    // Migra vínculos da planilha (só na primeira vez)
+    await migrarVinculos();
+    // Recarrega para pegar os vínculos
+    const zonasReload = ['norte','leste','sul','sudeste','rural'];
+    const snapsReload = await Promise.all(
+      zonasReload.map(z => colecao().where('_zona','==',z).get())
+    );
+    zonasReload.forEach((zona, i) => {
+      DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+    mostrarLoading(false);
+    atualizarNavCounts();
+    trocarZona('todas');
+  } catch(e) {
+    console.error('Erro ao carregar Firebase:', e);
+    DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
+    BAIRROS.norte = [...new Set(DB.norte.map(d => d.bairro).filter(Boolean))].sort();
+    dbCarregado = true;
+    mostrarLoading(false);
+    atualizarNavCounts();
+    trocarZona('todas');
+    toast('⚠️ Usando dados locais — sem conexão com banco', true);
+  }
+}
+
+function atualizarNavCounts() {
+  let total = 0;
+  Object.keys(DB).forEach(z => {
+    const n = DB[z].length;
+    document.getElementById('nc-' + z).textContent = n;
+    total += n;
+  });
+  document.getElementById('nc-todas').textContent = total;
+}
+
+// ===================== TROCA ZONA =====================
+function trocarZona(z) {
+  // Reset multi-zona when switching to a regular zone
+  if (z !== 'multi') {
+    multiZonaAtivo = false;
+    const mzPanel = document.getElementById('multi-zona-panel');
+    if (mzPanel) {
+      mzPanel.style.display = 'none';
+      mzPanel.querySelectorAll('input').forEach(cb => cb.checked = false);
+    }
+  }
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + z);
+  if (navEl) navEl.classList.add('active');
+
+  zonaAtual = z;
+  const cfg = z === 'todas' ? { label: 'Todas as Zonas', cor: '#e8433a' } : ZONAS_CFG[z];
+
+  // Update topbar
+  document.getElementById('zTitle').textContent = cfg.label;
+  document.getElementById('zBadge').style.background = cfg.cor;
+  document.documentElement.style.setProperty('--accent', cfg.cor);
+
+  // Update bairro filter
+  // Combina bairros oficiais de Teresina + bairros cadastrados no sistema
+  let bairrosBase = z === 'todas'
+    ? [...new Set(Object.values(BAIRROS_TERESINA).flat())]
+    : [...(BAIRROS_TERESINA[z] || [])];
+
+  // Adiciona bairros cadastrados que não estão na lista oficial
+  const cadastrados = z === 'todas'
+    ? [...new Set(Object.values(DB).flat().map(d => d.bairro).filter(Boolean))]
+    : [...new Set((DB[z]||[]).map(d => d.bairro).filter(Boolean))];
+
+  const bairros = [...new Set([...bairrosBase, ...cadastrados])].sort();
+
+  const selB = document.getElementById('filtro-bairro');
+  selB.innerHTML = '<option value="">Todos os bairros</option>';
+  bairros.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b; o.textContent = b;
+    selB.appendChild(o);
+  });
+
+  document.getElementById('search').value = '';
+  document.getElementById('filtro-tipo').value = '';
+  document.getElementById('filtro-bairro').value = '';
+  pg = 1;
+  aplicarFiltros();
+}
+
+// ===================== FILTROS =====================
+function getDados() {
+  if (zonaAtual === 'todas') {
+    const all = [];
+    Object.entries(DB).forEach(([z, arr]) => {
+      arr.forEach(d => all.push({...d, _zona: z}));
+    });
+    return all;
+  }
+  if (zonaAtual === 'multi') {
+    const selecionadas = Array.from(
+      document.querySelectorAll('#multi-zona-panel input:checked')
+    ).map(cb => cb.value);
+    const all = [];
+    selecionadas.forEach(z => {
+      (DB[z] || []).forEach(d => all.push({...d, _zona: z}));
+    });
+    return all;
+  }
+  return (DB[zonaAtual] || []).map(d => ({...d, _zona: zonaAtual}));
+}
+
+function norm(s) {
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function aplicarFiltros() {
+  const q = norm(document.getElementById('search').value);
+  const tipo = document.getElementById('filtro-tipo').value;
+  const bairro = document.getElementById('filtro-bairro').value;
+
+  filtrado = getDados().filter(d => {
+    const mn = norm(d.nome), mb = norm(d.bairro), mt = (d.telefone||'').toLowerCase();
+    return (!q || mn.includes(q) || mb.includes(q) || mt.includes(q))
+        && (!tipo || d.tipo === tipo)
+        && (!bairro || d.bairro === bairro);
+  });
+
+  doSort();
+  pg = 1;
+  renderCards();
+  renderTable();
+}
+
+function limpar() {
+  document.getElementById('search').value = '';
+  document.getElementById('filtro-tipo').value = '';
+  document.getElementById('filtro-bairro').value = '';
+  aplicarFiltros();
+}
+
+// ===================== SORT =====================
+function sortBy(col) {
+  sortAsc = (sortCol === col) ? !sortAsc : true;
+  sortCol = col;
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  const th = document.querySelector(`th[data-c="${col}"]`);
+  if (th) th.classList.add('sorted');
+  doSort();
+  renderTable();
+}
+
+function doSort() {
+  filtrado.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') {
+      return sortAsc ? norm(va).localeCompare(norm(vb),'pt-BR') : norm(vb).localeCompare(norm(va),'pt-BR');
+    }
+    return sortAsc ? (va||0)-(vb||0) : (vb||0)-(va||0);
+  });
+}
+
+// ===================== RENDER CARDS =====================
+function fmtWhats(tel) {
+  if (!tel || tel.trim().length < 8) return '—';
+  const num = tel.replace(/\D/g, '');
+  if (num.length < 8) return h(tel);
+  const wa = num.startsWith('55') ? num : '55' + num;
+  return `<a href="https://wa.me/${wa}" target="_blank" style="color:#25d366;text-decoration:none;display:inline-flex;align-items:center;gap:4px" title="Abrir WhatsApp">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.527 5.855L.057 23.882l6.19-1.622A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.724.977.995-3.635-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
+    ${h(tel)}</a>`;
+}
+
+
+function fmtK(v) { return v>=1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0); }
+function statusBadge(s) {
+  const map = {
+    ativo:    ['✅','ativo','status-ativo'],
+    inativo:  ['❌','inativo','status-inativo'],
+    pendente: ['⚠️','pendente','status-pendente']
+  };
+  const [ico, label, cls] = map[s||'ativo'] || map['ativo'];
+  return `<span class="status-badge ${cls}">${ico} ${label}</span>`;
+}
+
+function reuniaoBadge(r, data) {
+  if (r === 'sim') {
+    return `<span class="reuniao-badge reuniao-sim">✅ ${data||'Sim'}</span>`;
+  }
+  return `<span class="reuniao-badge reuniao-nao">— Não</span>`;
+}
+
+function fmtR(v) { return v ? 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:0}) : '—'; }
+
+function fmtMaps(end) {
+  if (!end || end.trim().length < 5) return '—';
+  const query = encodeURIComponent(end + (end.toLowerCase().includes('teresina') ? '' : ', Teresina PI'));
+  const label = end.length > 28 ? end.substring(0,26)+'…' : end;
+  return `<a href="https://www.google.com/maps/search/?api=1&query=${query}" target="_blank" style="color:#4285f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:.78rem" title="Ver no Google Maps">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    ${h(label)}</a>`;
+}
+
+function custoClass(v) {
+  if (!v || v===0) return 'c0';
+  if (v<=500) return 'c1';
+  if (v<=1000) return 'c2';
+  return 'c3';
+}
+
+function totalStyle(v) {
+  if (!v || v===0) return 'color:var(--muted)';
+  if (v<=1000) return 'color:var(--z-sul)';
+  if (v<=3000) return 'color:#fb923c';
+  return 'color:var(--z-norte)';
+}
+
+function renderCards() {
+  const src = filtrado;
+  document.getElementById('sc-total').textContent = src.length;
+  document.getElementById('sc-l').textContent = src.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
+  document.getElementById('sc-m').textContent = src.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
+  document.getElementById('sc-semam').textContent = src.filter(d=>d.tipo==='CA').length;
+  const ct = src.reduce((s,d)=>s+d.total,0);
+  document.getElementById('sc-custo').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
+
+  const totalVotos = src.reduce((s,d)=>s+(d.votos||0),0);
+  document.getElementById('tp1').innerHTML = `Votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong>`;
+  document.getElementById('tp2').innerHTML = `Custo médio: <strong>R$ ${src.length?Math.round(ct/src.length).toLocaleString('pt-BR'):'0'}</strong>`;
+
+  // Painel de zonas quando estiver em "Todas"
+  renderZonePanel();
+}
+
+function renderZonePanel() {
+  const panel = document.getElementById('zone-panel');
+  if (!panel) return;
+
+  if (zonaAtual !== 'todas') {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'grid';
+
+  const zonas = ['norte','leste','sul','sudeste','rural'];
+  panel.innerHTML = zonas.map(z => {
+    const cfg = ZONAS_CFG[z];
+    const dados = DB[z] || [];
+    const total = dados.length;
+    const lids = dados.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
+    const mobs = dados.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
+    const votos = dados.reduce((s,d)=>s+(d.votos||0),0);
+    const custo = dados.reduce((s,d)=>s+d.total,0);
+    const ativos = dados.filter(d=>d.status==='ativo'||!d.status).length;
+
+    return `<div class="zone-card" data-action="trocar-zona" data-zona="${a(z)}" style="border-top-color:${cfg.cor}">
+      <div class="zone-card-header">
+        <div class="zone-card-dot" style="background:${cfg.cor}"></div>
+        <div class="zone-card-name">${cfg.label}</div>
+        <div class="zone-card-count">${total} reg.</div>
+      </div>
+      <div class="zone-card-stats">
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#60a5fa">${lids}</span><span class="zone-stat-lbl">Lideranças</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#4ade80">${mobs}</span><span class="zone-stat-lbl">Mobilizadores</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:${cfg.cor}">${votos}</span><span class="zone-stat-lbl">Votos</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#f59e0b">R$${custo>=1000?(custo/1000).toFixed(0)+'K':custo}</span><span class="zone-stat-lbl">Custo</span></div>
+      </div>
+      <div class="zone-card-footer">
+        <span style="color:#4ade80;font-size:.7rem">✅ ${ativos} ativos</span>
+        <span style="color:#3b82f6;font-size:.7rem;cursor:pointer">Ver zona →</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== RENDER TABLE =====================
+function renderTable() {
+  const start = (pg-1)*PER;
+  const slice = filtrado.slice(start, start+PER);
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+
+  document.getElementById('rinfo').textContent =
+    filtrado.length + ' registro' + (filtrado.length!==1?'s':'');
+
+  if (!slice.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('pag').innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const showZona = zonaAtual === 'todas';
+
+  tbody.innerHTML = slice.map(d => {
+    const nome = d.nome || '';
+    const nomeDisplay = nome.length > 32 ? nome.substring(0,30)+'…' : nome;
+    const colegio = d.colegio || '';
+    const colegioDisplay = colegio ? colegio.substring(0,18)+(colegio.length>18?'…':'') : '—';
+    const c = ZONAS_CFG[d._zona] || {};
+    return `<tr>
+      <td class="muted-td mono" style="font-size:.72rem">${d.id}${showZona?`<br><span style="color:${c.cor};font-size:.65rem">${c.label||''}</span>`:''}</td>
+      <td><span class="badge badge-${d.tipo}">${d.tipo}</span></td>
+      <td class="nome-td" title="${a(nome)}">${h(nomeDisplay)}</td>
+      <td class="muted-td mono">${fmtWhats(d.telefone)}</td>
+      <td class="muted-td" style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${a(d.bairro || '')}">${h(d.bairro || '—')}</td>
+      <td class="muted-td" style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${a(colegio)}">${h(colegioDisplay)}</td>
+      <td class="muted-td" style="text-align:center">${h(d.secao || '—')}</td>
+      <td class="muted-td" style="text-align:center">${h(d.zona_eleitoral || '—')}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td>${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</td>
+      <td class="votos-td" style="color:#3b82f6">${d.votos||'—'}</td>
+      <td class="num-td ${custoClass(d.custo_jul)}">${d.custo_jul?'R$'+d.custo_jul.toLocaleString('pt-BR'):'—'}</td>
+      <td class="num-td ${custoClass(d.custo_ago)}">${d.custo_ago?'R$'+d.custo_ago.toLocaleString('pt-BR'):'—'}</td>
+      <td class="num-td ${custoClass(d.custo_set)}">${d.custo_set?'R$'+d.custo_set.toLocaleString('pt-BR'):'—'}</td>
+      <td class="num-td ${custoClass(d.custo_out)}">${d.custo_out?'R$'+d.custo_out.toLocaleString('pt-BR'):'—'}</td>
+      <td class="total-td" style="${totalStyle(d.total)}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Ver">👁</button>
+        <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
+        <button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  renderPag();
+}
+
+function renderPag() {
+  const total = Math.ceil(filtrado.length / PER);
+  const pag = document.getElementById('pag');
+  if (total <= 1) { pag.innerHTML = ''; return; }
+
+  let html = `<button class="pbn" data-action="go-page" data-page="${pg-1}" ${pg===1?'disabled':''}>‹</button>`;
+  for (let i=1;i<=total;i++) {
+    if (i===1||i===total||Math.abs(i-pg)<=2)
+      html += `<button class="pbn ${i===pg?'active':''}" data-action="go-page" data-page="${i}">${i}</button>`;
+    else if (Math.abs(i-pg)===3) html += `<span class="p-info">…</span>`;
+  }
+  html += `<button class="pbn" data-action="go-page" data-page="${pg+1}" ${pg===total?'disabled':''}>›</button>`;
+  html += `<span class="p-info">${pg}/${total} · ${filtrado.length} reg.</span>`;
+  pag.innerHTML = html;
+}
+
+function goPg(p) {
+  const total = Math.ceil(filtrado.length / PER);
+  if (p<1||p>total) return;
+  pg = p;
+  renderTable();
+  document.querySelector('.table-area').scrollTop = 0;
+}
+
+// ===================== DRAWER =====================
+function verDrawer(id, zona) {
+  const d = DB[zona].find(x=>x.id===id);
+  if (!d) return;
+  const maxC = Math.max(...getDados().map(x=>x.total), 1);
+  const pct = Math.min(100, (d.total/maxC)*100);
+  const cfg = ZONAS_CFG[zona];
+
+  document.getElementById('drawer-content').innerHTML = `
+    <div class="d-badge-wrap"><span class="badge badge-${d.tipo}">${d.tipo}</span>
+    ${cfg?`<span style="font-size:.7rem;color:${cfg.cor};margin-left:8px">${cfg.label}</span>`:''}
+    </div>
+    <div class="d-name">${h(d.nome)}</div>
+    <div class="d-row"><span class="d-lbl">📞 Telefone</span><span class="d-val">${fmtWhats(d.telefone)}</span></div>
+    <div class="d-row"><span class="d-lbl">📍 Bairro</span><span class="d-val">${h(d.bairro || '—')}</span></div>
+    <div class="d-row"><span class="d-lbl">🏠 Endereço</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${fmtMaps(d.endereco)}</span></div>
+    <div class="d-row"><span class="d-lbl">🏫 Colégio</span><span class="d-val" style="font-size:.75rem;text-align:right">${h(d.colegio || '—')}</span></div>
+    <div class="d-row"><span class="d-lbl">📋 Seção</span><span class="d-val">${h(d.secao || '—')}</span></div>
+    <div class="d-row"><span class="d-lbl">🗂️ Zona El.</span><span class="d-val">${h(d.zona_eleitoral || '—')}</span></div>
+    <div class="d-row"><span class="d-lbl">🗳️ Votos</span><span class="d-val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${d.votos||'—'}</span></div>
+    <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Custos mensais</div>
+    ${[['Julho',d.custo_jul],['Agosto',d.custo_ago],['Setembro',d.custo_set],['Outubro',d.custo_out]].map(([m,v])=>
+      `<div class="d-row"><span class="d-lbl">${m}</span><span class="d-val">${fmtR(v)}</span></div>`
+    ).join('')}
+
+    <div class="drawer-tabs">
+      <div class="drawer-tab active" data-action="switch-tab" data-tab="tab-info">📋 Info</div>
+      <div class="drawer-tab" data-action="switch-tab" data-tab="tab-reunioes">🤝 Reuniões</div>
+      <div class="drawer-tab" data-action="switch-tab" data-tab="tab-pagamentos">💰 Pagamentos</div>
+    </div>
+
+    <!-- TAB INFO -->
+    <div class="drawer-tab-content active" id="tab-info">
+      <div class="d-row"><span class="d-lbl">Status</span><span class="d-val">${statusBadge(d.status)}</span></div>
+      <div class="d-row"><span class="d-lbl">Reunião</span><span class="d-val">${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</span></div>
+      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${h(d.coord_area_nome)}</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
+      ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${h(d.lider_nome)}</span></div>` : ''}
+      <div class="d-total-box">
+        <div class="d-total-lbl">💰 Total investido</div>
+        <div class="d-total-val" style="${totalStyle(d.total)}">${fmtR(d.total)}</div>
+        <div class="cost-bar"><div class="cost-fill" style="width:${pct}%;background:var(--accent,#e8433a)"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-outline" style="flex:1;font-size:.78rem" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(zona)}" data-close-drawer="true">✏️ Editar</button>
+      </div>
+      <button class="migrar-zona-btn" data-action="migrar-pessoa" data-fire-id="${a(d._fireId || '')}" data-id="${a(d.id)}" data-zona="${a(zona)}">
+        📅 Adicionar em outra campanha
+      </button>
+    </div>
+
+    <!-- TAB REUNIÕES -->
+    <div class="drawer-tab-content" id="tab-reunioes">
+      <div id="lista-reunioes-${d.id}"></div>
+      <button class="btn-add-sm" data-action="toggle-mini" data-target="form-reuniao-${a(d.id)}">+ Registrar reunião</button>
+      <div class="mini-modal" id="form-reuniao-${d.id}">
+        <label>Data</label>
+        <input type="date" id="nr-data-${d.id}" value="${new Date().toISOString().slice(0,10)}">
+        <label>Observações</label>
+        <textarea id="nr-obs-${d.id}" placeholder="Como foi a reunião?"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-outline" style="flex:1;font-size:.75rem" data-action="toggle-mini" data-target="form-reuniao-${a(d.id)}">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1;font-size:.75rem" data-action="salvar-reuniao" data-fire-id="${a(d._fireId || '')}" data-id="${a(d.id)}" data-zona="${a(zona)}">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PAGAMENTOS -->
+    <div class="drawer-tab-content" id="tab-pagamentos">
+      <div id="lista-pagamentos-${d.id}"></div>
+      <button class="btn-add-sm" data-action="toggle-mini" data-target="form-pag-${a(d.id)}">+ Registrar pagamento</button>
+      <div class="mini-modal" id="form-pag-${d.id}">
+        <label>Mês</label>
+        <select id="np-mes-${d.id}">
+          <option value="Jul">Julho</option>
+          <option value="Ago">Agosto</option>
+          <option value="Set">Setembro</option>
+          <option value="Out">Outubro</option>
+        </select>
+        <label>Valor (R$)</label>
+        <input type="number" id="np-valor-${d.id}" placeholder="0" step="50">
+        <label>Status</label>
+        <select id="np-status-${d.id}">
+          <option value="pago">✅ Pago</option>
+          <option value="aberto">⏳ Em aberto</option>
+        </select>
+        <label>Observação</label>
+        <input type="text" id="np-obs-${d.id}" placeholder="Opcional">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-outline" style="flex:1;font-size:.75rem" data-action="toggle-mini" data-target="form-pag-${a(d.id)}">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1;font-size:.75rem" data-action="salvar-pagamento" data-fire-id="${a(d._fireId || '')}" data-id="${a(d.id)}" data-zona="${a(zona)}">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  // Carrega reuniões e pagamentos
+  carregarReunioes(d._fireId, d.id);
+  carregarPagamentos(d._fireId, d.id);
+  document.getElementById('drawer').classList.add('open');
+}
+
+function fecharDrawer() { document.getElementById('drawer').classList.remove('open'); }
+
+// ===================== MODAL CRUD =====================
+let _editZona = null;
+
+function abrirModal(id, zona) {
+  editId = id;
+  _editZona = zona || zonaAtual;
+  if (_editZona === 'todas') _editZona = 'norte';
+
+  document.getElementById('modal-title').textContent = id===null ? '📋 Novo Registro' : '✏️ Editar Registro';
+  const flds = ['f-tipo','f-zona','f-nome','f-tel','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
+
+  if (id === null) {
+    flds.forEach(f => { const el=document.getElementById(f); if(el.tagName==='SELECT') el.value=(f==='f-zona'?(_editZona==='todas'?'norte':_editZona):'M'); else el.value=''; });
+  } else {
+    const d = DB[_editZona].find(x=>x.id===id);
+    if (!d) return;
+    document.getElementById('f-tipo').value = d.tipo||'M';
+    document.getElementById('f-zona').value = _editZona;
+    document.getElementById('f-nome').value = d.nome||'';
+    document.getElementById('f-tel').value = d.telefone||'';
+    document.getElementById('f-bairro').value = d.bairro||'';
+    document.getElementById('f-end').value = d.endereco||'';
+    document.getElementById('f-votos').value = d.votos||'';
+    document.getElementById('f-jul').value = d.custo_jul||'';
+    document.getElementById('f-ago').value = d.custo_ago||'';
+    document.getElementById('f-set').value = d.custo_set||'';
+    document.getElementById('f-out').value = d.custo_out||'';
+    document.getElementById('f-total').value = d.total||'';
+    document.getElementById('f-status').value = d.status||'ativo';
+    document.getElementById('f-reuniao').value = d.reuniao_feita||'nao';
+    document.getElementById('f-reuniao-data').value = d.reuniao_data||'';
+    document.getElementById('f-colegio').value = d.colegio||'';
+    document.getElementById('f-secao').value = d.secao||'';
+    document.getElementById('f-zona-el').value = d.zona_eleitoral||'';
+    // Carrega hierarquia
+    atualizarCamposHierarquia();
+    setTimeout(() => {
+      document.getElementById('f-coord-area').value = d.coord_area_id||'';
+      document.getElementById('f-lider').value = d.lider_id||'';
+    }, 50);
+  }
+  if (id === null) atualizarCamposHierarquia();
+  document.getElementById('overlay').classList.add('on');
+}
+
+function fecharModal(e) {
+  if (e && e.target !== document.getElementById('overlay')) return;
+  document.getElementById('overlay').classList.remove('on');
+}
+
+function getNextId(zona) {
+  const arr = DB[zona];
+  return arr.length ? Math.max(...arr.map(d=>d.id)) + 1 : 1;
+}
+
+function salvar() {
+  const zonaOrigem = _editZona || zonaAtual;
+  const zonaDestino = document.getElementById('f-zona').value;
+  const raw = {
+    tipo: document.getElementById('f-tipo').value,
+    zona: zonaDestino,
+    nome: document.getElementById('f-nome').value.trim(),
+    telefone: document.getElementById('f-tel').value.trim(),
+    reuniao_feita: document.getElementById('f-reuniao').value || 'nao',
+    reuniao_data: document.getElementById('f-reuniao-data').value || ''
+  };
+  const numeric = {
+    votos: parseNonNegativeNumber(document.getElementById('f-votos').value, 'Votos'),
+    custo_jul: parseNonNegativeNumber(document.getElementById('f-jul').value, 'Custo de julho'),
+    custo_ago: parseNonNegativeNumber(document.getElementById('f-ago').value, 'Custo de agosto'),
+    custo_set: parseNonNegativeNumber(document.getElementById('f-set').value, 'Custo de setembro'),
+    custo_out: parseNonNegativeNumber(document.getElementById('f-out').value, 'Custo de outubro'),
+    total: parseNonNegativeNumber(document.getElementById('f-total').value, 'Total pago')
+  };
+  const errors = [
+    ...validateRecordInput(raw),
+    ...Object.values(numeric).map(item => item.error).filter(Boolean)
+  ];
+  if (errors.length) {
+    toast('⚠️ ' + errors[0], true);
+    return;
+  }
+
+  // Recupera o _fireId do registro original antes de qualquer alteração
+  const regOriginal = editId !== null ? DB[zonaOrigem].find(x => x.id === editId) : null;
+  const fireId = regOriginal ? regOriginal._fireId : null;
+
+  const reg = {
+    id: editId !== null ? editId : getNextId(zonaDestino),
+    _fireId: fireId, // preserva o ID do Firebase para deletar/atualizar corretamente
+    tipo: raw.tipo,
+    nome: raw.nome.toUpperCase(),
+    telefone: raw.telefone,
+    bairro: document.getElementById('f-bairro').value.trim().toUpperCase(),
+    endereco: document.getElementById('f-end').value.trim().toUpperCase(),
+    votos: numeric.votos.value,
+    v_entrada: 0,
+    custo_jul: numeric.custo_jul.value,
+    custo_ago: numeric.custo_ago.value,
+    custo_set: numeric.custo_set.value,
+    custo_out: numeric.custo_out.value,
+    total: numeric.total.value,
+    colegio: document.getElementById('f-colegio').value.trim().toUpperCase(),
+    secao: document.getElementById('f-secao').value.trim(),
+    zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
+    status: document.getElementById('f-status').value || 'ativo',
+    reuniao_feita: raw.reuniao_feita,
+    reuniao_data: raw.reuniao_data,
+    coord_area_id: document.getElementById('f-coord-area').value || '',
+    coord_area_nome: document.getElementById('f-coord-area').options[document.getElementById('f-coord-area').selectedIndex]?.text || '',
+    lider_id: document.getElementById('f-lider').value || '',
+    lider_nome: document.getElementById('f-lider').options[document.getElementById('f-lider').selectedIndex]?.text || '',
+  };
+
+  const zonaChanged = editId !== null && zonaDestino !== zonaOrigem;
+
+  document.getElementById('overlay').classList.remove('on');
+  // Delega tudo ao Firebase — ele recarrega as zonas após salvar
+  salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editId);
+}
+
+async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editIdOrig) {
+  try {
+    const docData = {...reg, _zona: zonaDestino};
+    const fireId = docData._fireId;
+    delete docData._fireId;
+
+    if (editIdOrig !== null && fireId) {
+      if (zonaChanged) {
+        await colecao().doc(fireId).delete();
+        await colecao().add(docData);
+      } else {
+        await colecao().doc(fireId).set(docData);
+      }
+    } else {
+      await colecao().add(docData);
+    }
+
+    await recarregarZona(zonaDestino);
+    if (zonaChanged) await recarregarZona(zonaOrigem);
+    atualizarNavCounts();
+    aplicarFiltros();
+
+    const msg = zonaChanged
+      ? `✅ Transferido para ${ZONAS_CFG[zonaDestino].label}!`
+      : editIdOrig !== null ? '✅ Salvo!' : '✅ Cadastrado!';
+    toast(msg);
+
+    // Se é cadastro novo, pergunta se quer adicionar em outras campanhas
+    if (editIdOrig === null) {
+      const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
+      if (outrasCamps.length > 0) {
+        setTimeout(() => {
+          abrirModalCampsSel(
+            reg,
+            '📅 Adicionar em outras campanhas?',
+            `"${reg.nome.split(' ')[0]}" foi cadastrado(a). Deseja adicioná-lo(a) em outras campanhas também?`
+          );
+        }, 600);
+      }
+    }
+  } catch(e) {
+    console.error('Erro Firebase salvar:', e);
+    toast('❌ ' + formatFirebaseError(e), true);
+  }
+}
+
+function deletar(id, zona) {
+  const d = DB[zona].find(x => x.id === id);
+  if (!d || !confirm(`Excluir "${d.nome}"?`)) return;
+  deletarNoFirebase(d, zona);
+}
+
+async function deletarNoFirebase(d, zona) {
+  try {
+    if (d._fireId) {
+      await colecao().doc(d._fireId).delete();
+    }
+    await recarregarZona(zona);
+    atualizarNavCounts();
+    aplicarFiltros();
+    toast('🗑️ Excluído');
+  } catch(e) {
+    console.error('Erro Firebase deletar:', e);
+    toast('❌ ' + formatFirebaseError(e), true);
+  }
+}
+
+async function recarregarZona(zona) {
+  const snap = await colecao().where('_zona', '==', zona).get();
+  DB[zona] = snap.docs.map(d => ({...d.data(), _fireId: d.id}));
+  BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+}
+
+// ===================== MIGRAÇÃO DE VÍNCULOS =====================
+// Mapa de vínculos extraído da planilha original
+const VINCULOS_PLANILHA = {"EDNA MARIA DA SILVA SOUSA": ["MARIA SOLIDADE FERNANDES DA SILVA", "ANA CLEIDE JESUS DOS SANTOS", "KATIUSIA MILENA DA SILVA", "ANTONIO CARLOS GOMES DA SILVA RODRIGUES", "BARBARA SOLANGE DA SILVA", "BIANCA DE JESUS DOS SANTOS"], "ELISALDA FERANANDA REIS": ["WALLISON DOROTEU"], "RAYLINNE OLIVEIRA XAVIER (SEMAM)": ["MARYANNE XAVIER", "KARLA ADRIANA MATOS DA COSTA", "JULCIMAR NUNES DE OLIVEIRA", "OSTINA RODRIGUES DA SILVA"], "ELIESIO GOMES SILVA": ["BOUQUINHA"], "RAVENA REGO SENA RODRIGUES (SEMAM)": ["GLAYDE HAYANY DE SOUSA CARVALHO LEITE", "DANIELY CARVALHO DA SILVA", "GLACILDE RIBEIRO DE SOUSA CAVALCANTE", "ROSA ELVAS DE SÁ", "MARIZE ALEXANDRA DE OLIVEIRA SOUSA", "JERONIMO PEREIRA SOUZA", "GISELIA MARIA FERREIRA DE ARAÚJO", "GRACIELLY SILVA CAVALCANTE", "ERICA CIBELLY", "FRANCISCA MARIA LIRA DO NASCIMENTO", "PAI DA RAVENA", "LISTA DA DANÇA"], "SHÉLYDA RAIANE RODRIGUES MACHADO (SEMAM)": ["EUDIMAR RODRIGUES DE SOUSA", "RENE WANDERSON OTAVIO DE SOUSA", "PAULA APARECIDA RODRIGUES DO NASCIMENTO", "JACOB RODRIGUES DE SOUSA", "FRANCIANA LOPES DO NASCIMENTO", "EDIVAN RODRIGUES DE SOUSA", "JEANIS OLIVEIRA DE AMORIM DE SOUSA", "MARIA DO SOCORRO AMANCIO DE SOUSA"], "ALINE DANIELE DOS SANTOS (SEMAM)": ["MARLENE DE FREITAS MARCIEL", "VIVIANE ALVES DA COSTA", "MARIA APARECIDA VIEIRA DOS SANTOS", "BARBARA THAIS SARAIVA", "ELANE DE SOUSA NOBREGA MENDES", "MARIA DO AMPARO SARAIVA LOPES"], "MARIA FERNANDA DE OLIVEIRA CRUZ (SEMAM)": ["THAIANY GABRIELE FELIX DA SILVA", "NATHALIA RODRIGUES DE SALES", "SALETE", "SOLANGE"], "REGINALDO VITORIO SOUZA": ["DANIELE MARIA DE MELO SANTOS (MULHER DO IAGO)", "SAMARA MARIA CARVALHO DE ARAÚJO", "RAIANE FERNANDES DAS SILVA", "FRANCISCA SANTANA DA SILVA", "NAYANE SANTANA DA SILVA", "LISAEL MAYKON COSTA E SILVA", "TIAGO PEREIRA DA SILVA", "LILIAN CARLA COSTA E SILVA", "MARCIO MACHADO PEREIRA", "IRAPUA FRANCISCO ARAÚJO", "ANGELICA MARIA DA SILVA PEREIRA", "LUCILENE ESTEVES DA CRUZ (NAO FEZ REUNIAO)", "DOMINGOS COSTA DOS SANTOS", "KAIO ESTEVES DA CRUZ SANTOS (NAO FEZ REUNIAO)", "ADRIANA DA SILVA", "DEUSELENE CLEMENTE SILVA", "MARIA SANTANA FRAZÃO DE OLIVEIRA", "MARIA DO SOCORRO MORAIS", "EDILSON FRANCISCO DA SILVA", "LUIS ALVES", "GARDENIA MARIA DA SILVA", "LUCIANA KATIA BORGES DA SILVA (ANINHA)", "VINICIUS DA COSTA MOREIRA", "FERNANDA MARIA GOMES SOARES DE SOUSA (NAO FEZ REUNIAO)", "DEBORA NAYARA SILVA ARAÚJO", "IZAURA FERREIRA BARROS", "IAGO LUIS DA SILVA PEREIRA"], "IVONEIDE MARIA DE ANDRADE (SEMAM)": ["LUCINETE MARIA DE ANDRADDE (FEZ REUNIAO)", "REGINA CELIA DE SOUSA SILVA (FEZ REUNIAO)", "DALILA BORGES FONTENELE TEÓFILO (FEZ REUNIAO)", "MARIA DE DEUS SOUSA DIAS (FEZ REUNIAO)", "FRANCISCO ALAN DOS SANTOS SILVA (FEZ REUNIAO)", "RAIMUNDA NONATA SILVA (FEZ REUNIAO)", "LUIS FELIPE SALES ALMEIDA", "MIGUEL DA SILVA SOUSA", "VERONICA KAROLINY OLIVEIRA SILVA FONTENELE", "LAVINIA AGLENES", "HIAGO ALEXANDRE OLIVEIRA FONTENELE", "DANIELLE ROCHA LEÃO FERRAZ MOREIRA"], "CARLANDIA RAMOS DE ARAUJO": ["RHAFAELLA MAYRA LIMA", "IRISMARA DE CARVALHO", "MARINALDO ALVES DA SILVA", "MARCELO FERREIRA NOGUEIRA", "MARIA DAS NEVES GREGORIO", "MARCOS VITORIO FERREIRA NOGUEIRA", "DEUSELITA FERREIRA DO  MONTE", "MARINEIDE LOPES RODRIGUES", "GLAUCIA MARIA DE SOUSA", "FERNANDA CARLA SILVA SANTOS", "MARIA DE FÀTIMA SILVA SANTOS", "KESSYANNY RODRIGUES DE SENA", "MATEUS PEREIRA LIMA REGO", "JANAINA MAGALHÃES MACHADO CARVALHO", "ZILDA MARIA DOS SANTOS PAIVA", "FABIO LUSTOZA", "JOSELENE ALVES DA PAZ BRITO (PRETA)", "SUELY PATRICIA SILVA SANTOS", "LUCIANA RAMOS DE ARAUJO", "REJANE DE SOUSA OLIVEIRA", "ELIZETE", "STENIO LEO LOPES DOS SANTOS", "CID JOSE PIMENTEL (CRISTIANO)", "LUIS SERGIO RAMOS DE ARAUJO", "ANA LUCIA BEZERRA DE SOUSA", "FRANCISCA PEREIRA (DEDE)", "TIA ROSA (ENTREGOU PAR ANA LUCIA)"], "AIDA DE LURDES ALVES LIMA": ["TICIANE AGNES ROCHA LIMA (FEZ REUNIAO JUNTO COM AIDA)", "FRANCISCA (VAI JUNTAR COM PROXIMA)", "FRANCILENE DE FATIMA DIAS MACIEL(FEZ REUNIAO)", "VERONICE MAGALHÃES DIAS", "FRANCINEIDE DO NASCIMENTO NERY", "MARIA DALVA OLIVEIRA CRUZ", "ELISA ANTONIA (DA INVASAO)", "MARIA CONCEICAO (VAI JUNTAR COM A PROXIMA)"], "DOMINGOS FERREIRA DE CARVALHO NETO (NETAO)": ["EDMILSON BRUNO FERREIRA CAMPOS VERAS (JA FEZ REUNIAO)", "KAMILA FERREIRA VERAS", "SERGIO ROBERTO DE SOUSA OLIVEIRA", "MARIA CLARA ALVES DE SOUSA", "FLAVIA ALVES VIANA"], "MARIANA MOUSINHO (DIRETORA CARLANDIA)": ["MAYSA RAMOS CARNEIRO", "RAFAEL ALVES DOS SANTOS", "MARIANE DO NASCIMENTO COSTA", "MAX RAMOS CARNEIRO", "AMANDA BEATRIZ DE MORAES", "NATALIA HAVANY SANTOS COSTA"], "ARLANE SANDRA DE SOUSA SANTOS": ["SONIA MARIA ALVES DE ALMEIDA SOUSA"], "MARIA MARTA ASSAYAG SILVA (SEMAM) (JA FEZ REUNIAO)": ["RAFAELLE MENDES DE SOUSA (JA FEZ REUNIAO)"], "SUELI DE SOUSA": ["BARBARA SUELEN DA SILVA LEITE (REUNIAO FEITA)", "LUSIANE GOMES DE ARAUJO", "MYLLENA DYANA DE OLIVEIRA (REUNIAO FEITA)", "RAIMUNDA MARIANA DA COSTA CARVALHO (REUNIAO FEITA)", "SILVANIA DA SILVA GOMES"], "IVONETE LACERDA DE LIMA": ["ANA SABRINA BARBOSA VELOSO (JA FEZ REUNIAO)"], "LAYANY NAYRA COUTINHO LIMA (JA FEZ REUNIAO)": ["NÁDIA TATIELY JATAHY DOS SANTOS", "AURICÉLIA DE SOUZA COSTA", "ELIENE MELO DO VALE", "FABIANO XAVIER DA SILVA", "JÚLIA REJANE ARAÚJO DA SILVA", "LUIZ ALVES LIMA JÚNIOR", "MARIA DAS GRAÇAS COUTINHO LIMA", "MIRLLA PORTELA DUARTE", "RAYANE PEREIRA DA SILVA", "SILVANA BARBOSA DA COSTA"], "ANDRE PRADO": ["LUZINEIDE FELIX DE ARAÚJO SOUSA", "VERÔNICA MARIA FERREIRA", "LUCIMEIRE DE CRAVALHO", "WESLEY SILVESTRE CARNEIRO MOREIRA DA SILVA", "MYRNA ALVES"], "HEVERTON": ["MESTRE", "MARIA DE FATIMA GREGORI MELO"]};
+
+// Nome da Raiane (coordenadora)
+const RAIANE_NOME = 'SHÉLYDA RAIANE RODRIGUES MACHADO (SEMAM)';
+
+async function migrarVinculos() {
+  // Sempre roda para garantir vínculos completos
+  await migrarVinculosForce();
+}
+
+async function migrarVinculosForce() {
+  console.log('Iniciando migração de vínculos...');
+  toast('🔗 Vinculando hierarquia…');
+
+  // Busca todos os docs
+  const todos = await colecao().get();
+  const docs = todos.docs.map(d => ({...d.data(), _fireId: d.id}));
+
+  // Encontra a Raiane
+  const raiane = docs.find(d => d.nome && d.nome.includes('SHÉLYDA RAIANE'));
+  const raianeId = raiane ? raiane._fireId : '';
+  const raianeNome = raiane ? raiane.nome : RAIANE_NOME;
+
+  const updates = [];
+  let count = 0;
+
+  // Para cada liderança com mobilizadores no mapa
+  for (const [nomeL, nomesMobs] of Object.entries(VINCULOS_PLANILHA)) {
+    // Encontra a liderança pelo nome (busca flexível)
+    const nomeKeyL = nomeL.substring(0, 15).toUpperCase();
+    const lider = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyL));
+    if (!lider) { console.log('Lider nao encontrada:', nomeL); continue; }
+
+    // Vincula liderança à Raiane (se não for a própria Raiane)
+    if (lider._fireId !== raianeId && raianeId) {
+      updates.push({ ref: colecao().doc(lider._fireId), data: {
+        coord_area_id: raianeId,
+        coord_area_nome: raianeNome
+      }});
+      count++;
+    }
+
+    // Vincula mobilizadores à liderança
+    for (const nomeMob of nomesMobs) {
+      const nomeKeyM = nomeMob.substring(0, 15).toUpperCase();
+      const mob = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyM));
+      if (!mob) { console.log('Mob nao encontrado:', nomeMob); continue; }
+      updates.push({ ref: colecao().doc(mob._fireId), data: {
+        lider_id: lider._fireId,
+        lider_nome: lider.nome,
+        coord_area_id: raianeId,
+        coord_area_nome: raianeNome
+      }});
+      count++;
+    }
+  }
+
+  // Vincula todas as lideranças restantes à Raiane também
+  docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && d._fireId !== raianeId).forEach(l => {
+    if (!updates.find(u => u.ref.id === l._fireId && u.data.coord_area_id)) {
+      updates.push({ ref: colecao().doc(l._fireId), data: {
+        coord_area_id: raianeId,
+        coord_area_nome: raianeNome
+      }});
+      count++;
+    }
+  });
+
+  // Executa em batches de 400
+  for (let i = 0; i < updates.length; i += 400) {
+    const batch = db.batch();
+    updates.slice(i, i + 400).forEach(u => batch.update(u.ref, u.data));
+    await batch.commit();
+    console.log(`Batch ${Math.floor(i/400)+1} concluído`);
+  }
+
+  console.log(`Migração concluída: ${count} vínculos criados`);
+  toast(`✅ ${count} vínculos aplicados!`);
+}
+
+// Migra dados locais da Zona Norte para Firebase (só na primeira vez)
+async function migrarDadosNorte() {
+  const snap = await colecao().where('_zona', '==', 'norte').limit(1).get();
+  if (!snap.empty) return;
+  toast('📤 Importando Zona Norte para o banco…');
+  // Divide em batches de 500
+  const todos = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
+  for (let i = 0; i < todos.length; i += 400) {
+    const batch = db.batch();
+    todos.slice(i, i + 400).forEach(d => {
+      const ref = colecao().doc();
+      const docData = {...d};
+      delete docData._fireId;
+      batch.set(ref, docData);
+    });
+    await batch.commit();
+  }
+  toast('✅ Dados da Zona Norte importados!');
+}
+
+// ===================== IMPORTAR XLSX =====================
+function importarArquivo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  toast('📥 Importação via arquivo requer servidor. Adicione registros manualmente ou cole no console: DB["' + zonaAtual + '"]');
+  event.target.value = '';
+}
+
+// ===================== HIERARQUIA =====================
+function atualizarCamposHierarquia() {
+  const tipo = document.getElementById('f-tipo').value;
+  const campoCord = document.getElementById('campo-coordenador');
+  const campoLider = document.getElementById('campo-lideranca');
+
+  // L e LE precisam de coordenador
+  if (tipo === 'L' || tipo === 'LE') {
+    campoCord.style.display = 'block';
+    campoLider.style.display = 'none';
+    popularSelectCoordenadores();
+  }
+  // M e ME precisam de liderança (e indiretamente coordenador)
+  else if (tipo === 'M' || tipo === 'ME') {
+    campoCord.style.display = 'none';
+    campoLider.style.display = 'block';
+    popularSelectLiderancas();
+  }
+  // CA não precisa de vínculo
+  else {
+    campoCord.style.display = 'none';
+    campoLider.style.display = 'none';
+  }
+}
+
+function popularSelectCoordenadores() {
+  const sel = document.getElementById('f-coord-area');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione o coordenador —</option>';
+
+  const todas = getDados();
+  const coords = todas.filter(d => d.tipo === 'CA').sort((a,b) => a.nome.localeCompare(b.nome));
+  coords.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d._fireId || d.id;
+    opt.textContent = d.nome + (d.bairro ? ` (${d.bairro})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = atual;
+}
+
+function popularSelectLiderancas() {
+  const sel = document.getElementById('f-lider');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione a liderança —</option>';
+
+  const zona = document.getElementById('f-zona').value;
+  const todas = getDados();
+  const liders = todas.filter(d => d.tipo === 'L' || d.tipo === 'LE').sort((a,b) => a.nome.localeCompare(b.nome));
+  liders.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d._fireId || d.id;
+    opt.textContent = d.nome + (d.bairro ? ` (${d.bairro})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = atual;
+}
+
+function getEquipeDeUm(d) {
+  const todas = getDados();
+  if (d.tipo === 'CA') {
+    return todas.filter(x => x.coord_area_id === (d._fireId || String(d.id)));
+  }
+  if (d.tipo === 'L' || d.tipo === 'LE') {
+    return todas.filter(x => x.lider_id === (d._fireId || String(d.id)));
+  }
+  return [];
+}
+
+// ===================== ÁRVORE HIERÁRQUICA =====================
+let treeView = false;
+
+function toggleTreeView() {
+  // Fecha mapa se estiver aberto
+  if (mapView) {
+    mapView = false;
+    document.getElementById('btnMapToggle').classList.remove('active');
+    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
+    document.getElementById('mapArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+    document.body.classList.remove('map-fullscreen');
+  }
+
+  treeView = !treeView;
+  const btn = document.getElementById('btnTreeToggle');
+  const tableArea = document.querySelector('.table-area');
+  const pag = document.getElementById('pag');
+  const treeArea = document.getElementById('treeArea');
+  const ctrlBar = document.querySelector('.controls-bar');
+
+  if (treeView) {
+    btn.classList.add('active');
+    btn.textContent = '📋 Tabela';
+    tableArea.classList.add('hidden');
+    pag.style.display = 'none';
+    ctrlBar.style.display = 'none';
+    treeArea.classList.add('active');
+    renderArvore();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🌳 Árvore';
+    tableArea.classList.remove('hidden');
+    pag.style.display = '';
+    ctrlBar.style.display = '';
+    treeArea.classList.remove('active');
+  }
+}
+
+function renderArvore() {
+  const q = norm(document.getElementById('treeSearch')?.value || '');
+  const dados = getDados();
+
+  // CA inclui tipo CA e também quem tem lideranças vinculadas por coord_area_id
+  let coords = dados.filter(d => d.tipo === 'CA');
+  const liderancas = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE');
+  const mobilizadores = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME');
+
+  // Se não tem CA mas tem vínculos via coord_area_id, reconstrói coordenadores a partir dos vínculos
+  if (coords.length === 0) {
+    const coordIds = [...new Set(liderancas.map(l => l.coord_area_id).filter(Boolean))];
+    coords = coordIds.map(id => {
+      // Busca o registro por _fireId ou por coord_area_nome
+      const found = dados.find(d => d._fireId === id || String(d.id) === id);
+      if (found) return found;
+      // Fallback: cria nó virtual com o nome
+      const nome = liderancas.find(l => l.coord_area_id === id)?.coord_area_nome || 'Coordenador';
+      return { id: id, _fireId: id, tipo: 'CA', nome, _virtual: true };
+    }).filter(Boolean);
+  }
+
+  // Stats
+  const totalVotos = dados.reduce((s,d) => s+(d.votos||0), 0);
+  const semVinculo = liderancas.filter(l => !l.coord_area_id).length;
+  document.getElementById('treeStats').innerHTML = `
+    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
+    <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
+    <div class="tree-stat">Total de votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong></div>
+    ${semVinculo > 0 ? `<div class="tree-stat" style="border-color:rgba(234,179,8,.3)">⚠️ Sem vínculo: <strong style="color:#f59e0b">${semVinculo}</strong></div>` : ''}
+  `;
+
+  let html = '';
+
+  // Sem coordenador e sem vínculos — mostra aviso
+  if (coords.length === 0 && liderancas.filter(l => l.coord_area_id).length === 0) {
+    html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);margin-bottom:16px">
+      <div style="font-size:1.5rem;margin-bottom:8px">🏛️</div>
+      <div style="font-size:.85rem">Nenhuma hierarquia definida ainda.</div>
+      <div style="font-size:.75rem;margin-top:6px">Edite as lideranças e vincule-as a um coordenador de área.</div>
+    </div>`;
+  }
+
+  // Nó de cada Coordenador
+  coords.forEach((ca, ci) => {
+    const nomeCA = ca.nome || '';
+    if (q && !norm(nomeCA).includes(q)) {
+      // Verifica se alguma liderança/mob bate
+      const lidsCa = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
+      const mobsCa = mobilizadores.filter(m => lidsCa.some(l => l._fireId === m.lider_id || String(l.id) === m.lider_id));
+      const algumBate = [...lidsCa, ...mobsCa].some(d =>
+        norm(d.nome || '').includes(q)
+      );
+      if (!algumBate) return;
+    }
+
+    const lidsCA = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
+    const totalMobs = mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id)).length;
+    const totalVotosCA = [...lidsCA, ...mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id))].reduce((s,d)=>s+(d.votos||0),0);
+
+    html += `<div class="tree-ca">
+      <div class="tree-ca-header" data-action="toggle-node" data-node-id="ca-${ci}">
+        <div class="tree-ca-avatar">🏛️</div>
+        <div class="tree-ca-info">
+          <div class="tree-ca-nome">${h(nomeCA)}</div>
+          <div class="tree-ca-sub">${h(ca.bairro || '')} ${ca.telefone ? '· '+h(ca.telefone) : ''}</div>
+        </div>
+        <div class="tree-ca-counts">
+          <div class="tree-count-pill">👥 <strong>${lidsCA.length}</strong> lideranças</div>
+          <div class="tree-count-pill">🗳️ <strong>${totalMobs}</strong> mob.</div>
+          <div class="tree-count-pill">✅ <strong>${totalVotosCA}</strong> votos</div>
+        </div>
+        <span class="tree-toggle open" id="tog-ca-${ci}">▶</span>
+      </div>
+      <div class="tree-ca-body open" id="ca-${ci}">`;
+
+    if (lidsCA.length === 0) {
+      html += `<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma liderança vinculada a este coordenador ainda.</div>`;
+    }
+
+    // Lideranças do CA
+    lidsCA.forEach((l, li) => {
+      const nomeL = l.nome || '';
+      const mobsL = mobilizadores.filter(m => m.lider_id === (l._fireId || String(l.id)));
+      const votosL = [l, ...mobsL].reduce((s,d)=>s+(d.votos||0),0);
+
+      html += `<div class="tree-l">
+        <div class="tree-l-header" data-action="toggle-node" data-node-id="l-${ci}-${li}">
+          <div class="tree-l-avatar">👤</div>
+          <div style="flex:1">
+            <div class="tree-l-nome">${h(nomeL)}</div>
+            <div class="tree-l-sub">${h(l.bairro || '')} ${l.secao?'· Seção '+h(l.secao):''}</div>
+          </div>
+          <div class="tree-ca-counts">
+            <div class="tree-count-pill">👥 <strong>${mobsL.length}</strong> mob.</div>
+            <div class="tree-count-pill">🗳️ <strong>${votosL}</strong> votos</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-left:8px">
+            <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Ver">👁</button>
+            <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Editar">✏️</button>
+          </div>
+          <span class="tree-toggle open" id="tog-l-${ci}-${li}" style="margin-left:6px">▶</span>
+        </div>
+        <div class="tree-l-body open" id="l-${ci}-${li}">`;
+
+      if (mobsL.length === 0) {
+        html += `<div style="font-size:.75rem;color:var(--muted);padding:4px 0">Nenhum mobilizador vinculado a esta liderança.</div>`;
+      }
+
+      mobsL.forEach(m => {
+        html += `<div class="tree-m" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}">
+          <div class="tree-m-dot"></div>
+          <span class="tree-m-nome">${h(m.nome)}</span>
+          <span class="tree-m-bairro">${h(m.bairro || '')}</span>
+          ${m.votos ? `<span class="tree-m-votos">🗳️ ${m.votos}</span>` : ''}
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Editar">✏️</button>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  // Sem vínculo — Lideranças sem coordenador
+  const lidersSemCA = liderancas.filter(l => !l.coord_area_id || l.coord_area_id === '');
+  const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
+
+  if (lidersSemCA.length > 0 || mobsSemL.length > 0) {
+    html += `<div class="tree-orphans">
+      <div class="tree-orphans-header" data-action="toggle-node" data-node-id="orphans">
+        <h4>⚠️ Sem vínculo definido</h4>
+        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> lideranças · <strong>${mobsSemL.length}</strong> mobilizadores</span>
+        <span class="tree-toggle" id="tog-orphans">▶</span>
+      </div>
+      <div class="tree-orphans-body" id="orphans">`;
+
+    if (lidersSemCA.length > 0) {
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Lideranças sem coordenador</div>`;
+      lidersSemCA.forEach(l => {
+        html += `<div class="orphan-item">
+          <span class="badge badge-${a(l.tipo)}">${h(l.tipo)}</span>
+          <span class="orphan-name">${h(l.nome)}</span>
+          <span class="orphan-bairro">${h(l.bairro || '')}</span>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Vincular">✏️</button>
+        </div>`;
+      });
+    }
+
+    if (mobsSemL.length > 0) {
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Mobilizadores sem liderança</div>`;
+      mobsSemL.forEach(m => {
+        html += `<div class="orphan-item">
+          <span class="badge badge-${a(m.tipo)}">${h(m.tipo)}</span>
+          <span class="orphan-name">${h(m.nome)}</span>
+          <span class="orphan-bairro">${h(m.bairro || '')}</span>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Vincular">✏️</button>
+        </div>`;
+      });
+    }
+
+    html += `</div></div>`;
+  }
+
+  document.getElementById('treeContent').innerHTML = html;
+}
+
+function toggleNode(id) {
+  const body = document.getElementById(id);
+  const tog = document.getElementById('tog-' + id);
+  if (!body) return;
+  body.classList.toggle('open');
+  if (tog) tog.classList.toggle('open');
+}
+
+// ===================== EXPORTAR =====================
+function exportarDados() {
+  const dados = getDados();
+  if (!dados.length) { toast('⚠️ Nenhum dado para exportar', true); return; }
+
+  const zonaNome = zonaAtual === 'todas' ? 'Todas as Zonas' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual);
+
+  const rows = dados.map(d => ({
+    'ID': d.id,
+    'Tipo': d.tipo,
+    'Nome': d.nome,
+    'Telefone': d.telefone || '',
+    'Bairro': d.bairro || '',
+    'Endereço': d.endereco || '',
+    'Zona': ZONAS_CFG[d._zona]?.label || d._zona || '',
+    'Colégio Eleitoral': d.colegio || '',
+    'Seção': d.secao || '',
+    'Zona Eleitoral': d.zona_eleitoral || '',
+    'Coordenador de Área': d.coord_area_nome || '',
+    'Liderança': d.lider_nome || '',
+    'Votos': d.votos || 0,
+    'V. Entrada': d.v_entrada || 0,
+    'Custo Jul': d.custo_jul || 0,
+    'Custo Ago': d.custo_ago || 0,
+    'Custo Set': d.custo_set || 0,
+    'Custo Out': d.custo_out || 0,
+    'Total': d.total || 0,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Largura das colunas
+  ws['!cols'] = [
+    {wch:6},{wch:8},{wch:40},{wch:18},{wch:20},{wch:40},
+    {wch:16},{wch:30},{wch:10},{wch:14},{wch:30},{wch:30},
+    {wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, zonaNome.substring(0,31));
+
+  const data = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const filename = `coordenacao_${zonaAtual}_${data}.xlsx`;
+  XLSX.writeFile(wb, filename);
+
+  toast(`✅ Exportado: ${filename}`);
+}
+
+// ===================== DRAWER TABS =====================
+function switchTab(el, tabId) {
+  const drawer = el.closest('.drawer-tabs').parentElement;
+  drawer.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+  drawer.querySelectorAll('.drawer-tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const tab = drawer.querySelector('#' + tabId);
+  if (tab) tab.classList.add('active');
+}
+
+function toggleMiniModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ===================== REUNIÕES =====================
+async function carregarReunioes(fireId, localId) {
+  const el = document.getElementById('lista-reunioes-' + localId);
+  if (!el || !fireId) return;
+  try {
+    const snap = await colecao().doc(fireId)
+      .collection('reunioes').orderBy('data', 'desc').limit(10).get();
+    if (snap.empty) {
+      el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhuma reunião registrada ainda.</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      return `<div class="reuniao-item">
+        <div class="reuniao-item-data">📅 ${h(r.data || '—')}</div>
+        <div class="reuniao-item-obs">${h(r.obs || 'Sem observações')}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('Erro reunioes:', e); }
+}
+
+async function salvarReuniao(fireId, localId, zona) {
+  const data = document.getElementById('nr-data-' + localId).value;
+  const obs  = document.getElementById('nr-obs-' + localId).value.trim();
+  if (!data) { toast('⚠️ Informe a data', true); return; }
+  try {
+    await colecao().doc(fireId)
+      .collection('reunioes').add({ data, obs, criadoEm: new Date().toISOString() });
+    // Marca reunião feita no registro principal
+    await colecao().doc(fireId).update({ reuniao_feita: 'sim', reuniao_data: data });
+    await recarregarZona(zona);
+    aplicarFiltros();
+    toggleMiniModal('form-reuniao-' + localId);
+    carregarReunioes(fireId, localId);
+    toast('✅ Reunião registrada!');
+  } catch(e) { toast('❌ Erro ao salvar reunião', true); }
+}
+
+// ===================== PAGAMENTOS =====================
+async function carregarPagamentos(fireId, localId) {
+  const el = document.getElementById('lista-pagamentos-' + localId);
+  if (!el || !fireId) return;
+  try {
+    const snap = await colecao().doc(fireId)
+      .collection('pagamentos').orderBy('criadoEm', 'desc').limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Nenhum pagamento registrado ainda.</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      const cls = p.status === 'pago' ? 'pag-pago' : 'pag-aberto';
+      const ico = p.status === 'pago' ? '✅' : '⏳';
+      return `<div class="pag-mes">
+        <span class="pag-mes-nome">${h(p.mes || '—')} ${p.obs ? '· '+h(p.obs) : ''}</span>
+        <span class="pag-mes-valor">R$ ${(p.valor||0).toLocaleString('pt-BR')}</span>
+        <span class="pag-mes-status ${cls}">${ico} ${h(p.status || '')}</span>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('Erro pagamentos:', e); }
+}
+
+async function salvarPagamento(fireId, localId, zona) {
+  const mes    = document.getElementById('np-mes-' + localId).value;
+  const parsedValor = parseNonNegativeNumber(document.getElementById('np-valor-' + localId).value, 'Valor');
+  const status = document.getElementById('np-status-' + localId).value;
+  const obs    = document.getElementById('np-obs-' + localId).value.trim();
+  if (parsedValor.error) { toast('⚠️ ' + parsedValor.error, true); return; }
+  if (!parsedValor.value) { toast('⚠️ Informe o valor', true); return; }
+  try {
+    await colecao().doc(fireId)
+      .collection('pagamentos').add({ mes, valor: parsedValor.value, status, obs, criadoEm: new Date().toISOString() });
+    toggleMiniModal('form-pag-' + localId);
+    carregarPagamentos(fireId, localId);
+    toast('✅ Pagamento registrado!');
+  } catch(e) { toast('❌ Erro ao salvar pagamento', true); }
+}
+
+// ===================== CAMPANHAS =====================
+async function carregarCampanhas() {
+  try {
+    const snap = await db.collection('campanhas').orderBy('ano', 'asc').get();
+
+    if (snap.empty) {
+      // Cria campanhas padrão
+      const campanhasPadrao = [
+        { id: '2024-vereador',        nome: '2024 - Vereador',          ano: 2024, cargo: 'Vereador' },
+        { id: '2026-governador',      nome: '2026 - Governador',        ano: 2026, cargo: 'Governador' },
+        { id: '2026-senador-1',       nome: '2026 - Senador 1',         ano: 2026, cargo: 'Senador' },
+        { id: '2026-senador-2',       nome: '2026 - Senador 2',         ano: 2026, cargo: 'Senador' },
+        { id: '2026-dep-estadual',    nome: '2026 - Dep. Estadual',     ano: 2026, cargo: 'Deputado Estadual' },
+        { id: '2026-dep-federal',     nome: '2026 - Dep. Federal',      ano: 2026, cargo: 'Deputado Federal' },
+      ];
+      const batch = db.batch();
+      campanhasPadrao.forEach(cp => {
+        batch.set(db.collection('campanhas').doc(cp.id), {
+          nome: cp.nome, ano: cp.ano, cargo: cp.cargo,
+          criadoEm: new Date().toISOString()
+        });
+      });
+      await batch.commit();
+      campanhas = {};
+      campanhasPadrao.forEach(cp => { campanhas[cp.id] = { nome: cp.nome, ano: cp.ano, cargo: cp.cargo }; });
+      campanhaAtual = '2024-vereador';
+    } else {
+      campanhas = {};
+      snap.docs.forEach(d => { campanhas[d.id] = d.data(); });
+      // Usa a mais recente por padrão
+      campanhaAtual = snap.docs[snap.docs.length - 1].id;
+      // Ou a salva no localStorage
+      const saved = localStorage.getItem('campanhaAtual');
+      if (saved && campanhas[saved]) campanhaAtual = saved;
+    }
+
+    renderCampanhaTabs();
+  } catch(e) {
+    console.error('Erro campanhas:', e);
+    campanhaAtual = '2024-vereador';
+  }
+}
+
+function renderCampanhaTabs() {
+  const container = document.getElementById('campanhaTabs');
+  if (!container) return;
+
+  const cargoCores = {
+    'Vereador': '#22c55e',
+    'Governador': '#a855f7',
+    'Senador': '#f59e0b',
+    'Deputado Estadual': '#3b82f6',
+    'Deputado Federal': '#ef4444',
+  };
+
+  container.innerHTML = Object.entries(campanhas).map(([id, camp]) => {
+    const cor = cargoCores[camp.cargo] || '#6b7294';
+    const isActive = id === campanhaAtual;
+    return `<div style="display:flex;align-items:center;gap:2px">
+      <button class="campanha-tab ${isActive ? 'active' : ''}"
+        data-action="trocar-campanha" data-campanha="${a(id)}"
+        title="${camp.candidato ? 'Candidato: '+a(camp.candidato) : ''}"
+        style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
+        ${h(camp.nome)}${camp.candidato ? ` · ${h(camp.candidato.split(' ')[0])}` : ''}
+      </button>
+      ${isActive ? `<button class="campanha-clear-btn" data-action="limpar-campanha" data-campanha="${a(id)}" title="Limpar dados desta campanha">🗑</button>` : ''}
+    </div>`;
+  }).join('');
+
+  // Atualiza select de origem no modal
+  const sel = document.getElementById('mc-origem');
+  if (sel) {
+    sel.innerHTML = '<option value="">Campanha zerada</option>' +
+      Object.entries(campanhas).map(([id, c]) =>
+        `<option value="${a(id)}">Copiar de: ${h(c.nome)}</option>`
+      ).join('');
+  }
+}
+
+async function trocarCampanha(id) {
+  if (!campanhas[id]) return;
+  campanhaAtual = id;
+  localStorage.setItem('campanhaAtual', id);
+  renderCampanhaTabs();
+  mostrarLoading(true);
+
+  // Recarrega dados da nova campanha
+  const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+  try {
+    const snaps = await Promise.all(
+      zonas.map(z => colecao().where('_zona', '==', z).get())
+    );
+    zonas.forEach((zona, i) => {
+      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+    });
+  } catch(e) { console.error('Erro trocar campanha:', e); }
+
+  mostrarLoading(false);
+  atualizarNavCounts();
+  aplicarFiltros();
+  toast(`📅 Campanha: ${campanhas[id].nome}`);
+}
+
+function abrirModalCampanha() {
+  document.getElementById('mc-nome').value = '';
+  document.getElementById('mc-ano').value = new Date().getFullYear() + 2;
+  document.getElementById('modalCampanha').classList.add('open');
+}
+
+function fecharModalCampanha() {
+  document.getElementById('modalCampanha').classList.remove('open');
+}
+
+
+async function criarCampanha() {
+  const nome = document.getElementById('mc-nome').value.trim();
+  const ano  = parseInt(document.getElementById('mc-ano').value) || new Date().getFullYear();
+  const cargo = document.getElementById('mc-cargo').value;
+  const origem = document.getElementById('mc-origem').value;
+  const copiar = document.getElementById('mc-copiar').value;
+
+  if (!nome) { toast('⚠️ Informe o nome da campanha', true); return; }
+
+  const id = nome.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  try {
+    const candidato = document.getElementById('mc-candidato').value.trim();
+    await db.collection('campanhas').doc(id).set({
+      nome, ano, cargo, candidato, criadoEm: new Date().toISOString()
+    });
+
+    campanhas[id] = { nome, ano, cargo, candidato };
+
+    // Copia dados da campanha de origem se selecionado
+    if (origem && campanhas[origem]) {
+      toast('📋 Copiando dados…');
+      const todos = await db.collection('campanhas').doc(origem)
+        .collection('liderancas').get();
+
+      for (let i = 0; i < todos.docs.length; i += 400) {
+        const batch = db.batch();
+        todos.docs.slice(i, i + 400).forEach(d => {
+          const data = {...d.data()};
+          // Se só estrutura, zera votos e custos
+          if (copiar === 'estrutura') {
+            data.votos = 0; data.v_entrada = 0;
+            data.custo_jul = 0; data.custo_ago = 0;
+            data.custo_set = 0; data.custo_out = 0;
+            data.total = 0; data.status = 'pendente';
+            data.reuniao_feita = 'nao'; data.reuniao_data = '';
+          }
+          const ref = db.collection('campanhas').doc(id).collection('liderancas').doc();
+          batch.set(ref, data);
+        });
+        await batch.commit();
+      }
+      toast(`✅ ${todos.size} registros copiados de ${campanhas[origem].nome}`);
+    }
+
+    fecharModalCampanha();
+    renderCampanhaTabs();
+    await trocarCampanha(id);
+    toast(`✅ Campanha "${nome}" criada!`);
+  } catch(e) {
+    console.error('Erro criar campanha:', e);
+    toast('❌ Erro ao criar campanha', true);
+  }
+}
+
+// Migrar pessoa para outra campanha
+function migrarPessoa(fireId, localId, zona) {
+  const d = DB[zona].find(x => x.id === localId);
+  if (!d) return;
+
+  const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
+  if (!outrasCamps.length) {
+    toast('⚠️ Crie outra campanha primeiro', true);
+    return;
+  }
+
+  abrirModalCampsSel(
+    d,
+    `📅 Adicionar "${d.nome.split(' ')[0]}" em outras campanhas`,
+    'Selecione em quais campanhas esta pessoa vai participar:'
+  );
+}
+
+// ===================== SELEÇÃO MÚLTIPLA DE CAMPANHAS =====================
+let _mcsPessoa = null; // dados da pessoa a ser adicionada
+let _mcsCallback = null; // callback após confirmação
+
+function abrirModalCampsSel(pessoa, titulo, desc, callback) {
+  _mcsPessoa = pessoa;
+  _mcsCallback = callback;
+
+  document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outras campanhas';
+  document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais campanhas esta pessoa vai participar:';
+
+  // Lista todas campanhas exceto a atual
+  const outras = Object.entries(campanhas).filter(([id]) => id !== campanhaAtual);
+
+  const lista = document.getElementById('mcs-lista');
+  if (!outras.length) {
+    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhuma outra campanha disponível. Crie campanhas primeiro.</div>';
+  } else {
+    const cargoCores = { 'Vereador':'#22c55e','Governador':'#a855f7','Senador':'#f59e0b','Deputado Estadual':'#3b82f6','Deputado Federal':'#ef4444' };
+    lista.innerHTML = outras.map(([id, camp]) => {
+      const cor = cargoCores[camp.cargo] || '#6b7294';
+      return `<label class="camp-check-item">
+        <input type="checkbox" value="${a(id)}">
+        <span class="camp-check-nome">${h(camp.nome)}${camp.candidato?' · '+h(camp.candidato.split(' ')[0]):''}</span>
+        <span class="camp-check-cargo" style="color:${cor}">${h(camp.cargo)}</span>
+      </label>`;
+    }).join('');
+  }
+
+  document.getElementById('modalCampsSel').classList.add('open');
+}
+
+function fecharModalCampsSel() {
+  document.getElementById('modalCampsSel').classList.remove('open');
+  _mcsPessoa = null;
+  _mcsCallback = null;
+}
+
+async function confirmarCampsSel() {
+  const checkboxes = document.querySelectorAll('#mcs-lista input[type="checkbox"]:checked');
+  const campsSelecionadas = Array.from(checkboxes).map(cb => cb.value);
+
+  fecharModalCampsSel();
+
+  if (!campsSelecionadas.length || !_mcsPessoa) return;
+
+  let count = 0;
+  for (const campId of campsSelecionadas) {
+    try {
+      const docData = {..._mcsPessoa,
+        status: 'pendente',
+        votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0,
+        reuniao_feita: 'nao', reuniao_data: '',
+        _campanha: campId
+      };
+      delete docData._fireId;
+      await db.collection('campanhas').doc(campId).collection('liderancas').add(docData);
+      count++;
+    } catch(e) { console.error('Erro ao adicionar em campanha:', campId, e); }
+  }
+
+  if (count > 0) toast(`✅ Adicionado(a) em ${count} campanha${count>1?'s':''}!`);
+  if (_mcsCallback) _mcsCallback();
+}
+
+// ===================== TOAST =====================
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err?' err':'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ===================== EVENTOS =====================
+function on(id, eventName, handler) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(eventName, handler);
+}
+
+function fecharSidebarMobile() {
+  if (window.innerWidth > 768) return;
+  document.querySelector('.sidebar')?.classList.remove('mob-open');
+  document.getElementById('mobOverlay')?.classList.remove('active');
+}
+
+function bindStaticEvents() {
+  on('search', 'input', () => { pg = 1; aplicarFiltros(); });
+  on('filtro-tipo', 'change', () => { pg = 1; aplicarFiltros(); });
+  on('filtro-bairro', 'change', () => { pg = 1; aplicarFiltros(); });
+  on('treeSearch', 'input', renderArvore);
+  on('loginBtn', 'click', fazerLogin);
+  on('mobOverlay', 'click', toggleSidebar);
+  on('mobMenuBtn', 'click', toggleSidebar);
+  on('btnTheme', 'click', toggleTheme);
+  on('btnTreeToggle', 'click', toggleTreeView);
+  on('btnMapToggle', 'click', toggleMapView);
+  on('btnLogout', 'click', fazerLogout);
+  on('importFile', 'change', importarArquivo);
+  on('btnExport', 'click', exportarDados);
+  on('btnMigrarBairro', 'click', migrarPorBairro);
+  on('btnNovoRegistro', 'click', () => abrirModal(null));
+  on('btnNovaCampanha', 'click', abrirModalCampanha);
+  on('btnLimparFiltros', 'click', limpar);
+  on('btnCancelarCampanha', 'click', fecharModalCampanha);
+  on('btnCriarCampanha', 'click', criarCampanha);
+  on('btnFecharDrawer', 'click', fecharDrawer);
+  on('btnCancelarRegistro', 'click', () => fecharModal());
+  on('btnSalvarRegistro', 'click', salvar);
+  on('btnFecharCampsSel', 'click', fecharModalCampsSel);
+  on('btnConfirmarCampsSel', 'click', confirmarCampsSel);
+  on('f-tipo', 'change', atualizarCamposHierarquia);
+
+  on('overlay', 'click', fecharModal);
+  on('mc-origem', 'change', function () {
+    document.getElementById('mc-migrar-opcoes').style.display = this.value ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('[data-zone-nav]').forEach(el => {
+    el.addEventListener('click', () => {
+      trocarZona(el.dataset.zoneNav);
+      fecharSidebarMobile();
+    });
+  });
+  document.querySelectorAll('#multi-zona-panel input').forEach(cb => {
+    cb.addEventListener('change', aplicarMultiZona);
+  });
+  document.querySelectorAll('th[data-c]').forEach(th => {
+    th.addEventListener('click', () => sortBy(th.dataset.c));
+  });
+
+  const campsLista = document.getElementById('mcs-lista');
+  if (campsLista) {
+    campsLista.addEventListener('change', event => {
+      const input = event.target.closest('input[type="checkbox"]');
+      if (!input) return;
+      input.closest('.camp-check-item')?.classList.toggle('selected', input.checked);
+    });
+  }
+
+  document.addEventListener('click', handleActionClick);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      fecharModal();
+      fecharDrawer();
+      fecharModalCampanha();
+      fecharModalCampsSel();
+    }
+    if (event.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) {
+      fazerLogin();
+    }
+  });
+}
+
+function handleActionClick(event) {
+  const el = event.target.closest('[data-action]');
+  if (!el) return;
+  if (el instanceof HTMLButtonElement && el.disabled) return;
+
+  const ds = el.dataset;
+  const id = ds.id ? Number(ds.id) : null;
+
+  switch (ds.action) {
+    case 'toggle-multi-zona':
+      toggleMultiZona();
+      break;
+    case 'trocar-zona':
+      trocarZona(ds.zona);
+      break;
+    case 'ver-drawer':
+      verDrawer(id, ds.zona);
+      break;
+    case 'editar-registro':
+      abrirModal(id, ds.zona);
+      if (ds.closeDrawer === 'true') fecharDrawer();
+      break;
+    case 'deletar-registro':
+      deletar(id, ds.zona);
+      break;
+    case 'go-page':
+      goPg(Number(ds.page));
+      break;
+    case 'switch-tab':
+      switchTab(el, ds.tab);
+      break;
+    case 'migrar-pessoa':
+      migrarPessoa(ds.fireId, id, ds.zona);
+      break;
+    case 'toggle-mini':
+      toggleMiniModal(ds.target);
+      break;
+    case 'salvar-reuniao':
+      salvarReuniao(ds.fireId, id, ds.zona);
+      break;
+    case 'salvar-pagamento':
+      salvarPagamento(ds.fireId, id, ds.zona);
+      break;
+    case 'toggle-node':
+      toggleNode(ds.nodeId);
+      break;
+    case 'trocar-campanha':
+      trocarCampanha(ds.campanha);
+      break;
+    case 'limpar-campanha':
+      limparCampanha(ds.campanha);
+      break;
+    case 'fechar-map-popup':
+      fecharMapPopup();
+      verDrawer(id, ds.zona);
+      break;
+    default:
+      return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+document.addEventListener('DOMContentLoaded', bindStaticEvents);
+
+// ===================== FIREBASE =====================
+
+
+// Mostra indicador de sync
+function setSyncStatus(msg, cor) {
+  let el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = cor || 'var(--muted)';
+}
+
+// ===================== AUTENTICAÇÃO =====================
+const auth = firebase.auth();
+
+// Observa estado de login
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Logado — mostra sistema
+    document.getElementById('loginScreen').classList.add('hidden');
+    const initials = user.email.substring(0, 2).toUpperCase();
+    document.getElementById('userAvatar').textContent = initials;
+    document.getElementById('userEmail').textContent = user.email;
+    setSyncStatus('🔄 Carregando dados…', '#60a5fa');
+    init();
+  } else {
+    // Não logado — mostra tela de login
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loading-overlay').style.display = 'none';
+    setSyncStatus('🔒 Aguardando login', 'var(--muted)');
+  }
+});
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+
+  if (!email || !senha) {
+    err.textContent = 'Preencha e-mail e senha.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  err.classList.remove('show');
+
+  try {
+    await auth.signInWithEmailAndPassword(email, senha);
+    // onAuthStateChanged cuida do resto
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    const msgs = {
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+      'auth/invalid-credential': 'E-mail ou senha incorretos.'
+    };
+    err.textContent = msgs[e.code] || 'Erro ao fazer login. Tente novamente.';
+    err.classList.add('show');
+  }
+}
+
+async function fazerLogout() {
+  if (!confirm('Deseja sair do sistema?')) return;
+  await auth.signOut();
+}
+
+
+// ===================== TEMA =====================
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('theme-light');
+  document.getElementById('btnTheme').textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Aplica tema salvo ao carregar
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    // Botão será atualizado após DOM carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('btnTheme');
+      if (btn) btn.textContent = '🌙';
+    });
+  }
+})();
+
+// ===================== MULTI ZONA =====================
+let multiZonaAtivo = false;
+
+function toggleMultiZona() {
+  const panel = document.getElementById('multi-zona-panel');
+  const navItem = document.getElementById('nav-multi');
+  multiZonaAtivo = !multiZonaAtivo;
+  panel.style.display = multiZonaAtivo ? 'block' : 'none';
+  navItem.classList.toggle('active', multiZonaAtivo);
+
+  if (!multiZonaAtivo) {
+    // Desmarca todos e volta para todas
+    document.querySelectorAll('#multi-zona-panel input').forEach(cb => cb.checked = false);
+    trocarZona('todas');
+  }
+}
+
+function aplicarMultiZona() {
+  const selecionadas = Array.from(
+    document.querySelectorAll('#multi-zona-panel input:checked')
+  ).map(cb => cb.value);
+
+  if (selecionadas.length === 0) {
+    trocarZona('todas');
+    return;
+  }
+
+  if (selecionadas.length === 1) {
+    trocarZona(selecionadas[0]);
+    return;
+  }
+
+  // Múltiplas zonas selecionadas
+  zonaAtual = 'multi';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-multi').classList.add('active');
+
+  // Atualiza título
+  const nomes = selecionadas.map(z => ZONAS_CFG[z]?.label.replace('Zona ','') || z);
+  document.getElementById('zTitle').textContent = nomes.join(' + ');
+  document.getElementById('zBadge').style.background = '#3b82f6';
+
+  pg = 1;
+  aplicarFiltros();
+  if (window.innerWidth <= 768) {
+    document.querySelector('.sidebar').classList.remove('mob-open');
+    document.getElementById('mobOverlay').classList.remove('active');
+  }
+}
+
+// ===================== MOBILE SIDEBAR =====================
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('mobOverlay');
+  sidebar.classList.toggle('mob-open');
+  overlay.classList.toggle('active');
+}
+
+// ===================== START =====================
+// init() é chamado pelo onAuthStateChanged após login.
+
+// ===================== MAPA =====================
+let mapView = false;
+let leafletMap = null;
+let markers = [];
+let geocodeCache = {};  // endereço -> {lat, lng} | null
+
+const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
+
+function toggleMapView() {
+  // Fecha árvore se estiver aberta
+  if (treeView) {
+    treeView = false;
+    document.getElementById('btnTreeToggle').classList.remove('active');
+    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('treeArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+    document.querySelector('.controls-bar').style.display = '';
+  }
+  mapView = !mapView;
+  const btn = document.getElementById('btnMapToggle');
+  const tableArea = document.querySelector('.table-area');
+  const pag = document.getElementById('pag');
+  const mapArea = document.getElementById('mapArea');
+
+  if (mapView) {
+    btn.classList.add('active');
+    btn.textContent = '📋 Tabela';
+    tableArea.classList.add('hidden');
+    pag.style.display = 'none';
+    mapArea.classList.add('active');
+    document.body.classList.add('map-fullscreen');
+    setTimeout(() => {
+      if (leafletMap) leafletMap.invalidateSize();
+      iniciarMapa();
+    }, 100);
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🗺️ Mapa';
+    tableArea.classList.remove('hidden');
+    pag.style.display = '';
+    mapArea.classList.remove('active');
+    document.body.classList.remove('map-fullscreen');
+  }
+}
+
+function iniciarMapa() {
+  if (!leafletMap) {
+    leafletMap = L.map('map', { zoomControl: true }).setView([-5.0892, -42.8019], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(leafletMap);
+  }
+  renderMapa();
+}
+
+function criarIcone(tipo) {
+  const cor = TIPO_COLORS[tipo] || '#888';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${cor}" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>
+    <circle cx="14" cy="14" r="5" fill="rgba(255,255,255,.9)"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    iconSize: [28, 36],
+    iconAnchor: [14, 36],
+    popupAnchor: [0, -36],
+    className: ''
+  });
+}
+
+function popupHTML(d, zona) {
+  const cfg = ZONAS_CFG[zona] || {};
+  const wa = d.telefone ? d.telefone.replace(/\D/g,'') : '';
+  const waLink = wa.length >= 8
+    ? `<a href="https://wa.me/55${wa}" target="_blank" style="color:#25d366">${h(d.telefone)}</a>`
+    : h(d.telefone || '—');
+  return `
+    <div style="min-width:200px">
+      <div class="popup-nome">${h(d.nome)}</div>
+      <div class="popup-row"><span class="popup-lbl">Tipo</span><span class="popup-val"><span class="badge badge-${d.tipo}">${d.tipo}</span></span></div>
+      ${cfg.label ? `<div class="popup-row"><span class="popup-lbl">Zona</span><span class="popup-val" style="color:${cfg.cor}">${cfg.label}</span></div>` : ''}
+      <div class="popup-row"><span class="popup-lbl">Bairro</span><span class="popup-val">${h(d.bairro || '—')}</span></div>
+      <div class="popup-row"><span class="popup-lbl">📞</span><span class="popup-val">${waLink}</span></div>
+      <div class="popup-row"><span class="popup-lbl">Votos</span><span class="popup-val" style="color:var(--accent,#e8433a);font-weight:700">${d.votos||'—'}</span></div>
+      ${d.colegio ? `<div class="popup-row"><span class="popup-lbl">Colégio</span><span class="popup-val" style="font-size:.7rem">${h(d.colegio)}</span></div>` : ''}
+      ${d.secao ? `<div class="popup-row"><span class="popup-lbl">Seção</span><span class="popup-val">${h(d.secao)}</span></div>` : ''}
+      <div style="margin-top:8px">
+        <button data-action="fechar-map-popup" data-id="${a(d.id)}" data-zona="${a(zona)}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;padding:6px;font-size:.75rem;font-family:DM Sans,sans-serif">
+          Ver detalhes →
+        </button>
+      </div>
+    </div>`;
+}
+
+function fecharMapPopup() {
+  if (leafletMap) leafletMap.closePopup();
+}
+
+async function geocodificar(endereco, bairro, tentativa) {
+  const chave = endereco || bairro;
+  if (!chave) return null;
+  if (geocodeCache[chave] !== undefined) return geocodeCache[chave];
+
+  // Monta query progressivamente
+  const queries = [];
+  if (endereco && endereco.length > 5) {
+    queries.push(endereco + ', Teresina, Piauí, Brasil');
+  }
+  if (bairro) {
+    queries.push(bairro + ', Teresina, Piauí, Brasil');
+    queries.push('Bairro ' + bairro + ', Teresina, Piauí');
+  }
+
+  for (const q of queries) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=br`;
+      const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      const data = await r.json();
+      if (data && data[0]) {
+        const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        geocodeCache[chave] = result;
+        return result;
+      }
+    } catch(e) {}
+    // Respeita rate limit do Nominatim
+    await new Promise(res => setTimeout(res, 1100));
+  }
+
+  geocodeCache[chave] = null;
+  return null;
+}
+
+async function renderMapa() {
+  // Limpa marcadores antigos
+  markers.forEach(m => leafletMap.removeLayer(m));
+  markers = [];
+
+  const dados = getDados();
+  const comEndereco = dados.filter(d => d.endereco || d.bairro);
+
+  const infoBar = document.getElementById('mapInfoBar');
+  const gc = document.getElementById('gcProgress');
+  const gcSub = document.getElementById('gcSub');
+
+  if (!comEndereco.length) {
+    infoBar.innerHTML = '⚠️ Nenhum registro com endereço ou bairro para mapear';
+    return;
+  }
+
+  // Mostra spinner
+  gc.classList.add('active');
+  infoBar.innerHTML = 'Geocodificando endereços…';
+
+  let ok = 0, fail = 0;
+  const bounds = [];
+
+  for (let i = 0; i < comEndereco.length; i++) {
+    const d = comEndereco[i];
+    gcSub.textContent = `${i+1} / ${comEndereco.length}`;
+
+    // Pequena variação aleatória para não sobrepor pins do mesmo bairro
+    const jitter = () => (Math.random() - 0.5) * 0.003;
+
+    let coord = await geocodificar(d.endereco, d.bairro, i);
+
+    if (coord) {
+      const lat = coord.lat + jitter();
+      const lng = coord.lng + jitter();
+      const marker = L.marker([lat, lng], { icon: criarIcone(d.tipo) })
+        .bindPopup(popupHTML(d, d._zona), { maxWidth: 280 })
+        .addTo(leafletMap);
+      markers.push(marker);
+      bounds.push([lat, lng]);
+      ok++;
+    } else {
+      fail++;
+    }
+
+    // Atualiza info bar
+    infoBar.innerHTML = `<strong>${ok}</strong> no mapa · <strong>${fail}</strong> sem coordenada · processando ${i+1}/${comEndereco.length}`;
+
+    // Pausa entre requests para respeitar Nominatim (1 req/seg)
+    if (i < comEndereco.length - 1) {
+      await new Promise(res => setTimeout(res, 1100));
+    }
+  }
+
+  gc.classList.remove('active');
+
+  if (bounds.length) {
+    leafletMap.fitBounds(bounds, { padding: [40, 40] });
+    infoBar.innerHTML = `✅ <strong>${ok}</strong> lideranças no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}`;
+  } else {
+    infoBar.innerHTML = '⚠️ Nenhum endereço pôde ser localizado. Verifique os endereços cadastrados.';
+  }
+
+  setTimeout(() => leafletMap.invalidateSize(), 200);
+}
