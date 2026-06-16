@@ -154,6 +154,11 @@ async function limparCampanha(id) {
       snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
       await batch.commit();
     }
+    await db.collection('campanhas').doc(id).set({
+      dadosIniciaisImportados: true,
+      limpaEm: new Date().toISOString()
+    }, { merge: true });
+    if (campanhas[id]) campanhas[id].dadosIniciaisImportados = true;
     await trocarCampanha(id);
     toast(`✅ "${nome}" limpa — ${snap.size} registros removidos`);
   } catch(e) {
@@ -162,12 +167,18 @@ async function limparCampanha(id) {
 }
 
 // ===================== CAMPANHAS =====================
+const CAMPANHA_SEMENTE_INICIAL = '2024-vereador';
 let campanhaAtual = null; // ID da campanha ativa
 let campanhas = {}; // {id: {nome, ano, cargo}}
 
 // Retorna a coleção correta baseada na campanha ativa
 function colecao() {
   return db.collection('campanhas').doc(campanhaAtual || 'default').collection('liderancas');
+}
+
+function deveImportarDadosIniciais() {
+  const campanha = campanhas[campanhaAtual] || {};
+  return campanhaAtual === CAMPANHA_SEMENTE_INICIAL && campanha.dadosIniciaisImportados !== true;
 }
 
 // ===================== DADOS =====================
@@ -231,9 +242,10 @@ async function carregarDoFirebase() {
     // Carrega campanhas disponíveis
     await carregarCampanhas();
 
-    // Verifica se banco está vazio e migra se necessário
+    // Importa dados iniciais apenas para a campanha semente e somente uma vez.
+    // Campanhas limpas pelo usuário devem permanecer vazias após atualizar a página.
     const snapCheck = await colecao().limit(1).get();
-    if (snapCheck.empty) {
+    if (snapCheck.empty && deveImportarDadosIniciais()) {
       await migrarDadosNorte();
     }
 
@@ -248,8 +260,11 @@ async function carregarDoFirebase() {
     });
 
     dbCarregado = true;
-    // Migra vínculos da planilha (só na primeira vez)
-    await migrarVinculos();
+    // Migra vínculos da planilha quando há dados para processar.
+    const possuiRegistros = Object.values(DB).some(registros => registros.length > 0);
+    if (possuiRegistros) {
+      await migrarVinculos();
+    }
     // Recarrega para pegar os vínculos
     const zonasReload = ['norte','leste','sul','sudeste','rural'];
     const snapsReload = await Promise.all(
@@ -996,6 +1011,11 @@ async function migrarDadosNorte() {
     });
     await batch.commit();
   }
+  await db.collection('campanhas').doc(campanhaAtual).set({
+    dadosIniciaisImportados: true,
+    dadosIniciaisImportadosEm: new Date().toISOString()
+  }, { merge: true });
+  if (campanhas[campanhaAtual]) campanhas[campanhaAtual].dadosIniciaisImportados = true;
   toast('✅ Dados da Zona Norte importados!');
 }
 
@@ -1453,12 +1473,20 @@ async function carregarCampanhas() {
       campanhasPadrao.forEach(cp => {
         batch.set(db.collection('campanhas').doc(cp.id), {
           nome: cp.nome, ano: cp.ano, cargo: cp.cargo,
+          dadosIniciaisImportados: cp.id !== CAMPANHA_SEMENTE_INICIAL,
           criadoEm: new Date().toISOString()
         });
       });
       await batch.commit();
       campanhas = {};
-      campanhasPadrao.forEach(cp => { campanhas[cp.id] = { nome: cp.nome, ano: cp.ano, cargo: cp.cargo }; });
+      campanhasPadrao.forEach(cp => {
+        campanhas[cp.id] = {
+          nome: cp.nome,
+          ano: cp.ano,
+          cargo: cp.cargo,
+          dadosIniciaisImportados: cp.id !== CAMPANHA_SEMENTE_INICIAL
+        };
+      });
       campanhaAtual = '2024-vereador';
     } else {
       campanhas = {};

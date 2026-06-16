@@ -26,6 +26,9 @@ assert(!/<style[\s>]/i.test(html), 'index.html nao deve conter bloco <style> inl
 assert(!/<script>\s*\/\/ ===================== FIREBASE CONFIG/i.test(html), 'index.html nao deve conter o app inline.');
 assert(!/\son(?:click|change|input|submit|mouseover|mouseout)=/i.test(html + app), 'Nao deve haver handlers inline.');
 assert(!/\bcarregarFirestore\(/.test(app), 'Fluxo legado carregarFirestore nao deve ser usado.');
+assert(/function deveImportarDadosIniciais\(\)/.test(app), 'Importacao inicial deve ter guarda explicita.');
+assert(/snapCheck\.empty && deveImportarDadosIniciais\(\)/.test(app), 'Campanha vazia nao deve ser reimportada sem validar metadados.');
+assert(/dadosIniciaisImportados: true/.test(app), 'Campanhas limpas/importadas devem registrar metadado de inicializacao.');
 
 assert(escapeHtml('<img src=x onerror=alert(1)>') === '&lt;img src=x onerror=alert(1)&gt;', 'escapeHtml deve escapar tags.');
 assert(parseNonNegativeNumber('-1', 'Valor').error, 'Numeros negativos devem ser rejeitados.');
