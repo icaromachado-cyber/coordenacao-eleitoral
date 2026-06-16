@@ -540,42 +540,8 @@ function renderZonePanel() {
   const panel = document.getElementById('zone-panel');
   if (!panel) return;
 
-  if (zonaAtual !== 'todas') {
-    panel.style.display = 'none';
-    return;
-  }
-
-  panel.style.display = 'grid';
-
-  const zonas = ['norte','leste','sul','sudeste','rural'];
-  panel.innerHTML = zonas.map(z => {
-    const cfg = ZONAS_CFG[z];
-    const dados = DB[z] || [];
-    const total = dados.length;
-    const lids = dados.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
-    const mobs = dados.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
-    const apoios = dados.reduce((s,d)=>s+(d.votos||0),0);
-    const custo = dados.reduce((s,d)=>s+d.total,0);
-    const ativos = dados.filter(d=>d.status==='ativo'||!d.status).length;
-
-    return `<div class="zone-card" data-action="trocar-zona" data-zona="${a(z)}" style="border-top-color:${cfg.cor}">
-      <div class="zone-card-header">
-        <div class="zone-card-dot" style="background:${cfg.cor}"></div>
-        <div class="zone-card-name">${cfg.label}</div>
-        <div class="zone-card-count">${total} reg.</div>
-      </div>
-      <div class="zone-card-stats">
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#60a5fa">${lids}</span><span class="zone-stat-lbl">Referências</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#4ade80">${mobs}</span><span class="zone-stat-lbl">Equipe</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:${cfg.cor}">${apoios}</span><span class="zone-stat-lbl">Apoios</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#f59e0b">R$${custo>=1000?(custo/1000).toFixed(0)+'K':custo}</span><span class="zone-stat-lbl">Recursos</span></div>
-      </div>
-      <div class="zone-card-footer">
-        <span style="color:#4ade80;font-size:.7rem">✅ ${ativos} ativos</span>
-        <span style="color:#3b82f6;font-size:.7rem;cursor:pointer">Ver região →</span>
-      </div>
-    </div>`;
-  }).join('');
+  panel.style.display = 'none';
+  panel.innerHTML = '';
 }
 
 // ===================== RENDER TABLE =====================
