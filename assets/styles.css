@@ -186,13 +186,55 @@ body {
 .topbar-actions {
   margin-left: auto;
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.tools-menu {
+  position: relative;
+}
+
+.tools-menu summary {
+  list-style: none;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.tools-menu summary::-webkit-details-marker { display: none; }
+.tools-menu summary:hover { border-color: var(--muted); color: var(--text); }
+
+.tools-menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 16px 44px rgba(0,0,0,.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  z-index: 500;
+}
+
+.tools-menu-list .btn {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 /* SUMMARY STRIP */
 .summary-strip {
   flex-shrink: 0;
-  display: flex;
+  display: none;
   gap: 0;
   border-bottom: 1px solid var(--border);
   background: #252830;
@@ -355,6 +397,18 @@ table {
   border-collapse: collapse;
   font-size: 0.82rem;
   min-width: 900px;
+}
+
+/* Tela principal mais limpa: campos secundários continuam no drawer. */
+th:nth-child(6), td:nth-child(6),
+th:nth-child(7), td:nth-child(7),
+th:nth-child(8), td:nth-child(8),
+th:nth-child(10), td:nth-child(10),
+th:nth-child(12), td:nth-child(12),
+th:nth-child(13), td:nth-child(13),
+th:nth-child(14), td:nth-child(14),
+th:nth-child(15), td:nth-child(15) {
+  display: none;
 }
 
 thead {

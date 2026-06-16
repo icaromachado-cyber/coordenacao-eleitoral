@@ -131,12 +131,17 @@
         <span class="user-email" id="userEmail"></span>
         <button class="btn-logout" id="btnLogout">Sair</button>
       </div>
-      <label class="btn btn-import" style="cursor:pointer" title="Importar planilha desta região">
-        📥 <span>Importar</span>
-        <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
-      </label>
-      <button class="btn btn-import" id="btnExport" title="Exportar dados da região atual em Excel">📤 Exportar</button>
-      <button class="btn btn-import" id="btnMigrarBairro" title="Organizar pessoas por região com base no bairro">🔄 Organizar Regiões</button>
+      <details class="tools-menu">
+        <summary>Ferramentas</summary>
+        <div class="tools-menu-list">
+          <label class="btn btn-import" title="Importar planilha desta região">
+            📥 <span>Importar</span>
+            <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
+          </label>
+          <button class="btn btn-import" id="btnExport" title="Exportar dados da região atual em Excel">📤 Exportar</button>
+          <button class="btn btn-import" id="btnMigrarBairro" title="Organizar pessoas por região com base no bairro">🔄 Organizar Regiões</button>
+        </div>
+      </details>
       <button class="btn btn-primary" id="btnNovoRegistro">+ Novo</button>
     </div>
   </div>
