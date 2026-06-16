@@ -148,19 +148,14 @@ async function limparCampanha(id) {
   
   toast('🗑️ Limpando ciclo…');
   try {
-    const snap = await db.collection('campanhas').doc(id).collection('liderancas').get();
-    for (let i = 0; i < snap.docs.length; i += 400) {
-      const batch = db.batch();
-      snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
+    const removidos = await limparRegistrosCampanha(id);
     await db.collection('campanhas').doc(id).set({
       dadosIniciaisImportados: true,
       limpaEm: new Date().toISOString()
     }, { merge: true });
     if (campanhas[id]) campanhas[id].dadosIniciaisImportados = true;
     await trocarCampanha(id);
-    toast(`✅ "${nome}" limpa — ${snap.size} registros removidos`);
+    toast(`✅ "${nome}" limpa — ${removidos} registros removidos`);
   } catch(e) {
     toast('❌ Erro ao limpar ciclo', true);
   }
@@ -174,6 +169,16 @@ let campanhas = {}; // {id: {nome, ano, cargo}}
 // Retorna a coleção correta baseada na campanha ativa
 function colecao() {
   return db.collection('campanhas').doc(campanhaAtual || 'default').collection('liderancas');
+}
+
+async function limparRegistrosCampanha(id) {
+  const snap = await db.collection('campanhas').doc(id).collection('liderancas').get();
+  for (let i = 0; i < snap.docs.length; i += 400) {
+    const batch = db.batch();
+    snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  return snap.size;
 }
 
 function deveImportarDadosIniciais() {
@@ -199,13 +204,16 @@ const TIPO_LABELS = {
 };
 
 const CICLOS_NEUTROS = {
-  '2024-vereador': '2024 - Ciclo Base',
-  '2026-governador': '2026 - Ciclo 1',
-  '2026-senador-1': '2026 - Ciclo 2',
-  '2026-senador-2': '2026 - Ciclo 3',
-  '2026-dep-estadual': '2026 - Ciclo 4',
-  '2026-dep-federal': '2026 - Ciclo 5'
+  '2024-vereador': '2024 - Ciclo Base'
 };
+
+const CICLOS_PADRAO_OCULTOS = new Set([
+  '2026-governador',
+  '2026-senador-1',
+  '2026-senador-2',
+  '2026-dep-estadual',
+  '2026-dep-federal'
+]);
 
 const CATEGORIA_CORES = {
   Vereador: '#22c55e',
@@ -227,9 +235,17 @@ function tipoLabel(tipo) {
 }
 
 function nomeCiclo(id, campanha) {
-  if (CICLOS_NEUTROS[id]) return CICLOS_NEUTROS[id];
+  if (id === CAMPANHA_SEMENTE_INICIAL) {
+    const nome = String(campanha?.nome || '');
+    if (campanha?.atualizadoEm && nome) return nome;
+    return CICLOS_NEUTROS[id];
+  }
   return String(campanha?.nome || id || '')
     .replace(/\b(Vereador|Governador|Senador|Deputado Federal|Deputado Estadual|Prefeito)\b/gi, 'Ciclo');
+}
+
+function cicloVisivel(id) {
+  return id === CAMPANHA_SEMENTE_INICIAL || !CICLOS_PADRAO_OCULTOS.has(id);
 }
 
 const DADOS_NORTE = window.DADOS_NORTE || [];
@@ -1469,12 +1485,7 @@ async function carregarCampanhas() {
     if (snap.empty) {
       // Cria ciclos padrão
       const campanhasPadrao = [
-        { id: '2024-vereador',        nome: '2024 - Vereador',          ano: 2024, cargo: 'Vereador' },
-        { id: '2026-governador',      nome: '2026 - Governador',        ano: 2026, cargo: 'Governador' },
-        { id: '2026-senador-1',       nome: '2026 - Senador 1',         ano: 2026, cargo: 'Senador' },
-        { id: '2026-senador-2',       nome: '2026 - Senador 2',         ano: 2026, cargo: 'Senador' },
-        { id: '2026-dep-estadual',    nome: '2026 - Dep. Estadual',     ano: 2026, cargo: 'Deputado Estadual' },
-        { id: '2026-dep-federal',     nome: '2026 - Dep. Federal',      ano: 2026, cargo: 'Deputado Federal' },
+        { id: CAMPANHA_SEMENTE_INICIAL, nome: '2024 - Ciclo Base', ano: 2024, cargo: 'Categoria E' },
       ];
       const batch = db.batch();
       campanhasPadrao.forEach(cp => {
@@ -1496,11 +1507,32 @@ async function carregarCampanhas() {
       });
       campanhaAtual = '2024-vereador';
     } else {
-      campanhas = {};
-      snap.docs.forEach(d => { campanhas[d.id] = d.data(); });
-      // Usa a mais recente por padrão
-      campanhaAtual = snap.docs[snap.docs.length - 1].id;
-      // Ou a salva no localStorage
+      const todasCampanhas = {};
+      snap.docs.forEach(d => { todasCampanhas[d.id] = d.data(); });
+      if (!todasCampanhas[CAMPANHA_SEMENTE_INICIAL]) {
+        await db.collection('campanhas').doc(CAMPANHA_SEMENTE_INICIAL).set({
+          nome: '2024 - Ciclo Base',
+          ano: 2024,
+          cargo: 'Categoria E',
+          dadosIniciaisImportados: false,
+          criadoEm: new Date().toISOString()
+        }, { merge: true });
+        todasCampanhas[CAMPANHA_SEMENTE_INICIAL] = {
+          nome: '2024 - Ciclo Base',
+          ano: 2024,
+          cargo: 'Categoria E',
+          dadosIniciaisImportados: false
+        };
+      }
+
+      campanhas = Object.fromEntries(
+        Object.entries(todasCampanhas).filter(([id]) => cicloVisivel(id))
+      );
+
+      // Usa o ciclo base por padrão, ou a salva no localStorage se ainda for visível.
+      campanhaAtual = campanhas[CAMPANHA_SEMENTE_INICIAL]
+        ? CAMPANHA_SEMENTE_INICIAL
+        : Object.keys(campanhas)[0];
       const saved = localStorage.getItem('campanhaAtual');
       if (saved && campanhas[saved]) campanhaAtual = saved;
     }
@@ -1583,11 +1615,17 @@ async function renomearCampanhaAtual() {
 async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
   if (!origem || !destino || origem === destino) return 0;
   const todos = await db.collection('campanhas').doc(origem).collection('liderancas').get();
+  const registros = todos.docs.map(d => ({...d.data(), _sourceId: d.id}));
+  const count = await copiarRegistrosParaCampanha(registros, destino, modo);
+  await marcarCampanhaImportada(destino);
+  return count;
+}
 
-  for (let i = 0; i < todos.docs.length; i += 400) {
+async function copiarRegistrosParaCampanha(registros, destino, modo='estrutura') {
+  for (let i = 0; i < registros.length; i += 400) {
     const batch = db.batch();
-    todos.docs.slice(i, i + 400).forEach(d => {
-      const data = {...d.data()};
+    registros.slice(i, i + 400).forEach(reg => {
+      const data = {...reg};
       if (modo === 'estrutura') {
         data.votos = 0; data.v_entrada = 0;
         data.custo_jul = 0; data.custo_ago = 0;
@@ -1596,37 +1634,26 @@ async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
         data.reuniao_feita = 'nao'; data.reuniao_data = '';
       }
       delete data._fireId;
+      delete data._sourceId;
       const ref = db.collection('campanhas').doc(destino).collection('liderancas').doc();
       batch.set(ref, data);
     });
     await batch.commit();
   }
 
+  return registros.length;
+}
+
+async function marcarCampanhaImportada(destino) {
   await db.collection('campanhas').doc(destino).set({
     dadosIniciaisImportados: true,
     baseImportadaEm: new Date().toISOString()
   }, { merge: true });
   if (campanhas[destino]) campanhas[destino].dadosIniciaisImportados = true;
-
-  return todos.size;
 }
 
 async function importarBaseParaCampanhaAtual() {
-  if (!campanhaAtual || campanhaAtual === CAMPANHA_SEMENTE_INICIAL) {
-    toast('⚠️ Escolha um ciclo criado para importar a base', true);
-    return;
-  }
-  if (!confirm(`Importar a estrutura do ciclo base para "${nomeCiclo(campanhaAtual, campanhas[campanhaAtual])}"?\n\nOs apoios e recursos serão zerados.`)) return;
-
-  try {
-    toast('📋 Importando base…');
-    const count = await copiarDadosEntreCampanhas(CAMPANHA_SEMENTE_INICIAL, campanhaAtual, 'estrutura');
-    await trocarCampanha(campanhaAtual);
-    toast(`✅ ${count} registros importados do ciclo base`);
-  } catch(e) {
-    console.error('Erro importar base:', e);
-    toast('❌ Erro ao importar base', true);
-  }
+  abrirModalImportarBase();
 }
 
 function abrirModalCampanha() {
@@ -1653,9 +1680,14 @@ async function criarCampanha() {
 
   if (!nome) { toast('⚠️ Informe o nome do ciclo', true); return; }
 
-  const id = nome.toLowerCase()
+  let id = nome.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (CICLOS_PADRAO_OCULTOS.has(id)) id = `${id}-novo`;
+  if (campanhas[id]) {
+    toast('⚠️ Já existe um ciclo com esse nome', true);
+    return;
+  }
 
   try {
     const candidato = document.getElementById('mc-candidato').value.trim();
@@ -1703,13 +1735,18 @@ function migrarPessoa(fireId, localId, zona) {
 // ===================== SELEÇÃO MÚLTIPLA DE CAMPANHAS =====================
 let _mcsPessoa = null; // dados da pessoa a ser adicionada
 let _mcsCallback = null; // callback após confirmação
+let _mcsMode = 'ciclos';
+let _mcsBaseRegistros = [];
 
 function abrirModalCampsSel(pessoa, titulo, desc, callback) {
+  _mcsMode = 'ciclos';
   _mcsPessoa = pessoa;
   _mcsCallback = callback;
 
   document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outros ciclos';
   document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais ciclos esta pessoa vai participar:';
+  document.getElementById('mcs-search').style.display = 'none';
+  document.getElementById('mcs-actions').classList.remove('on');
 
   // Lista todos os ciclos exceto o atual
   const outras = Object.entries(campanhas).filter(([id]) => id !== campanhaAtual);
@@ -1732,16 +1769,89 @@ function abrirModalCampsSel(pessoa, titulo, desc, callback) {
   document.getElementById('modalCampsSel').classList.add('open');
 }
 
+async function abrirModalImportarBase() {
+  if (!campanhaAtual || campanhaAtual === CAMPANHA_SEMENTE_INICIAL) {
+    toast('⚠️ Escolha um ciclo criado para importar a base', true);
+    return;
+  }
+
+  _mcsMode = 'base';
+  _mcsPessoa = null;
+  _mcsCallback = null;
+  _mcsBaseRegistros = [];
+
+  document.getElementById('mcs-titulo').textContent = '📋 Importar do ciclo base';
+  document.getElementById('mcs-desc').textContent = 'Selecione quem vai continuar neste novo ciclo. Apoios e recursos serão zerados.';
+  const search = document.getElementById('mcs-search');
+  search.style.display = '';
+  search.value = '';
+  document.getElementById('mcs-actions').classList.add('on');
+  document.getElementById('mcs-lista').innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Carregando base…</div>';
+  document.getElementById('modalCampsSel').classList.add('open');
+
+  try {
+    const snap = await db.collection('campanhas').doc(CAMPANHA_SEMENTE_INICIAL).collection('liderancas').get();
+    _mcsBaseRegistros = snap.docs.map(d => ({...d.data(), _sourceId: d.id}));
+    renderImportacaoBase();
+  } catch(e) {
+    console.error('Erro carregar base:', e);
+    document.getElementById('mcs-lista').innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Erro ao carregar o ciclo base.</div>';
+  }
+}
+
+function renderImportacaoBase() {
+  const lista = document.getElementById('mcs-lista');
+  const q = norm(document.getElementById('mcs-search').value);
+  const filtrados = _mcsBaseRegistros.filter(d => {
+    return !q || norm(`${d.nome || ''} ${d.bairro || ''} ${d.telefone || ''}`).includes(q);
+  });
+
+  if (!filtrados.length) {
+    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhum registro encontrado na base.</div>';
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(d => `
+    <label class="camp-check-item">
+      <input type="checkbox" value="${a(d._sourceId)}">
+      <span class="camp-check-nome">${h(d.nome || 'Sem nome')}${d.bairro ? ` · ${h(d.bairro)}` : ''}</span>
+      <span class="camp-check-cargo">${h(tipoLabel(d.tipo))}</span>
+    </label>
+  `).join('');
+}
+
 function fecharModalCampsSel() {
   document.getElementById('modalCampsSel').classList.remove('open');
   _mcsPessoa = null;
   _mcsCallback = null;
+  _mcsMode = 'ciclos';
+  _mcsBaseRegistros = [];
 }
 
 async function confirmarCampsSel() {
   const checkboxes = document.querySelectorAll('#mcs-lista input[type="checkbox"]:checked');
-  const campsSelecionadas = Array.from(checkboxes).map(cb => cb.value);
+  const selecionados = Array.from(checkboxes).map(cb => cb.value);
 
+  if (_mcsMode === 'base') {
+    if (!selecionados.length) { toast('⚠️ Selecione pelo menos um registro', true); return; }
+    const ids = new Set(selecionados);
+    const registros = _mcsBaseRegistros.filter(d => ids.has(d._sourceId));
+    fecharModalCampsSel();
+    try {
+      toast('📋 Importando selecionados…');
+      await limparRegistrosCampanha(campanhaAtual);
+      const count = await copiarRegistrosParaCampanha(registros, campanhaAtual, 'estrutura');
+      await marcarCampanhaImportada(campanhaAtual);
+      await trocarCampanha(campanhaAtual);
+      toast(`✅ ${count} registros importados do ciclo base`);
+    } catch(e) {
+      console.error('Erro importar selecionados:', e);
+      toast('❌ Erro ao importar selecionados', true);
+    }
+    return;
+  }
+
+  const campsSelecionadas = selecionados;
   fecharModalCampsSel();
 
   if (!campsSelecionadas.length || !_mcsPessoa) return;
@@ -1813,6 +1923,19 @@ function bindStaticEvents() {
   on('btnSalvarRegistro', 'click', salvar);
   on('btnFecharCampsSel', 'click', fecharModalCampsSel);
   on('btnConfirmarCampsSel', 'click', confirmarCampsSel);
+  on('mcs-search', 'input', renderImportacaoBase);
+  on('btnMcsTodos', 'click', () => {
+    document.querySelectorAll('#mcs-lista input[type="checkbox"]').forEach(input => {
+      input.checked = true;
+      input.closest('.camp-check-item')?.classList.add('selected');
+    });
+  });
+  on('btnMcsLimpar', 'click', () => {
+    document.querySelectorAll('#mcs-lista input[type="checkbox"]').forEach(input => {
+      input.checked = false;
+      input.closest('.camp-check-item')?.classList.remove('selected');
+    });
+  });
   on('f-tipo', 'change', atualizarCamposHierarquia);
   on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 

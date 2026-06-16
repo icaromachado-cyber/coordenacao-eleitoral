@@ -180,7 +180,7 @@
     <span class="campanha-label">📁 Ciclo:</span>
     <select id="campanhaSelect" class="campanha-select"></select>
     <button class="btn-nova-campanha" id="btnRenomearCampanha">Renomear</button>
-    <button class="btn-nova-campanha" id="btnImportarBase">Importar base</button>
+    <button class="btn-nova-campanha" id="btnImportarBase">Selecionar da base</button>
     <button class="btn-nova-campanha" id="btnNovaCampanha">+ Nova</button>
   </div>
 
@@ -419,6 +419,11 @@
   <div class="modal-camps-sel-box">
     <h3 id="mcs-titulo">📅 Adicionar em outros ciclos</h3>
     <p id="mcs-desc">Selecione em quais ciclos esta pessoa também vai participar:</p>
+    <input class="mcs-search" type="text" id="mcs-search" placeholder="Buscar nome ou bairro">
+    <div class="mcs-actions" id="mcs-actions">
+      <button class="btn btn-outline" id="btnMcsTodos">Todos</button>
+      <button class="btn btn-outline" id="btnMcsLimpar">Limpar</button>
+    </div>
     <div class="camp-check-list" id="mcs-lista"></div>
     <div class="mcs-footer">
       <button class="btn btn-outline" id="btnFecharCampsSel">Pular</button>

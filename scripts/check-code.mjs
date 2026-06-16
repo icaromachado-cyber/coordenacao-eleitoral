@@ -29,6 +29,8 @@ assert(!/\bcarregarFirestore\(/.test(app), 'Fluxo legado carregarFirestore nao d
 assert(/function deveImportarDadosIniciais\(\)/.test(app), 'Importacao inicial deve ter guarda explicita.');
 assert(/snapCheck\.empty && deveImportarDadosIniciais\(\)/.test(app), 'Campanha vazia nao deve ser reimportada sem validar metadados.');
 assert(/dadosIniciaisImportados: true/.test(app), 'Campanhas limpas/importadas devem registrar metadado de inicializacao.');
+assert(/CICLOS_PADRAO_OCULTOS/.test(app), 'Ciclos padrao antigos devem ficar ocultos.');
+assert(!/campanhasPadrao = \[[\s\S]*2026-governador/.test(app), 'A criacao automatica deve manter apenas o ciclo base.');
 
 assert(escapeHtml('<img src=x onerror=alert(1)>') === '&lt;img src=x onerror=alert(1)&gt;', 'escapeHtml deve escapar tags.');
 assert(parseNonNegativeNumber('-1', 'Valor').error, 'Numeros negativos devem ser rejeitados.');

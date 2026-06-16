@@ -1477,6 +1477,41 @@ body.theme-light .modal-camps-sel-box h3 { color: #1e2235; }
   margin-bottom: 16px;
 }
 
+.mcs-search {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  padding: 9px 11px;
+  margin-bottom: 10px;
+  outline: none;
+}
+
+.mcs-search:focus { border-color: #3b82f6; }
+
+.mcs-actions {
+  display: none;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mcs-actions.on { display: flex; }
+
+.mcs-actions .btn {
+  flex: 1;
+  justify-content: center;
+  padding: 7px 10px;
+}
+
+body.theme-light .mcs-search {
+  background: #f0f2f8;
+  border-color: #dde1ee;
+  color: #1e2235;
+}
+
 .camp-check-list {
   display: flex;
   flex-direction: column;
