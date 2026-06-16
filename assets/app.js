@@ -1513,32 +1513,23 @@ async function carregarCampanhas() {
 }
 
 function renderCampanhaTabs() {
-  const container = document.getElementById('campanhaTabs');
-  if (!container) return;
+  const select = document.getElementById('campanhaSelect');
+  if (!select) return;
 
-  const cargoCores = CATEGORIA_CORES;
+  select.innerHTML = Object.entries(campanhas).map(([id, camp]) =>
+    `<option value="${a(id)}">${h(nomeCiclo(id, camp))}</option>`
+  ).join('');
+  select.value = campanhaAtual || '';
 
-  container.innerHTML = Object.entries(campanhas).map(([id, camp]) => {
-    const cor = cargoCores[camp.cargo] || '#6b7294';
-    const isActive = id === campanhaAtual;
-    return `<div style="display:flex;align-items:center;gap:2px">
-      <button class="campanha-tab ${isActive ? 'active' : ''}"
-        data-action="trocar-campanha" data-campanha="${a(id)}"
-        title="${camp.candidato ? 'Responsável: '+a(camp.candidato) : ''}"
-        style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
-        ${h(nomeCiclo(id, camp))}${camp.candidato ? ` · ${h(camp.candidato.split(' ')[0])}` : ''}
-      </button>
-      ${isActive ? `<button class="campanha-clear-btn" data-action="limpar-campanha" data-campanha="${a(id)}" title="Limpar dados deste ciclo">🗑</button>` : ''}
-    </div>`;
-  }).join('');
+  const podeImportarBase = campanhaAtual && campanhaAtual !== CAMPANHA_SEMENTE_INICIAL;
+  const btnImportarBase = document.getElementById('btnImportarBase');
+  if (btnImportarBase) btnImportarBase.disabled = !podeImportarBase;
 
   // Atualiza select de origem no modal
   const sel = document.getElementById('mc-origem');
   if (sel) {
     sel.innerHTML = '<option value="">Ciclo zerado</option>' +
-      Object.entries(campanhas).map(([id, c]) =>
-        `<option value="${a(id)}">Copiar de: ${h(nomeCiclo(id, c))}</option>`
-      ).join('');
+      `<option value="${CAMPANHA_SEMENTE_INICIAL}">Importar do ciclo base</option>`;
   }
 }
 
@@ -1567,9 +1558,84 @@ async function trocarCampanha(id) {
   toast(`📁 Ciclo: ${nomeCiclo(id, campanhas[id])}`);
 }
 
+async function renomearCampanhaAtual() {
+  if (!campanhaAtual || !campanhas[campanhaAtual]) return;
+  const atual = nomeCiclo(campanhaAtual, campanhas[campanhaAtual]);
+  const novoNome = prompt('Novo nome do ciclo:', atual);
+  if (novoNome === null) return;
+  const nome = novoNome.trim();
+  if (!nome) { toast('⚠️ Informe um nome para o ciclo', true); return; }
+
+  try {
+    await db.collection('campanhas').doc(campanhaAtual).set({
+      nome,
+      atualizadoEm: new Date().toISOString()
+    }, { merge: true });
+    campanhas[campanhaAtual].nome = nome;
+    renderCampanhaTabs();
+    toast('✅ Ciclo renomeado');
+  } catch(e) {
+    console.error('Erro renomear ciclo:', e);
+    toast('❌ Erro ao renomear ciclo', true);
+  }
+}
+
+async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
+  if (!origem || !destino || origem === destino) return 0;
+  const todos = await db.collection('campanhas').doc(origem).collection('liderancas').get();
+
+  for (let i = 0; i < todos.docs.length; i += 400) {
+    const batch = db.batch();
+    todos.docs.slice(i, i + 400).forEach(d => {
+      const data = {...d.data()};
+      if (modo === 'estrutura') {
+        data.votos = 0; data.v_entrada = 0;
+        data.custo_jul = 0; data.custo_ago = 0;
+        data.custo_set = 0; data.custo_out = 0;
+        data.total = 0; data.status = 'pendente';
+        data.reuniao_feita = 'nao'; data.reuniao_data = '';
+      }
+      delete data._fireId;
+      const ref = db.collection('campanhas').doc(destino).collection('liderancas').doc();
+      batch.set(ref, data);
+    });
+    await batch.commit();
+  }
+
+  await db.collection('campanhas').doc(destino).set({
+    dadosIniciaisImportados: true,
+    baseImportadaEm: new Date().toISOString()
+  }, { merge: true });
+  if (campanhas[destino]) campanhas[destino].dadosIniciaisImportados = true;
+
+  return todos.size;
+}
+
+async function importarBaseParaCampanhaAtual() {
+  if (!campanhaAtual || campanhaAtual === CAMPANHA_SEMENTE_INICIAL) {
+    toast('⚠️ Escolha um ciclo criado para importar a base', true);
+    return;
+  }
+  if (!confirm(`Importar a estrutura do ciclo base para "${nomeCiclo(campanhaAtual, campanhas[campanhaAtual])}"?\n\nOs apoios e recursos serão zerados.`)) return;
+
+  try {
+    toast('📋 Importando base…');
+    const count = await copiarDadosEntreCampanhas(CAMPANHA_SEMENTE_INICIAL, campanhaAtual, 'estrutura');
+    await trocarCampanha(campanhaAtual);
+    toast(`✅ ${count} registros importados do ciclo base`);
+  } catch(e) {
+    console.error('Erro importar base:', e);
+    toast('❌ Erro ao importar base', true);
+  }
+}
+
 function abrirModalCampanha() {
   document.getElementById('mc-nome').value = '';
   document.getElementById('mc-ano').value = new Date().getFullYear() + 2;
+  document.getElementById('mc-candidato').value = '';
+  document.getElementById('mc-origem').value = '';
+  document.getElementById('mc-copiar').value = 'estrutura';
+  document.getElementById('mc-migrar-opcoes').style.display = 'none';
   document.getElementById('modalCampanha').classList.add('open');
 }
 
@@ -1602,27 +1668,8 @@ async function criarCampanha() {
     // Copia dados do ciclo de origem se selecionado
     if (origem && campanhas[origem]) {
       toast('📋 Copiando estrutura…');
-      const todos = await db.collection('campanhas').doc(origem)
-        .collection('liderancas').get();
-
-      for (let i = 0; i < todos.docs.length; i += 400) {
-        const batch = db.batch();
-        todos.docs.slice(i, i + 400).forEach(d => {
-          const data = {...d.data()};
-          // Se só estrutura, zera apoios e custos
-          if (copiar === 'estrutura') {
-            data.votos = 0; data.v_entrada = 0;
-            data.custo_jul = 0; data.custo_ago = 0;
-            data.custo_set = 0; data.custo_out = 0;
-            data.total = 0; data.status = 'pendente';
-            data.reuniao_feita = 'nao'; data.reuniao_data = '';
-          }
-          const ref = db.collection('campanhas').doc(id).collection('liderancas').doc();
-          batch.set(ref, data);
-        });
-        await batch.commit();
-      }
-      toast(`✅ ${todos.size} registros copiados de ${nomeCiclo(origem, campanhas[origem])}`);
+      const totalCopiado = await copiarDadosEntreCampanhas(origem, id, copiar);
+      toast(`✅ ${totalCopiado} registros copiados de ${nomeCiclo(origem, campanhas[origem])}`);
     }
 
     fecharModalCampanha();
@@ -1756,6 +1803,8 @@ function bindStaticEvents() {
   on('btnMigrarBairro', 'click', migrarPorBairro);
   on('btnNovoRegistro', 'click', () => abrirModal(null));
   on('btnNovaCampanha', 'click', abrirModalCampanha);
+  on('btnRenomearCampanha', 'click', renomearCampanhaAtual);
+  on('btnImportarBase', 'click', importarBaseParaCampanhaAtual);
   on('btnLimparFiltros', 'click', limpar);
   on('btnCancelarCampanha', 'click', fecharModalCampanha);
   on('btnCriarCampanha', 'click', criarCampanha);
@@ -1765,6 +1814,7 @@ function bindStaticEvents() {
   on('btnFecharCampsSel', 'click', fecharModalCampsSel);
   on('btnConfirmarCampsSel', 'click', confirmarCampsSel);
   on('f-tipo', 'change', atualizarCamposHierarquia);
+  on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 
   on('overlay', 'click', fecharModal);
   on('mc-origem', 'change', function () {

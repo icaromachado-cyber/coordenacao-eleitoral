@@ -178,7 +178,9 @@
   <!-- CAMPANHA BAR -->
   <div class="campanha-bar" id="campanhaBar">
     <span class="campanha-label">📁 Ciclo:</span>
-    <div class="campanha-tabs" id="campanhaTabs"></div>
+    <select id="campanhaSelect" class="campanha-select"></select>
+    <button class="btn-nova-campanha" id="btnRenomearCampanha">Renomear</button>
+    <button class="btn-nova-campanha" id="btnImportarBase">Importar base</button>
     <button class="btn-nova-campanha" id="btnNovaCampanha">+ Nova</button>
   </div>
 
@@ -306,9 +308,10 @@
       </select>
     </div>
     <div class="mc-field">
-      <label>Iniciar com dados de</label>
+      <label>Dados iniciais</label>
       <select id="mc-origem">
         <option value="">Ciclo zerado</option>
+        <option value="2024-vereador">Importar do ciclo base</option>
       </select>
     </div>
     <div class="mc-field" id="mc-migrar-opcoes" style="display:none">
