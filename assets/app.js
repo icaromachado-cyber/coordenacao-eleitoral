@@ -88,9 +88,9 @@ const BAIRRO_ZONA_MAP = {
 };
 
 async function migrarPorBairro() {
-  if (!confirm('Migrar automaticamente todas as pessoas para as zonas corretas baseado no bairro?\n\nIsso vai mover pessoas da Zona Norte para Sul, Leste, Sudeste e Rural conforme o bairro cadastrado.')) return;
+  if (!confirm('Organizar automaticamente as pessoas nas regiões corretas com base no bairro?\n\nIsso vai mover registros entre Norte, Sul, Leste, Sudeste e Rural conforme o bairro cadastrado.')) return;
 
-  toast('🔄 Iniciando migração por bairro…');
+  toast('🔄 Organizando por bairro…');
   let moved = 0, unchanged = 0;
 
   try {
@@ -112,7 +112,7 @@ async function migrarPorBairro() {
     });
 
     if (!updates.length) {
-      toast('✅ Todos já estão nas zonas corretas!');
+      toast('✅ Todos já estão nas regiões corretas!');
       return;
     }
 
@@ -136,7 +136,7 @@ async function migrarPorBairro() {
 
     atualizarNavCounts();
     aplicarFiltros();
-    toast(`✅ ${moved} pessoas migradas · ${unchanged} já estavam corretas`);
+    toast(`✅ ${moved} registros organizados · ${unchanged} já estavam corretos`);
   } catch(e) {
     console.error('Erro migração:', e);
     toast('❌ Erro na migração', true);
@@ -146,7 +146,7 @@ async function limparCampanha(id) {
   const nome = campanhas[id]?.nome || id;
   if (!confirm(`⚠️ Limpar TODOS os dados de "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
   
-  toast('🗑️ Limpando campanha…');
+  toast('🗑️ Limpando ciclo…');
   try {
     const snap = await db.collection('campanhas').doc(id).collection('liderancas').get();
     for (let i = 0; i < snap.docs.length; i += 400) {
@@ -162,7 +162,7 @@ async function limparCampanha(id) {
     await trocarCampanha(id);
     toast(`✅ "${nome}" limpa — ${snap.size} registros removidos`);
   } catch(e) {
-    toast('❌ Erro ao limpar campanha', true);
+    toast('❌ Erro ao limpar ciclo', true);
   }
 }
 
@@ -183,12 +183,54 @@ function deveImportarDadosIniciais() {
 
 // ===================== DADOS =====================
 const ZONAS_CFG = {
-  norte:   { label: 'Zona Norte',    cor: '#e8433a' },
-  leste:   { label: 'Zona Leste',    cor: '#3b82f6' },
-  sul:     { label: 'Zona Sul',      cor: '#22c55e' },
-  sudeste: { label: 'Zona Sudeste',  cor: '#a855f7' },
-  rural:   { label: 'Zona Rural',    cor: '#eab308' }
+  norte:   { label: 'Região Norte',    cor: '#e8433a' },
+  leste:   { label: 'Região Leste',    cor: '#3b82f6' },
+  sul:     { label: 'Região Sul',      cor: '#22c55e' },
+  sudeste: { label: 'Região Sudeste',  cor: '#a855f7' },
+  rural:   { label: 'Região Rural',    cor: '#eab308' }
 };
+
+const TIPO_LABELS = {
+  CA: 'CR',
+  L: 'RF',
+  M: 'EQ',
+  LE: 'RE',
+  ME: 'EE'
+};
+
+const CICLOS_NEUTROS = {
+  '2024-vereador': '2024 - Ciclo Base',
+  '2026-governador': '2026 - Ciclo 1',
+  '2026-senador-1': '2026 - Ciclo 2',
+  '2026-senador-2': '2026 - Ciclo 3',
+  '2026-dep-estadual': '2026 - Ciclo 4',
+  '2026-dep-federal': '2026 - Ciclo 5'
+};
+
+const CATEGORIA_CORES = {
+  Vereador: '#22c55e',
+  Governador: '#a855f7',
+  Senador: '#f59e0b',
+  'Deputado Estadual': '#3b82f6',
+  'Deputado Federal': '#ef4444',
+  Prefeito: '#14b8a6',
+  'Categoria A': '#a855f7',
+  'Categoria B': '#f59e0b',
+  'Categoria C': '#ef4444',
+  'Categoria D': '#3b82f6',
+  'Categoria E': '#22c55e',
+  'Categoria F': '#14b8a6'
+};
+
+function tipoLabel(tipo) {
+  return TIPO_LABELS[tipo] || tipo || '—';
+}
+
+function nomeCiclo(id, campanha) {
+  if (CICLOS_NEUTROS[id]) return CICLOS_NEUTROS[id];
+  return String(campanha?.nome || id || '')
+    .replace(/\b(Vereador|Governador|Senador|Deputado Federal|Deputado Estadual|Prefeito)\b/gi, 'Ciclo');
+}
 
 const DADOS_NORTE = window.DADOS_NORTE || [];
 
@@ -239,11 +281,11 @@ function mostrarLoading(show) {
 
 async function carregarDoFirebase() {
   try {
-    // Carrega campanhas disponíveis
+    // Carrega ciclos disponíveis
     await carregarCampanhas();
 
-    // Importa dados iniciais apenas para a campanha semente e somente uma vez.
-    // Campanhas limpas pelo usuário devem permanecer vazias após atualizar a página.
+    // Importa dados iniciais apenas para o ciclo semente e somente uma vez.
+    // Ciclos limpos pelo usuário devem permanecer vazios após atualizar a página.
     const snapCheck = await colecao().limit(1).get();
     if (snapCheck.empty && deveImportarDadosIniciais()) {
       await migrarDadosNorte();
@@ -315,7 +357,7 @@ function trocarZona(z) {
   if (navEl) navEl.classList.add('active');
 
   zonaAtual = z;
-  const cfg = z === 'todas' ? { label: 'Todas as Zonas', cor: '#e8433a' } : ZONAS_CFG[z];
+  const cfg = z === 'todas' ? { label: 'Todas as Regiões', cor: '#e8433a' } : ZONAS_CFG[z];
 
   // Update topbar
   document.getElementById('zTitle').textContent = cfg.label;
@@ -486,9 +528,9 @@ function renderCards() {
   const ct = src.reduce((s,d)=>s+d.total,0);
   document.getElementById('sc-custo').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
 
-  const totalVotos = src.reduce((s,d)=>s+(d.votos||0),0);
-  document.getElementById('tp1').innerHTML = `Votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong>`;
-  document.getElementById('tp2').innerHTML = `Custo médio: <strong>R$ ${src.length?Math.round(ct/src.length).toLocaleString('pt-BR'):'0'}</strong>`;
+  const totalApoios = src.reduce((s,d)=>s+(d.votos||0),0);
+  document.getElementById('tp1').innerHTML = `Apoios: <strong>${totalApoios.toLocaleString('pt-BR')}</strong>`;
+  document.getElementById('tp2').innerHTML = `Média de recursos: <strong>R$ ${src.length?Math.round(ct/src.length).toLocaleString('pt-BR'):'0'}</strong>`;
 
   // Painel de zonas quando estiver em "Todas"
   renderZonePanel();
@@ -512,7 +554,7 @@ function renderZonePanel() {
     const total = dados.length;
     const lids = dados.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
     const mobs = dados.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
-    const votos = dados.reduce((s,d)=>s+(d.votos||0),0);
+    const apoios = dados.reduce((s,d)=>s+(d.votos||0),0);
     const custo = dados.reduce((s,d)=>s+d.total,0);
     const ativos = dados.filter(d=>d.status==='ativo'||!d.status).length;
 
@@ -523,14 +565,14 @@ function renderZonePanel() {
         <div class="zone-card-count">${total} reg.</div>
       </div>
       <div class="zone-card-stats">
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#60a5fa">${lids}</span><span class="zone-stat-lbl">Lideranças</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#4ade80">${mobs}</span><span class="zone-stat-lbl">Mobilizadores</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:${cfg.cor}">${votos}</span><span class="zone-stat-lbl">Votos</span></div>
-        <div class="zone-stat"><span class="zone-stat-val" style="color:#f59e0b">R$${custo>=1000?(custo/1000).toFixed(0)+'K':custo}</span><span class="zone-stat-lbl">Custo</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#60a5fa">${lids}</span><span class="zone-stat-lbl">Referências</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#4ade80">${mobs}</span><span class="zone-stat-lbl">Equipe</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:${cfg.cor}">${apoios}</span><span class="zone-stat-lbl">Apoios</span></div>
+        <div class="zone-stat"><span class="zone-stat-val" style="color:#f59e0b">R$${custo>=1000?(custo/1000).toFixed(0)+'K':custo}</span><span class="zone-stat-lbl">Recursos</span></div>
       </div>
       <div class="zone-card-footer">
         <span style="color:#4ade80;font-size:.7rem">✅ ${ativos} ativos</span>
-        <span style="color:#3b82f6;font-size:.7rem;cursor:pointer">Ver zona →</span>
+        <span style="color:#3b82f6;font-size:.7rem;cursor:pointer">Ver região →</span>
       </div>
     </div>`;
   }).join('');
@@ -564,7 +606,7 @@ function renderTable() {
     const c = ZONAS_CFG[d._zona] || {};
     return `<tr>
       <td class="muted-td mono" style="font-size:.72rem">${d.id}${showZona?`<br><span style="color:${c.cor};font-size:.65rem">${c.label||''}</span>`:''}</td>
-      <td><span class="badge badge-${d.tipo}">${d.tipo}</span></td>
+      <td><span class="badge badge-${a(d.tipo)}">${h(tipoLabel(d.tipo))}</span></td>
       <td class="nome-td" title="${a(nome)}">${h(nomeDisplay)}</td>
       <td class="muted-td mono">${fmtWhats(d.telefone)}</td>
       <td class="muted-td" style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${a(d.bairro || '')}">${h(d.bairro || '—')}</td>
@@ -623,7 +665,7 @@ function verDrawer(id, zona) {
   const cfg = ZONAS_CFG[zona];
 
   document.getElementById('drawer-content').innerHTML = `
-    <div class="d-badge-wrap"><span class="badge badge-${d.tipo}">${d.tipo}</span>
+    <div class="d-badge-wrap"><span class="badge badge-${a(d.tipo)}">${h(tipoLabel(d.tipo))}</span>
     ${cfg?`<span style="font-size:.7rem;color:${cfg.cor};margin-left:8px">${cfg.label}</span>`:''}
     </div>
     <div class="d-name">${h(d.nome)}</div>
@@ -632,9 +674,9 @@ function verDrawer(id, zona) {
     <div class="d-row"><span class="d-lbl">🏠 Endereço</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${fmtMaps(d.endereco)}</span></div>
     <div class="d-row"><span class="d-lbl">🏫 Colégio</span><span class="d-val" style="font-size:.75rem;text-align:right">${h(d.colegio || '—')}</span></div>
     <div class="d-row"><span class="d-lbl">📋 Seção</span><span class="d-val">${h(d.secao || '—')}</span></div>
-    <div class="d-row"><span class="d-lbl">🗂️ Zona El.</span><span class="d-val">${h(d.zona_eleitoral || '—')}</span></div>
-    <div class="d-row"><span class="d-lbl">🗳️ Votos</span><span class="d-val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${d.votos||'—'}</span></div>
-    <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Custos mensais</div>
+    <div class="d-row"><span class="d-lbl">🗂️ Código</span><span class="d-val">${h(d.zona_eleitoral || '—')}</span></div>
+    <div class="d-row"><span class="d-lbl">📌 Apoios</span><span class="d-val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${d.votos||'—'}</span></div>
+    <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Recursos mensais</div>
     ${[['Julho',d.custo_jul],['Agosto',d.custo_ago],['Setembro',d.custo_set],['Outubro',d.custo_out]].map(([m,v])=>
       `<div class="d-row"><span class="d-lbl">${m}</span><span class="d-val">${fmtR(v)}</span></div>`
     ).join('')}
@@ -649,9 +691,9 @@ function verDrawer(id, zona) {
     <div class="drawer-tab-content active" id="tab-info">
       <div class="d-row"><span class="d-lbl">Status</span><span class="d-val">${statusBadge(d.status)}</span></div>
       <div class="d-row"><span class="d-lbl">Reunião</span><span class="d-val">${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</span></div>
-      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
+      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} referências</span></div>` : ''}
       ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${h(d.coord_area_nome)}</span></div>` : ''}
-      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
       ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${h(d.lider_nome)}</span></div>` : ''}
       <div class="d-total-box">
         <div class="d-total-lbl">💰 Total investido</div>
@@ -662,7 +704,7 @@ function verDrawer(id, zona) {
         <button class="btn btn-outline" style="flex:1;font-size:.78rem" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(zona)}" data-close-drawer="true">✏️ Editar</button>
       </div>
       <button class="migrar-zona-btn" data-action="migrar-pessoa" data-fire-id="${a(d._fireId || '')}" data-id="${a(d.id)}" data-zona="${a(zona)}">
-        📅 Adicionar em outra campanha
+        📁 Adicionar em outro ciclo
       </button>
     </div>
 
@@ -785,12 +827,12 @@ function salvar() {
     reuniao_data: document.getElementById('f-reuniao-data').value || ''
   };
   const numeric = {
-    votos: parseNonNegativeNumber(document.getElementById('f-votos').value, 'Votos'),
-    custo_jul: parseNonNegativeNumber(document.getElementById('f-jul').value, 'Custo de julho'),
-    custo_ago: parseNonNegativeNumber(document.getElementById('f-ago').value, 'Custo de agosto'),
-    custo_set: parseNonNegativeNumber(document.getElementById('f-set').value, 'Custo de setembro'),
-    custo_out: parseNonNegativeNumber(document.getElementById('f-out').value, 'Custo de outubro'),
-    total: parseNonNegativeNumber(document.getElementById('f-total').value, 'Total pago')
+    votos: parseNonNegativeNumber(document.getElementById('f-votos').value, 'Apoios'),
+    custo_jul: parseNonNegativeNumber(document.getElementById('f-jul').value, 'Recurso de julho'),
+    custo_ago: parseNonNegativeNumber(document.getElementById('f-ago').value, 'Recurso de agosto'),
+    custo_set: parseNonNegativeNumber(document.getElementById('f-set').value, 'Recurso de setembro'),
+    custo_out: parseNonNegativeNumber(document.getElementById('f-out').value, 'Recurso de outubro'),
+    total: parseNonNegativeNumber(document.getElementById('f-total').value, 'Total aplicado')
   };
   const errors = [
     ...validateRecordInput(raw),
@@ -866,15 +908,15 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
       : editIdOrig !== null ? '✅ Salvo!' : '✅ Cadastrado!';
     toast(msg);
 
-    // Se é cadastro novo, pergunta se quer adicionar em outras campanhas
+    // Se é cadastro novo, pergunta se quer adicionar em outros ciclos
     if (editIdOrig === null) {
       const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
       if (outrasCamps.length > 0) {
         setTimeout(() => {
           abrirModalCampsSel(
             reg,
-            '📅 Adicionar em outras campanhas?',
-            `"${reg.nome.split(' ')[0]}" foi cadastrado(a). Deseja adicioná-lo(a) em outras campanhas também?`
+            '📁 Adicionar em outros ciclos?',
+            `"${reg.nome.split(' ')[0]}" foi cadastrado(a). Deseja adicioná-lo(a) em outros ciclos também?`
           );
         }, 600);
       }
@@ -971,7 +1013,7 @@ async function migrarVinculosForce() {
     }
   }
 
-  // Vincula todas as lideranças restantes à Raiane também
+  // Vincula todas as referências restantes à Raiane também
   docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && d._fireId !== raianeId).forEach(l => {
     if (!updates.find(u => u.ref.id === l._fireId && u.data.coord_area_id)) {
       updates.push({ ref: colecao().doc(l._fireId), data: {
@@ -998,7 +1040,7 @@ async function migrarVinculosForce() {
 async function migrarDadosNorte() {
   const snap = await colecao().where('_zona', '==', 'norte').limit(1).get();
   if (!snap.empty) return;
-  toast('📤 Importando Zona Norte para o banco…');
+  toast('📤 Importando base inicial…');
   // Divide em batches de 500
   const todos = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
   for (let i = 0; i < todos.length; i += 400) {
@@ -1016,7 +1058,7 @@ async function migrarDadosNorte() {
     dadosIniciaisImportadosEm: new Date().toISOString()
   }, { merge: true });
   if (campanhas[campanhaAtual]) campanhas[campanhaAtual].dadosIniciaisImportados = true;
-  toast('✅ Dados da Zona Norte importados!');
+  toast('✅ Base inicial importada!');
 }
 
 // ===================== IMPORTAR XLSX =====================
@@ -1140,7 +1182,7 @@ function renderArvore() {
   const q = norm(document.getElementById('treeSearch')?.value || '');
   const dados = getDados();
 
-  // CA inclui tipo CA e também quem tem lideranças vinculadas por coord_area_id
+  // CA inclui tipo CA e também quem tem referências vinculadas por coord_area_id
   let coords = dados.filter(d => d.tipo === 'CA');
   const liderancas = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE');
   const mobilizadores = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME');
@@ -1159,13 +1201,13 @@ function renderArvore() {
   }
 
   // Stats
-  const totalVotos = dados.reduce((s,d) => s+(d.votos||0), 0);
+  const totalApoios = dados.reduce((s,d) => s+(d.votos||0), 0);
   const semVinculo = liderancas.filter(l => !l.coord_area_id).length;
   document.getElementById('treeStats').innerHTML = `
-    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
-    <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
-    <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
-    <div class="tree-stat">Total de votos: <strong>${totalVotos.toLocaleString('pt-BR')}</strong></div>
+    <div class="tree-stat">Coordenação: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Referências: <strong>${liderancas.length}</strong></div>
+    <div class="tree-stat">Equipe: <strong>${mobilizadores.length}</strong></div>
+    <div class="tree-stat">Total de apoios: <strong>${totalApoios.toLocaleString('pt-BR')}</strong></div>
     ${semVinculo > 0 ? `<div class="tree-stat" style="border-color:rgba(234,179,8,.3)">⚠️ Sem vínculo: <strong style="color:#f59e0b">${semVinculo}</strong></div>` : ''}
   `;
 
@@ -1176,7 +1218,7 @@ function renderArvore() {
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);margin-bottom:16px">
       <div style="font-size:1.5rem;margin-bottom:8px">🏛️</div>
       <div style="font-size:.85rem">Nenhuma hierarquia definida ainda.</div>
-      <div style="font-size:.75rem;margin-top:6px">Edite as lideranças e vincule-as a um coordenador de área.</div>
+      <div style="font-size:.75rem;margin-top:6px">Edite as referências e vincule-as a um coordenador de área.</div>
     </div>`;
   }
 
@@ -1195,7 +1237,7 @@ function renderArvore() {
 
     const lidsCA = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
     const totalMobs = mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id)).length;
-    const totalVotosCA = [...lidsCA, ...mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id))].reduce((s,d)=>s+(d.votos||0),0);
+    const totalApoiosCA = [...lidsCA, ...mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id))].reduce((s,d)=>s+(d.votos||0),0);
 
     html += `<div class="tree-ca">
       <div class="tree-ca-header" data-action="toggle-node" data-node-id="ca-${ci}">
@@ -1205,23 +1247,23 @@ function renderArvore() {
           <div class="tree-ca-sub">${h(ca.bairro || '')} ${ca.telefone ? '· '+h(ca.telefone) : ''}</div>
         </div>
         <div class="tree-ca-counts">
-          <div class="tree-count-pill">👥 <strong>${lidsCA.length}</strong> lideranças</div>
-          <div class="tree-count-pill">🗳️ <strong>${totalMobs}</strong> mob.</div>
-          <div class="tree-count-pill">✅ <strong>${totalVotosCA}</strong> votos</div>
+          <div class="tree-count-pill">👥 <strong>${lidsCA.length}</strong> referências</div>
+          <div class="tree-count-pill">🗳️ <strong>${totalMobs}</strong> eq.</div>
+          <div class="tree-count-pill">✅ <strong>${totalApoiosCA}</strong> apoios</div>
         </div>
         <span class="tree-toggle open" id="tog-ca-${ci}">▶</span>
       </div>
       <div class="tree-ca-body open" id="ca-${ci}">`;
 
     if (lidsCA.length === 0) {
-      html += `<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma liderança vinculada a este coordenador ainda.</div>`;
+      html += `<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma referência vinculada a esta coordenação ainda.</div>`;
     }
 
     // Lideranças do CA
     lidsCA.forEach((l, li) => {
       const nomeL = l.nome || '';
       const mobsL = mobilizadores.filter(m => m.lider_id === (l._fireId || String(l.id)));
-      const votosL = [l, ...mobsL].reduce((s,d)=>s+(d.votos||0),0);
+      const apoiosL = [l, ...mobsL].reduce((s,d)=>s+(d.votos||0),0);
 
       html += `<div class="tree-l">
         <div class="tree-l-header" data-action="toggle-node" data-node-id="l-${ci}-${li}">
@@ -1231,8 +1273,8 @@ function renderArvore() {
             <div class="tree-l-sub">${h(l.bairro || '')} ${l.secao?'· Seção '+h(l.secao):''}</div>
           </div>
           <div class="tree-ca-counts">
-            <div class="tree-count-pill">👥 <strong>${mobsL.length}</strong> mob.</div>
-            <div class="tree-count-pill">🗳️ <strong>${votosL}</strong> votos</div>
+            <div class="tree-count-pill">👥 <strong>${mobsL.length}</strong> eq.</div>
+            <div class="tree-count-pill">🗳️ <strong>${apoiosL}</strong> apoios</div>
           </div>
           <div style="display:flex;gap:6px;margin-left:8px">
             <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Ver">👁</button>
@@ -1243,7 +1285,7 @@ function renderArvore() {
         <div class="tree-l-body open" id="l-${ci}-${li}">`;
 
       if (mobsL.length === 0) {
-        html += `<div style="font-size:.75rem;color:var(--muted);padding:4px 0">Nenhum mobilizador vinculado a esta liderança.</div>`;
+        html += `<div style="font-size:.75rem;color:var(--muted);padding:4px 0">Nenhuma pessoa da equipe vinculada a esta referência.</div>`;
       }
 
       mobsL.forEach(m => {
@@ -1262,7 +1304,7 @@ function renderArvore() {
     html += `</div></div>`;
   });
 
-  // Sem vínculo — Lideranças sem coordenador
+  // Sem vínculo — Referências sem coordenação
   const lidersSemCA = liderancas.filter(l => !l.coord_area_id || l.coord_area_id === '');
   const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
 
@@ -1270,13 +1312,13 @@ function renderArvore() {
     html += `<div class="tree-orphans">
       <div class="tree-orphans-header" data-action="toggle-node" data-node-id="orphans">
         <h4>⚠️ Sem vínculo definido</h4>
-        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> lideranças · <strong>${mobsSemL.length}</strong> mobilizadores</span>
+        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> referências · <strong>${mobsSemL.length}</strong> mobilizadores</span>
         <span class="tree-toggle" id="tog-orphans">▶</span>
       </div>
       <div class="tree-orphans-body" id="orphans">`;
 
     if (lidersSemCA.length > 0) {
-      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Lideranças sem coordenador</div>`;
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Referências sem coordenação</div>`;
       lidersSemCA.forEach(l => {
         html += `<div class="orphan-item">
           <span class="badge badge-${a(l.tipo)}">${h(l.tipo)}</span>
@@ -1288,7 +1330,7 @@ function renderArvore() {
     }
 
     if (mobsSemL.length > 0) {
-      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Mobilizadores sem liderança</div>`;
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Equipe sem liderança</div>`;
       mobsSemL.forEach(m => {
         html += `<div class="orphan-item">
           <span class="badge badge-${a(m.tipo)}">${h(m.tipo)}</span>
@@ -1318,7 +1360,7 @@ function exportarDados() {
   const dados = getDados();
   if (!dados.length) { toast('⚠️ Nenhum dado para exportar', true); return; }
 
-  const zonaNome = zonaAtual === 'todas' ? 'Todas as Zonas' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual);
+  const zonaNome = zonaAtual === 'todas' ? 'Todas as Regiões' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual);
 
   const rows = dados.map(d => ({
     'ID': d.id,
@@ -1327,18 +1369,18 @@ function exportarDados() {
     'Telefone': d.telefone || '',
     'Bairro': d.bairro || '',
     'Endereço': d.endereco || '',
-    'Zona': ZONAS_CFG[d._zona]?.label || d._zona || '',
-    'Colégio Eleitoral': d.colegio || '',
+    'Região': ZONAS_CFG[d._zona]?.label || d._zona || '',
+    'Ponto de referência': d.colegio || '',
     'Seção': d.secao || '',
-    'Zona Eleitoral': d.zona_eleitoral || '',
+    'Código regional': d.zona_eleitoral || '',
     'Coordenador de Área': d.coord_area_nome || '',
     'Liderança': d.lider_nome || '',
-    'Votos': d.votos || 0,
+    'Apoios': d.votos || 0,
     'V. Entrada': d.v_entrada || 0,
-    'Custo Jul': d.custo_jul || 0,
-    'Custo Ago': d.custo_ago || 0,
-    'Custo Set': d.custo_set || 0,
-    'Custo Out': d.custo_out || 0,
+    'Recurso Jul': d.custo_jul || 0,
+    'Recurso Ago': d.custo_ago || 0,
+    'Recurso Set': d.custo_set || 0,
+    'Recurso Out': d.custo_out || 0,
     'Total': d.total || 0,
   }));
 
@@ -1460,7 +1502,7 @@ async function carregarCampanhas() {
     const snap = await db.collection('campanhas').orderBy('ano', 'asc').get();
 
     if (snap.empty) {
-      // Cria campanhas padrão
+      // Cria ciclos padrão
       const campanhasPadrao = [
         { id: '2024-vereador',        nome: '2024 - Vereador',          ano: 2024, cargo: 'Vereador' },
         { id: '2026-governador',      nome: '2026 - Governador',        ano: 2026, cargo: 'Governador' },
@@ -1509,13 +1551,7 @@ function renderCampanhaTabs() {
   const container = document.getElementById('campanhaTabs');
   if (!container) return;
 
-  const cargoCores = {
-    'Vereador': '#22c55e',
-    'Governador': '#a855f7',
-    'Senador': '#f59e0b',
-    'Deputado Estadual': '#3b82f6',
-    'Deputado Federal': '#ef4444',
-  };
+  const cargoCores = CATEGORIA_CORES;
 
   container.innerHTML = Object.entries(campanhas).map(([id, camp]) => {
     const cor = cargoCores[camp.cargo] || '#6b7294';
@@ -1523,20 +1559,20 @@ function renderCampanhaTabs() {
     return `<div style="display:flex;align-items:center;gap:2px">
       <button class="campanha-tab ${isActive ? 'active' : ''}"
         data-action="trocar-campanha" data-campanha="${a(id)}"
-        title="${camp.candidato ? 'Candidato: '+a(camp.candidato) : ''}"
+        title="${camp.candidato ? 'Responsável: '+a(camp.candidato) : ''}"
         style="${isActive ? `background:${cor}22;border-color:${cor}55;color:${cor}` : `border-color:transparent`}">
-        ${h(camp.nome)}${camp.candidato ? ` · ${h(camp.candidato.split(' ')[0])}` : ''}
+        ${h(nomeCiclo(id, camp))}${camp.candidato ? ` · ${h(camp.candidato.split(' ')[0])}` : ''}
       </button>
-      ${isActive ? `<button class="campanha-clear-btn" data-action="limpar-campanha" data-campanha="${a(id)}" title="Limpar dados desta campanha">🗑</button>` : ''}
+      ${isActive ? `<button class="campanha-clear-btn" data-action="limpar-campanha" data-campanha="${a(id)}" title="Limpar dados deste ciclo">🗑</button>` : ''}
     </div>`;
   }).join('');
 
   // Atualiza select de origem no modal
   const sel = document.getElementById('mc-origem');
   if (sel) {
-    sel.innerHTML = '<option value="">Campanha zerada</option>' +
+    sel.innerHTML = '<option value="">Ciclo zerado</option>' +
       Object.entries(campanhas).map(([id, c]) =>
-        `<option value="${a(id)}">Copiar de: ${h(c.nome)}</option>`
+        `<option value="${a(id)}">Copiar de: ${h(nomeCiclo(id, c))}</option>`
       ).join('');
   }
 }
@@ -1548,7 +1584,7 @@ async function trocarCampanha(id) {
   renderCampanhaTabs();
   mostrarLoading(true);
 
-  // Recarrega dados da nova campanha
+  // Recarrega dados do novo ciclo
   const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
   try {
     const snaps = await Promise.all(
@@ -1563,7 +1599,7 @@ async function trocarCampanha(id) {
   mostrarLoading(false);
   atualizarNavCounts();
   aplicarFiltros();
-  toast(`📅 Campanha: ${campanhas[id].nome}`);
+  toast(`📁 Ciclo: ${nomeCiclo(id, campanhas[id])}`);
 }
 
 function abrirModalCampanha() {
@@ -1584,7 +1620,7 @@ async function criarCampanha() {
   const origem = document.getElementById('mc-origem').value;
   const copiar = document.getElementById('mc-copiar').value;
 
-  if (!nome) { toast('⚠️ Informe o nome da campanha', true); return; }
+  if (!nome) { toast('⚠️ Informe o nome do ciclo', true); return; }
 
   const id = nome.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -1598,9 +1634,9 @@ async function criarCampanha() {
 
     campanhas[id] = { nome, ano, cargo, candidato };
 
-    // Copia dados da campanha de origem se selecionado
+    // Copia dados do ciclo de origem se selecionado
     if (origem && campanhas[origem]) {
-      toast('📋 Copiando dados…');
+      toast('📋 Copiando estrutura…');
       const todos = await db.collection('campanhas').doc(origem)
         .collection('liderancas').get();
 
@@ -1608,7 +1644,7 @@ async function criarCampanha() {
         const batch = db.batch();
         todos.docs.slice(i, i + 400).forEach(d => {
           const data = {...d.data()};
-          // Se só estrutura, zera votos e custos
+          // Se só estrutura, zera apoios e custos
           if (copiar === 'estrutura') {
             data.votos = 0; data.v_entrada = 0;
             data.custo_jul = 0; data.custo_ago = 0;
@@ -1621,34 +1657,34 @@ async function criarCampanha() {
         });
         await batch.commit();
       }
-      toast(`✅ ${todos.size} registros copiados de ${campanhas[origem].nome}`);
+      toast(`✅ ${todos.size} registros copiados de ${nomeCiclo(origem, campanhas[origem])}`);
     }
 
     fecharModalCampanha();
     renderCampanhaTabs();
     await trocarCampanha(id);
-    toast(`✅ Campanha "${nome}" criada!`);
+    toast(`✅ Ciclo "${nome}" criado!`);
   } catch(e) {
     console.error('Erro criar campanha:', e);
-    toast('❌ Erro ao criar campanha', true);
+    toast('❌ Erro ao criar ciclo', true);
   }
 }
 
-// Migrar pessoa para outra campanha
+// Adiciona pessoa em outro ciclo
 function migrarPessoa(fireId, localId, zona) {
   const d = DB[zona].find(x => x.id === localId);
   if (!d) return;
 
   const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
   if (!outrasCamps.length) {
-    toast('⚠️ Crie outra campanha primeiro', true);
+    toast('⚠️ Crie outro ciclo primeiro', true);
     return;
   }
 
   abrirModalCampsSel(
     d,
-    `📅 Adicionar "${d.nome.split(' ')[0]}" em outras campanhas`,
-    'Selecione em quais campanhas esta pessoa vai participar:'
+    `📁 Adicionar "${d.nome.split(' ')[0]}" em outros ciclos`,
+    'Selecione em quais ciclos esta pessoa vai participar:'
   );
 }
 
@@ -1660,23 +1696,23 @@ function abrirModalCampsSel(pessoa, titulo, desc, callback) {
   _mcsPessoa = pessoa;
   _mcsCallback = callback;
 
-  document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outras campanhas';
-  document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais campanhas esta pessoa vai participar:';
+  document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outros ciclos';
+  document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais ciclos esta pessoa vai participar:';
 
-  // Lista todas campanhas exceto a atual
+  // Lista todos os ciclos exceto o atual
   const outras = Object.entries(campanhas).filter(([id]) => id !== campanhaAtual);
 
   const lista = document.getElementById('mcs-lista');
   if (!outras.length) {
-    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhuma outra campanha disponível. Crie campanhas primeiro.</div>';
+    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhum outro ciclo disponível. Crie ciclos primeiro.</div>';
   } else {
-    const cargoCores = { 'Vereador':'#22c55e','Governador':'#a855f7','Senador':'#f59e0b','Deputado Estadual':'#3b82f6','Deputado Federal':'#ef4444' };
+    const cargoCores = CATEGORIA_CORES;
     lista.innerHTML = outras.map(([id, camp]) => {
       const cor = cargoCores[camp.cargo] || '#6b7294';
       return `<label class="camp-check-item">
         <input type="checkbox" value="${a(id)}">
-        <span class="camp-check-nome">${h(camp.nome)}${camp.candidato?' · '+h(camp.candidato.split(' ')[0]):''}</span>
-        <span class="camp-check-cargo" style="color:${cor}">${h(camp.cargo)}</span>
+        <span class="camp-check-nome">${h(nomeCiclo(id, camp))}${camp.candidato?' · '+h(camp.candidato.split(' ')[0]):''}</span>
+        <span class="camp-check-cargo" style="color:${cor}">${h(camp.cargo && camp.cargo.startsWith('Categoria') ? camp.cargo : 'Ciclo')}</span>
       </label>`;
     }).join('');
   }
@@ -1710,10 +1746,10 @@ async function confirmarCampsSel() {
       delete docData._fireId;
       await db.collection('campanhas').doc(campId).collection('liderancas').add(docData);
       count++;
-    } catch(e) { console.error('Erro ao adicionar em campanha:', campId, e); }
+    } catch(e) { console.error('Erro ao adicionar em ciclo:', campId, e); }
   }
 
-  if (count > 0) toast(`✅ Adicionado(a) em ${count} campanha${count>1?'s':''}!`);
+  if (count > 0) toast(`✅ Adicionado(a) em ${count} ciclo${count>1?'s':''}!`);
   if (_mcsCallback) _mcsCallback();
 }
 
@@ -2002,7 +2038,7 @@ function aplicarMultiZona() {
   document.getElementById('nav-multi').classList.add('active');
 
   // Atualiza título
-  const nomes = selecionadas.map(z => ZONAS_CFG[z]?.label.replace('Zona ','') || z);
+  const nomes = selecionadas.map(z => ZONAS_CFG[z]?.label.replace('Região ','') || z);
   document.getElementById('zTitle').textContent = nomes.join(' + ');
   document.getElementById('zBadge').style.background = '#3b82f6';
 
@@ -2106,11 +2142,11 @@ function popupHTML(d, zona) {
   return `
     <div style="min-width:200px">
       <div class="popup-nome">${h(d.nome)}</div>
-      <div class="popup-row"><span class="popup-lbl">Tipo</span><span class="popup-val"><span class="badge badge-${d.tipo}">${d.tipo}</span></span></div>
+      <div class="popup-row"><span class="popup-lbl">Tipo</span><span class="popup-val"><span class="badge badge-${a(d.tipo)}">${h(tipoLabel(d.tipo))}</span></span></div>
       ${cfg.label ? `<div class="popup-row"><span class="popup-lbl">Zona</span><span class="popup-val" style="color:${cfg.cor}">${cfg.label}</span></div>` : ''}
       <div class="popup-row"><span class="popup-lbl">Bairro</span><span class="popup-val">${h(d.bairro || '—')}</span></div>
       <div class="popup-row"><span class="popup-lbl">📞</span><span class="popup-val">${waLink}</span></div>
-      <div class="popup-row"><span class="popup-lbl">Votos</span><span class="popup-val" style="color:var(--accent,#e8433a);font-weight:700">${d.votos||'—'}</span></div>
+      <div class="popup-row"><span class="popup-lbl">Apoios</span><span class="popup-val" style="color:var(--accent,#e8433a);font-weight:700">${d.votos||'—'}</span></div>
       ${d.colegio ? `<div class="popup-row"><span class="popup-lbl">Colégio</span><span class="popup-val" style="font-size:.7rem">${h(d.colegio)}</span></div>` : ''}
       ${d.secao ? `<div class="popup-row"><span class="popup-lbl">Seção</span><span class="popup-val">${h(d.secao)}</span></div>` : ''}
       <div style="margin-top:8px">
@@ -2218,7 +2254,7 @@ async function renderMapa() {
 
   if (bounds.length) {
     leafletMap.fitBounds(bounds, { padding: [40, 40] });
-    infoBar.innerHTML = `✅ <strong>${ok}</strong> lideranças no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}`;
+    infoBar.innerHTML = `✅ <strong>${ok}</strong> referências no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}`;
   } else {
     infoBar.innerHTML = '⚠️ Nenhum endereço pôde ser localizado. Verifique os endereços cadastrados.';
   }
