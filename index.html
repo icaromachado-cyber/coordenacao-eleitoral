@@ -124,8 +124,6 @@
     </div>
     <div class="topbar-actions">
       <button class="btn-tree-toggle" id="btnTheme" title="Alternar tema">☀️</button>
-      <button class="btn-tree-toggle" id="btnTreeToggle">🌳 Árvore</button>
-      <button class="btn-map-toggle" id="btnMapToggle">🗺️ Mapa</button>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">?</div>
         <span class="user-email" id="userEmail"></span>
@@ -134,6 +132,8 @@
       <details class="tools-menu">
         <summary>Ferramentas</summary>
         <div class="tools-menu-list">
+          <button class="btn btn-import" id="btnTreeToggle">🌳 Árvore</button>
+          <button class="btn btn-import" id="btnMapToggle">🗺️ Mapa</button>
           <label class="btn btn-import" title="Importar planilha desta região">
             📥 <span>Importar</span>
             <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
@@ -191,16 +191,21 @@
       <span class="search-icon">🔍</span>
       <input type="text" id="search" placeholder="Buscar nome, bairro ou telefone…">
     </div>
-    <select id="filtro-tipo">
-      <option value="">Todos os perfis</option>
-      <option value="L">Referência (RF)</option>
-      <option value="M">Equipe de campo (EQ)</option>
-      <option value="LE">Referência especial (RE)</option>
-      <option value="ME">Equipe especial (EE)</option>
-      <option value="CA">Coordenação regional (CR)</option>
-    </select>
-    <select id="filtro-bairro"></select>
-    <button class="btn btn-outline" id="btnLimparFiltros">✕</button>
+    <details class="filters-menu">
+      <summary>Filtros</summary>
+      <div class="filters-menu-list">
+        <select id="filtro-tipo">
+          <option value="">Todos os perfis</option>
+          <option value="L">Referência (RF)</option>
+          <option value="M">Equipe de campo (EQ)</option>
+          <option value="LE">Referência especial (RE)</option>
+          <option value="ME">Equipe especial (EE)</option>
+          <option value="CA">Coordenação regional (CR)</option>
+        </select>
+        <select id="filtro-bairro"></select>
+        <button class="btn btn-outline" id="btnLimparFiltros">Limpar</button>
+      </div>
+    </details>
     <span class="result-info" id="rinfo"></span>
   </div>
 

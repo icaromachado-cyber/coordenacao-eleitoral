@@ -589,8 +589,6 @@ function renderTable() {
       <td class="total-td" style="${totalStyle(d.total)}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}</td>
       <td style="text-align:center;white-space:nowrap">
         <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Ver">👁</button>
-        <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
-        <button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>
       </td>
     </tr>`;
   }).join('');
@@ -668,6 +666,7 @@ function verDrawer(id, zona) {
       </div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn btn-outline" style="flex:1;font-size:.78rem" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(zona)}" data-close-drawer="true">✏️ Editar</button>
+        <button class="btn btn-outline" style="flex:1;font-size:.78rem" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(zona)}">🗑 Excluir</button>
       </div>
       <button class="migrar-zona-btn" data-action="migrar-pessoa" data-fire-id="${a(d._fireId || '')}" data-id="${a(d.id)}" data-zona="${a(zona)}">
         📁 Adicionar em outro ciclo
