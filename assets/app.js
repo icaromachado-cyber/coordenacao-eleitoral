@@ -1615,11 +1615,17 @@ async function renomearCampanhaAtual() {
 async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
   if (!origem || !destino || origem === destino) return 0;
   const todos = await db.collection('campanhas').doc(origem).collection('liderancas').get();
+  const registros = todos.docs.map(d => ({...d.data(), _sourceId: d.id}));
+  const count = await copiarRegistrosParaCampanha(registros, destino, modo);
+  await marcarCampanhaImportada(destino);
+  return count;
+}
 
-  for (let i = 0; i < todos.docs.length; i += 400) {
+async function copiarRegistrosParaCampanha(registros, destino, modo='estrutura') {
+  for (let i = 0; i < registros.length; i += 400) {
     const batch = db.batch();
-    todos.docs.slice(i, i + 400).forEach(d => {
-      const data = {...d.data()};
+    registros.slice(i, i + 400).forEach(reg => {
+      const data = {...reg};
       if (modo === 'estrutura') {
         data.votos = 0; data.v_entrada = 0;
         data.custo_jul = 0; data.custo_ago = 0;
@@ -1628,38 +1634,26 @@ async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
         data.reuniao_feita = 'nao'; data.reuniao_data = '';
       }
       delete data._fireId;
+      delete data._sourceId;
       const ref = db.collection('campanhas').doc(destino).collection('liderancas').doc();
       batch.set(ref, data);
     });
     await batch.commit();
   }
 
+  return registros.length;
+}
+
+async function marcarCampanhaImportada(destino) {
   await db.collection('campanhas').doc(destino).set({
     dadosIniciaisImportados: true,
     baseImportadaEm: new Date().toISOString()
   }, { merge: true });
   if (campanhas[destino]) campanhas[destino].dadosIniciaisImportados = true;
-
-  return todos.size;
 }
 
 async function importarBaseParaCampanhaAtual() {
-  if (!campanhaAtual || campanhaAtual === CAMPANHA_SEMENTE_INICIAL) {
-    toast('⚠️ Escolha um ciclo criado para importar a base', true);
-    return;
-  }
-  if (!confirm(`Importar a estrutura do ciclo base para "${nomeCiclo(campanhaAtual, campanhas[campanhaAtual])}"?\n\nOs dados atuais desse ciclo serão substituídos. Apoios e recursos serão zerados.`)) return;
-
-  try {
-    toast('📋 Importando base…');
-    await limparRegistrosCampanha(campanhaAtual);
-    const count = await copiarDadosEntreCampanhas(CAMPANHA_SEMENTE_INICIAL, campanhaAtual, 'estrutura');
-    await trocarCampanha(campanhaAtual);
-    toast(`✅ ${count} registros importados do ciclo base`);
-  } catch(e) {
-    console.error('Erro importar base:', e);
-    toast('❌ Erro ao importar base', true);
-  }
+  abrirModalImportarBase();
 }
 
 function abrirModalCampanha() {
@@ -1741,13 +1735,18 @@ function migrarPessoa(fireId, localId, zona) {
 // ===================== SELEÇÃO MÚLTIPLA DE CAMPANHAS =====================
 let _mcsPessoa = null; // dados da pessoa a ser adicionada
 let _mcsCallback = null; // callback após confirmação
+let _mcsMode = 'ciclos';
+let _mcsBaseRegistros = [];
 
 function abrirModalCampsSel(pessoa, titulo, desc, callback) {
+  _mcsMode = 'ciclos';
   _mcsPessoa = pessoa;
   _mcsCallback = callback;
 
   document.getElementById('mcs-titulo').textContent = titulo || '📅 Adicionar em outros ciclos';
   document.getElementById('mcs-desc').textContent = desc || 'Selecione em quais ciclos esta pessoa vai participar:';
+  document.getElementById('mcs-search').style.display = 'none';
+  document.getElementById('mcs-actions').classList.remove('on');
 
   // Lista todos os ciclos exceto o atual
   const outras = Object.entries(campanhas).filter(([id]) => id !== campanhaAtual);
@@ -1770,16 +1769,89 @@ function abrirModalCampsSel(pessoa, titulo, desc, callback) {
   document.getElementById('modalCampsSel').classList.add('open');
 }
 
+async function abrirModalImportarBase() {
+  if (!campanhaAtual || campanhaAtual === CAMPANHA_SEMENTE_INICIAL) {
+    toast('⚠️ Escolha um ciclo criado para importar a base', true);
+    return;
+  }
+
+  _mcsMode = 'base';
+  _mcsPessoa = null;
+  _mcsCallback = null;
+  _mcsBaseRegistros = [];
+
+  document.getElementById('mcs-titulo').textContent = '📋 Importar do ciclo base';
+  document.getElementById('mcs-desc').textContent = 'Selecione quem vai continuar neste novo ciclo. Apoios e recursos serão zerados.';
+  const search = document.getElementById('mcs-search');
+  search.style.display = '';
+  search.value = '';
+  document.getElementById('mcs-actions').classList.add('on');
+  document.getElementById('mcs-lista').innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Carregando base…</div>';
+  document.getElementById('modalCampsSel').classList.add('open');
+
+  try {
+    const snap = await db.collection('campanhas').doc(CAMPANHA_SEMENTE_INICIAL).collection('liderancas').get();
+    _mcsBaseRegistros = snap.docs.map(d => ({...d.data(), _sourceId: d.id}));
+    renderImportacaoBase();
+  } catch(e) {
+    console.error('Erro carregar base:', e);
+    document.getElementById('mcs-lista').innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Erro ao carregar o ciclo base.</div>';
+  }
+}
+
+function renderImportacaoBase() {
+  const lista = document.getElementById('mcs-lista');
+  const q = norm(document.getElementById('mcs-search').value);
+  const filtrados = _mcsBaseRegistros.filter(d => {
+    return !q || norm(`${d.nome || ''} ${d.bairro || ''} ${d.telefone || ''}`).includes(q);
+  });
+
+  if (!filtrados.length) {
+    lista.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:8px">Nenhum registro encontrado na base.</div>';
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(d => `
+    <label class="camp-check-item">
+      <input type="checkbox" value="${a(d._sourceId)}">
+      <span class="camp-check-nome">${h(d.nome || 'Sem nome')}${d.bairro ? ` · ${h(d.bairro)}` : ''}</span>
+      <span class="camp-check-cargo">${h(tipoLabel(d.tipo))}</span>
+    </label>
+  `).join('');
+}
+
 function fecharModalCampsSel() {
   document.getElementById('modalCampsSel').classList.remove('open');
   _mcsPessoa = null;
   _mcsCallback = null;
+  _mcsMode = 'ciclos';
+  _mcsBaseRegistros = [];
 }
 
 async function confirmarCampsSel() {
   const checkboxes = document.querySelectorAll('#mcs-lista input[type="checkbox"]:checked');
-  const campsSelecionadas = Array.from(checkboxes).map(cb => cb.value);
+  const selecionados = Array.from(checkboxes).map(cb => cb.value);
 
+  if (_mcsMode === 'base') {
+    if (!selecionados.length) { toast('⚠️ Selecione pelo menos um registro', true); return; }
+    const ids = new Set(selecionados);
+    const registros = _mcsBaseRegistros.filter(d => ids.has(d._sourceId));
+    fecharModalCampsSel();
+    try {
+      toast('📋 Importando selecionados…');
+      await limparRegistrosCampanha(campanhaAtual);
+      const count = await copiarRegistrosParaCampanha(registros, campanhaAtual, 'estrutura');
+      await marcarCampanhaImportada(campanhaAtual);
+      await trocarCampanha(campanhaAtual);
+      toast(`✅ ${count} registros importados do ciclo base`);
+    } catch(e) {
+      console.error('Erro importar selecionados:', e);
+      toast('❌ Erro ao importar selecionados', true);
+    }
+    return;
+  }
+
+  const campsSelecionadas = selecionados;
   fecharModalCampsSel();
 
   if (!campsSelecionadas.length || !_mcsPessoa) return;
@@ -1851,6 +1923,19 @@ function bindStaticEvents() {
   on('btnSalvarRegistro', 'click', salvar);
   on('btnFecharCampsSel', 'click', fecharModalCampsSel);
   on('btnConfirmarCampsSel', 'click', confirmarCampsSel);
+  on('mcs-search', 'input', renderImportacaoBase);
+  on('btnMcsTodos', 'click', () => {
+    document.querySelectorAll('#mcs-lista input[type="checkbox"]').forEach(input => {
+      input.checked = true;
+      input.closest('.camp-check-item')?.classList.add('selected');
+    });
+  });
+  on('btnMcsLimpar', 'click', () => {
+    document.querySelectorAll('#mcs-lista input[type="checkbox"]').forEach(input => {
+      input.checked = false;
+      input.closest('.camp-check-item')?.classList.remove('selected');
+    });
+  });
   on('f-tipo', 'change', atualizarCamposHierarquia);
   on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 
