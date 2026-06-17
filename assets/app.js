@@ -974,14 +974,21 @@ async function migrarVinculosForce() {
   const raianeId = raiane ? raiane._fireId : '';
   const raianeNome = raiane ? raiane.nome : RAIANE_NOME;
 
+  const normalizeName = (name) =>
+    (name || '')
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .replace(/SEMAM|EMPREGADO/g, '')
+      .trim();
+
   const updates = [];
   let count = 0;
 
   // Para cada liderança com mobilizadores no mapa
   for (const [nomeL, nomesMobs] of Object.entries(VINCULOS_PLANILHA)) {
     // Encontra a liderança pelo nome (busca flexível)
-    const nomeKeyL = nomeL.substring(0, 15).toUpperCase();
-    const lider = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyL));
+    const nomeKeyL = normalizeName(nomeL).substring(0, 15);
+    const lider = docs.find(d => d.nome && normalizeName(d.nome).includes(nomeKeyL));
     if (!lider) { console.log('Lider nao encontrada:', nomeL); continue; }
 
     // Vincula liderança à Raiane (se não for a própria Raiane)
@@ -995,8 +1002,8 @@ async function migrarVinculosForce() {
 
     // Vincula mobilizadores à liderança
     for (const nomeMob of nomesMobs) {
-      const nomeKeyM = nomeMob.substring(0, 15).toUpperCase();
-      const mob = docs.find(d => d.nome && d.nome.toUpperCase().includes(nomeKeyM));
+      const nomeKeyM = normalizeName(nomeMob).substring(0, 15);
+      const mob = docs.find(d => d.nome && normalizeName(d.nome).includes(nomeKeyM));
       if (!mob) { console.log('Mob nao encontrado:', nomeMob); continue; }
       updates.push({ ref: colecao().doc(mob._fireId), data: {
         lider_id: lider._fireId,
