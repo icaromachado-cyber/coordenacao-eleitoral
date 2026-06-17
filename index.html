@@ -462,58 +462,57 @@
 
 <!-- MODAL GERENCIAR USUÁRIOS (só admin) -->
 <div class="overlay" id="overlayUsuarios" style="display:none">
-  <div class="modal" style="max-width:520px;max-height:85vh;overflow-y:auto">
-    <h2>👥 Gerenciar Coordenadores</h2>
-
-    <div style="margin-bottom:16px">
-      <h3 style="font-size:.9rem;margin-bottom:10px;color:var(--muted)">Criar novo login</h3>
-      <div class="fg">
-        <label>Nome</label>
-        <input type="text" id="nu-nome" placeholder="Nome completo">
-      </div>
-      <div class="fg">
-        <label>E-mail</label>
-        <input type="email" id="nu-email" placeholder="email@exemplo.com">
-      </div>
-      <div class="fg">
-        <label>Senha</label>
-        <input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres">
-      </div>
-      <div class="fg">
-        <label>Função</label>
-        <select id="nu-role">
-          <option value="regional">Coordenador Regional</option>
-          <option value="admin">Administrador</option>
-        </select>
-      </div>
-      <div id="nu-region-group">
-        <div class="fg">
-          <label>Região</label>
-          <select id="nu-region">
-            <option value="norte">Norte</option>
-            <option value="sul">Sul</option>
-            <option value="leste">Leste</option>
-            <option value="sudeste">Sudeste</option>
-            <option value="rural">Rural</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label>Zona (número do coordenador)</label>
-          <input type="text" id="nu-zona" placeholder="Ex: 01, 02...">
-        </div>
-      </div>
-      <div id="nu-msg" style="color:var(--danger);font-size:.85rem;margin-top:6px"></div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn btn-outline" id="btnFecharUsuarios">Fechar</button>
-        <button class="btn btn-primary" id="btnCriarUsuario">Criar conta</button>
-      </div>
+  <div class="nu-modal">
+    <!-- Cabeçalho fixo -->
+    <div class="nu-modal-header">
+      <h2 style="font-size:1.05rem;font-weight:600">👥 Gerenciar Coordenadores</h2>
+      <button class="btn-ico" id="btnFecharUsuarios" style="font-size:1rem">✕</button>
     </div>
 
-    <hr style="border-color:var(--border);margin:16px 0">
+    <!-- Corpo com scroll slim -->
+    <div class="nu-modal-body">
 
-    <div>
-      <h3 style="font-size:.9rem;margin-bottom:10px;color:var(--muted)">Coordenadores cadastrados</h3>
-      <div id="nu-lista" style="font-size:.85rem"></div>
+      <!-- Criar novo -->
+      <details class="nu-section" id="nuCreateDetails">
+        <summary class="nu-section-summary">+ Criar novo login</summary>
+        <div class="nu-create-form">
+          <div class="fg"><label>Nome</label><input type="text" id="nu-nome" placeholder="Nome completo"></div>
+          <div class="fg"><label>E-mail</label><input type="email" id="nu-email" placeholder="email@exemplo.com"></div>
+          <div class="fg"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres"></div>
+          <div class="fg">
+            <label>Função</label>
+            <select id="nu-role">
+              <option value="regional">Coordenador Regional</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div id="nu-region-group">
+            <div class="fg">
+              <label>Região</label>
+              <select id="nu-region">
+                <option value="norte">Norte</option>
+                <option value="sul">Sul</option>
+                <option value="leste">Leste</option>
+                <option value="sudeste">Sudeste</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Zona (número do coordenador)</label>
+              <input type="text" id="nu-zona" placeholder="Ex: 01, 02...">
+            </div>
+          </div>
+          <div id="nu-msg" style="color:var(--danger);font-size:.85rem;margin-top:4px"></div>
+          <button class="btn btn-primary" id="btnCriarUsuario" style="margin-top:12px;width:100%">Criar conta</button>
+        </div>
+      </details>
+
+      <!-- Lista -->
+      <div style="margin-top:16px">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;font-weight:600">Cadastrados</div>
+        <div id="nu-lista"></div>
+      </div>
+
     </div>
   </div>
 </div>

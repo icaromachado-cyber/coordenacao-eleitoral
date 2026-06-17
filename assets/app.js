@@ -2778,32 +2778,90 @@ function fecharGerenciarUsuarios() {
 
 async function carregarListaUsuarios() {
   const lista = document.getElementById('nu-lista');
-  lista.textContent = 'Carregando…';
+  lista.innerHTML = '<div style="color:var(--muted);font-size:.84rem;padding:8px 0">Carregando…</div>';
   try {
     const snap = await db.collection('users').get();
     if (snap.empty) {
-      lista.textContent = 'Nenhum usuário cadastrado.';
+      lista.innerHTML = '<div style="color:var(--muted);font-size:.84rem;padding:8px 0">Nenhum usuário cadastrado.</div>';
       return;
     }
-    const ROLE_LABELS = { admin: 'Admin', regional: 'Coordenador' };
     const REGION_LABELS = { norte: 'Norte', sul: 'Sul', leste: 'Leste', sudeste: 'Sudeste', rural: 'Rural' };
-    let html = '<table style="width:100%;border-collapse:collapse">';
-    html += '<tr style="font-size:.78rem;color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px">Nome</th><th style="text-align:left;padding:4px 6px">E-mail</th><th style="text-align:left;padding:4px 6px">Função</th><th style="text-align:left;padding:4px 6px">Região</th></tr>';
+    let html = '';
     snap.forEach(doc => {
       const d = doc.data();
-      const role = ROLE_LABELS[d.role] || d.role;
-      const region = d.region ? (REGION_LABELS[d.region] || d.region) + (d.zona ? ' / Zona ' + d.zona : '') : '—';
-      html += `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:5px 6px">${h(d.name || '—')}</td>
-        <td style="padding:5px 6px;font-size:.8rem">${h(d.email || '—')}</td>
-        <td style="padding:5px 6px">${h(role)}</td>
-        <td style="padding:5px 6px">${h(region)}</td>
-      </tr>`;
+      const isAdmin = d.role === 'admin';
+      const badgeClass = isAdmin ? 'nu-badge-admin' : 'nu-badge-regional';
+      const badgeLabel = isAdmin ? 'Admin' : 'Coordenador';
+      const regiao = d.region ? (REGION_LABELS[d.region] || d.region) + (d.zona ? ' · Zona ' + d.zona : '') : '';
+      const dataStr = encodeURIComponent(JSON.stringify({ name: d.name||'', role: d.role||'regional', region: d.region||'norte', zona: d.zona||'', email: d.email||'' }));
+      html += `<div class="nu-user-row">
+        <div>
+          <div class="nu-user-name">${h(d.name || '—')}</div>
+          <div class="nu-user-sub">${h(d.email || '—')}</div>
+        </div>
+        <div>
+          <span class="nu-badge-role ${badgeClass}">${badgeLabel}</span>
+          ${regiao ? `<div class="nu-user-sub" style="margin-top:4px">${h(regiao)}</div>` : ''}
+        </div>
+        <button class="btn btn-outline" style="font-size:.78rem;padding:6px 12px" onclick="editarUsuario('${a(doc.id)}', decodeURIComponent('${dataStr}'))">✏️ Editar</button>
+      </div>`;
     });
-    html += '</table>';
     lista.innerHTML = html;
   } catch(e) {
-    lista.textContent = 'Erro ao carregar usuários.';
+    lista.innerHTML = '<div style="color:var(--danger);font-size:.84rem">Erro ao carregar usuários.</div>';
+  }
+}
+
+function editarUsuario(uid, dataStr) {
+  const d = JSON.parse(dataStr);
+  const lista = document.getElementById('nu-lista');
+  const regionOptions = ['norte','sul','leste','sudeste','rural']
+    .map(r => `<option value="${r}" ${d.region===r?'selected':''}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`)
+    .join('');
+  lista.innerHTML = `
+    <div class="nu-edit-panel">
+      <h4>Editando: ${h(d.email)}</h4>
+      <div class="fg"><label>Nome</label><input type="text" id="edit-nome" value="${a(d.name)}"></div>
+      <div class="fg">
+        <label>Função</label>
+        <select id="edit-role" onchange="document.getElementById('edit-region-group').style.display=this.value==='regional'?'':'none'">
+          <option value="regional" ${d.role==='regional'?'selected':''}>Coordenador Regional</option>
+          <option value="admin" ${d.role==='admin'?'selected':''}>Administrador</option>
+        </select>
+      </div>
+      <div id="edit-region-group" style="display:${d.role==='regional'?'':'none'}">
+        <div class="fg"><label>Região</label><select id="edit-region">${regionOptions}</select></div>
+        <div class="fg"><label>Zona</label><input type="text" id="edit-zona" value="${a(d.zona)}" placeholder="Ex: 01, 02..."></div>
+      </div>
+      <div id="edit-msg" style="color:var(--danger);font-size:.82rem;margin-top:4px"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-outline" style="flex:1" onclick="carregarListaUsuarios()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="salvarEdicaoUsuario('${a(uid)}')">Salvar</button>
+      </div>
+    </div>`;
+}
+
+async function salvarEdicaoUsuario(uid) {
+  const nome = document.getElementById('edit-nome').value.trim();
+  const role = document.getElementById('edit-role').value;
+  const region = role === 'regional' ? document.getElementById('edit-region').value : null;
+  const zona = role === 'regional' ? document.getElementById('edit-zona').value.trim() : null;
+  const msg = document.getElementById('edit-msg');
+  const btn = event.target;
+
+  if (!nome) { msg.textContent = 'Nome é obrigatório.'; return; }
+  btn.disabled = true; btn.textContent = 'Salvando…';
+
+  try {
+    const docData = { name: nome, role };
+    if (region) { docData.region = region; } else { docData.region = firebase.firestore.FieldValue.delete(); }
+    if (zona) { docData.zona = zona; } else { docData.zona = firebase.firestore.FieldValue.delete(); }
+    await db.collection('users').doc(uid).update(docData);
+    toast('✅ Usuário atualizado!');
+    carregarListaUsuarios();
+  } catch(e) {
+    msg.textContent = 'Erro ao salvar: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Salvar';
   }
 }
 
@@ -2860,7 +2918,6 @@ async function criarNovoUsuario() {
   }
 }
 
-// Mostrar/ocultar campo de região conforme função selecionada
 document.addEventListener('DOMContentLoaded', () => {
   const roleSelect = document.getElementById('nu-role');
   if (roleSelect) {
@@ -2875,4 +2932,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnFecharU) btnFecharU.addEventListener('click', fecharGerenciarUsuarios);
   const btnCriarU = document.getElementById('btnCriarUsuario');
   if (btnCriarU) btnCriarU.addEventListener('click', criarNovoUsuario);
+  // Fechar ao clicar no overlay
+  const overlayU = document.getElementById('overlayUsuarios');
+  if (overlayU) overlayU.addEventListener('click', e => { if (e.target === overlayU) fecharGerenciarUsuarios(); });
 });
