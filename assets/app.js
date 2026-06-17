@@ -2422,6 +2422,97 @@ function toggleMapView() {
   }
 }
 
+// ===================== FINANCEIRO =====================
+async function getCurrentUserRole() {
+  const u = firebase.auth().currentUser;
+  if (!u) return null;
+  try {
+    const doc = await db.collection('users').doc(u.uid).get();
+    return doc.exists ? doc.data() : null;
+  } catch (e) {
+    console.error('Erro ao buscar user role', e);
+    return null;
+  }
+}
+
+function openFinanceiro() {
+  document.getElementById('financeiroMsg').textContent = '';
+  document.getElementById('financeiroArea').style.display = 'block';
+  loadFinanceiro();
+}
+
+function closeFinanceiro() {
+  document.getElementById('financeiroArea').style.display = 'none';
+}
+
+function calcFinTotal() {
+  const vals = ['fin-jul','fin-ago','fin-set','fin-out'].map(id=>parseInt(document.getElementById(id).value||0,10));
+  const total = vals.reduce((s,v)=>s+(isNaN(v)?0:v),0);
+  document.getElementById('fin-total').value = total;
+  return total;
+}
+
+async function loadFinanceiro() {
+  const role = await getCurrentUserRole();
+  if (!role) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const region = role.region || 'todas';
+  const ciclo = campanhaAtual || '2024';
+  document.getElementById('fin-ciclo').textContent = ciclo;
+  document.getElementById('fin-regiao').textContent = region;
+
+  // read finanças doc
+  const id = `${ciclo}_${region}`;
+  const doc = await db.collection('financas').doc(id).get();
+  const data = doc.exists ? doc.data() : { julho:0, agosto:0, setembro:0, outubro:0, total:0 };
+  document.getElementById('fin-jul').value = data.julho || 0;
+  document.getElementById('fin-ago').value = data.agosto || 0;
+  document.getElementById('fin-set').value = data.setembro || 0;
+  document.getElementById('fin-out').value = data.outubro || 0;
+  document.getElementById('fin-total').value = data.total || 0;
+}
+
+async function saveFinanceiro() {
+  const role = await getCurrentUserRole();
+  if (!role) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const region = role.region || 'todas';
+  const ciclo = campanhaAtual || '2024';
+  const id = `${ciclo}_${region}`;
+  const data = {
+    region,
+    ciclo,
+    julho: parseInt(document.getElementById('fin-jul').value||0,10),
+    agosto: parseInt(document.getElementById('fin-ago').value||0,10),
+    setembro: parseInt(document.getElementById('fin-set').value||0,10),
+    outubro: parseInt(document.getElementById('fin-out').value||0,10),
+    total: calcFinTotal(),
+    updatedBy: firebase.auth().currentUser ? firebase.auth().currentUser.uid : null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('financas').doc(id).set(data, { merge: true });
+    document.getElementById('financeiroMsg').textContent = 'Salvo com sucesso.';
+    // update tools value
+    document.getElementById('toolsResourceValue').textContent = 'R$ ' + data.total.toLocaleString('pt-BR');
+  } catch(e) {
+    console.error(e);
+    document.getElementById('financeiroMsg').textContent = 'Erro ao salvar.';
+  }
+}
+
+// bind finance buttons
+document.addEventListener('DOMContentLoaded', ()=>{
+  const bf = document.getElementById('btnFinanceiro');
+  if (bf) bf.addEventListener('click', openFinanceiro);
+  const bc = document.getElementById('btnCloseFinance');
+  if (bc) bc.addEventListener('click', closeFinanceiro);
+  const bs = document.getElementById('btnSaveFinance');
+  if (bs) bs.addEventListener('click', saveFinanceiro);
+  ['fin-jul','fin-ago','fin-set','fin-out'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcFinTotal);
+  });
+});
+
 function iniciarMapa() {
   if (!leafletMap) {
     leafletMap = L.map('map', { zoomControl: true }).setView([-5.0892, -42.8019], 12);

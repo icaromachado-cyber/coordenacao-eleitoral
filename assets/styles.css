@@ -273,6 +273,14 @@ body {
   color: #f59e0b;
 }
 
+/* Financeiro panel */
+.financeiro-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; margin-top: 12px; }
+.financeiro-card { padding: 16px; max-width: 560px; }
+.financeiro-card h3 { font-family: 'Syne', sans-serif; margin-bottom: 10px; font-size: 1rem; }
+.financeiro-card .fg label { font-size: 0.72rem; }
+.financeiro-card input { width: 160px; }
+.financeiro-card #fin-total { font-weight:800; }
+
 /* SUMMARY STRIP */
 .summary-strip {
   flex-shrink: 0;
