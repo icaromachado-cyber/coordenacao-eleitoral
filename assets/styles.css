@@ -309,6 +309,12 @@ body {
   font-weight: 800;
   color: #fff;
   line-height: 1.1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.strip-card.s-custo .strip-value {
+  font-size: 1.55rem;
 }
 
 .strip-sub {
