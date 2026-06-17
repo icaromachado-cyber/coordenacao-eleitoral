@@ -3268,6 +3268,66 @@ async function sincronizarCAsCoord() {
   }
 }
 
+async function repararCriadoPorCAs() {
+  const msgEl = document.getElementById('nu-repair-msg');
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Verificando…';
+
+  try {
+    // Carrega todos os usuários coordenadores (com região)
+    const usersSnap = await db.collection('users').get();
+    const coordUsers = [];
+    usersSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.region) coordUsers.push({ uid: doc.id, region: d.region, zona: d.zona || '', name: d.name || '' });
+    });
+
+    // Carrega todos os CAs
+    const caSnap = await colecao().where('tipo', '==', 'CA').get();
+
+    let reparados = 0;
+    const batch = db.batch();
+
+    caSnap.docs.forEach(doc => {
+      const ca = doc.data();
+      // Encontra o usuário com mesma região (zona é opcional — região já é suficiente para CAs únicos por região)
+      const dono = coordUsers.find(u =>
+        u.region === ca._zona &&
+        (!ca._coordZona || !u.zona || u.zona === ca._coordZona)
+      ) || coordUsers.find(u => u.region === ca._zona);
+
+      if (!dono) return;
+      if (ca._criadoPor === dono.uid) return; // já correto
+
+      batch.update(doc.ref, {
+        _criadoPor: dono.uid,
+        _coordZona: dono.zona || ca._coordZona || '',
+        _coordNome: dono.name ? dono.name.split(' ')[0] : ca._coordNome || '',
+      });
+      reparados++;
+    });
+
+    if (reparados === 0) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = '✅ Todos os CAs já têm proprietário correto.';
+      return;
+    }
+
+    await batch.commit();
+    msgEl.style.color = '#4ade80';
+    msgEl.textContent = `✅ ${reparados} CA(s) reparado(s).`;
+    toast(`✅ ${reparados} CA(s) com proprietário corrigido`);
+
+  } catch(e) {
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent = 'Erro: ' + e.message;
+    console.error('[repararCriadoPorCAs]', e);
+    return;
+  }
+
+  try { await carregarDoFirebase(); } catch(e2) { console.error(e2); }
+}
+
 async function limparCAsDuplicados() {
   const msgEl = document.getElementById('nu-dedup-msg');
   msgEl.style.color = 'var(--muted)';
