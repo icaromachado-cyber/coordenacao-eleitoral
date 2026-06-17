@@ -878,8 +878,16 @@ function findById(zona, id) {
 }
 
 function verDrawer(id, zona) {
-  const d = findById(zona, id);
+  let d = findById(zona, id);
+  let zonaReal = zona;
+  if (!d) {
+    for (const z of ['norte','leste','sul','sudeste','rural']) {
+      d = findById(z, id);
+      if (d) { zonaReal = z; break; }
+    }
+  }
   if (!d) return;
+  zona = zonaReal;
   const maxC = Math.max(...getDados().map(x=>x.total), 1);
   const pct = Math.min(100, (d.total/maxC)*100);
   const cfg = ZONAS_CFG[zona];
@@ -1018,8 +1026,15 @@ function abrirModal(id, zona) {
     });
     if (!isAdminUser() && currentUserRole?.region && zonaFieldEl) zonaFieldEl.value = currentUserRole.region;
   } else {
-    const d = findById(_editZona, id);
-    if (!d) return;
+    let d = findById(_editZona, id);
+    // Se não achou na zona indicada, procura em todas as zonas (fallback para CAs com zona divergente)
+    if (!d) {
+      for (const z of ['norte','leste','sul','sudeste','rural']) {
+        d = findById(z, id);
+        if (d) { _editZona = z; break; }
+      }
+    }
+    if (!d) { console.warn('[abrirModal] registro não encontrado:', id, _editZona); toast('⚠️ Registro não encontrado (id: ' + id + ')', true); return; }
     const setIf = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     setIf('f-tipo', d.tipo||'M');
     setIf('f-zona', _editZona);
