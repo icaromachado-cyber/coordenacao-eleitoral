@@ -2896,6 +2896,7 @@ function abrirGerenciarUsuarios() {
   document.getElementById('nu-zona').value = '';
   document.getElementById('nu-region-group').style.display = '';
   carregarListaUsuarios();
+  verificarRegistrosSemCoord();
 }
 
 function fecharGerenciarUsuarios() {
@@ -3062,3 +3063,108 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlayU = document.getElementById('overlayUsuarios');
   if (overlayU) overlayU.addEventListener('click', e => { if (e.target === overlayU) fecharGerenciarUsuarios(); });
 });
+
+// ===================== MIGRAÇÃO DE REGISTROS =====================
+
+async function verificarRegistrosSemCoord() {
+  const infoEl  = document.getElementById('nu-migrate-info');
+  const selCoord = document.getElementById('nu-migrate-coord');
+  if (!infoEl || !selCoord) return;
+
+  infoEl.textContent = 'Verificando registros...';
+  try {
+    // Conta registros sem _criadoPor em todas as zonas
+    const snaps = await Promise.all(
+      ['norte','leste','sul','sudeste','rural'].map(z =>
+        colecao().where('_zona', '==', z).get()
+      )
+    );
+    const semCoord = snaps.flatMap(s => s.docs).filter(d => !d.data()._criadoPor);
+    const total = semCoord.length;
+
+    if (total === 0) {
+      infoEl.innerHTML = '<span style="color:#4ade80">✓ Todos os registros já têm coordenador atribuído.</span>';
+    } else {
+      infoEl.innerHTML = `<span style="color:#fbbf24">⚠️ <strong>${total}</strong> registro(s) sem coordenador — selecione para quem atribuir:</span>`;
+    }
+
+    // Popula dropdown com coordenadores
+    const usersSnap = await db.collection('users').get();
+    const coords = [];
+    usersSnap.forEach(doc => {
+      const d = doc.data();
+      if (!d.region) return;
+      const label = (REGION_CAP[d.region] || d.region) + (d.zona ? ' ' + d.zona : '') + (d.name ? ' — ' + d.name : '');
+      coords.push({ uid: doc.id, label, region: d.region, zona: d.zona||'', name: d.name||'' });
+    });
+    coords.sort((a,b) => a.label.localeCompare(b.label, 'pt-BR'));
+    selCoord.innerHTML = '<option value="">— selecione um coordenador —</option>' +
+      coords.map(c => `<option value="${a(c.uid)}" data-region="${a(c.region)}" data-zona="${a(c.zona)}" data-name="${a(c.name)}">${h(c.label)}</option>`).join('');
+
+  } catch(e) {
+    infoEl.textContent = 'Erro ao verificar: ' + e.message;
+  }
+}
+
+async function executarMigracaoDados() {
+  const selCoord  = document.getElementById('nu-migrate-coord');
+  const moverZona = document.getElementById('nu-migrate-zona').checked;
+  const msgEl     = document.getElementById('nu-migrate-msg');
+  msgEl.textContent = '';
+
+  const uid = selCoord.value;
+  if (!uid) { msgEl.textContent = 'Selecione um coordenador.'; return; }
+
+  const opt = selCoord.options[selCoord.selectedIndex];
+  const coordRegion = opt.getAttribute('data-region');
+  const coordZona   = opt.getAttribute('data-zona');
+  const coordName   = opt.getAttribute('data-name');
+
+  if (!confirm(`Atribuir todos os registros SEM coordenador para ${opt.text}?\n${moverZona ? 'Os registros também serão movidos para a zona ' + coordRegion.toUpperCase() + '.' : ''}\n\nEsta ação não pode ser desfeita.`)) return;
+
+  msgEl.textContent = 'Migrando...';
+  try {
+    // Busca todos os registros sem _criadoPor
+    const snaps = await Promise.all(
+      ['norte','leste','sul','sudeste','rural'].map(z =>
+        colecao().where('_zona', '==', z).get()
+      )
+    );
+    const semCoord = snaps.flatMap(s => s.docs).filter(d => !d.data()._criadoPor);
+
+    if (semCoord.length === 0) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = 'Nenhum registro sem coordenador encontrado.';
+      return;
+    }
+
+    // Batch update (limite 499 por batch)
+    let migrados = 0;
+    for (let i = 0; i < semCoord.length; i += 499) {
+      const batch = db.batch();
+      semCoord.slice(i, i + 499).forEach(doc => {
+        const update = {
+          _criadoPor: uid,
+          _coordZona: coordZona,
+          _coordNome: coordName
+        };
+        if (moverZona && coordRegion) update._zona = coordRegion;
+        batch.update(doc.ref, update);
+      });
+      await batch.commit();
+      migrados += Math.min(499, semCoord.length - i);
+    }
+
+    msgEl.style.color = '#4ade80';
+    msgEl.textContent = `✅ ${migrados} registro(s) migrados com sucesso!`;
+    toast(`✅ ${migrados} registros atribuídos a ${coordName || opt.text}`);
+
+    // Recarrega dados
+    await carregarDoFirebase();
+    verificarRegistrosSemCoord();
+
+  } catch(e) {
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent = 'Erro: ' + e.message;
+  }
+}

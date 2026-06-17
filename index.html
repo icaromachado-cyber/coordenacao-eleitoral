@@ -522,6 +522,24 @@
         <div id="nu-lista"></div>
       </div>
 
+      <!-- Migração de dados -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;font-weight:600">Migrar dados sem coordenador</div>
+        <div id="nu-migrate-info" style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Verificando registros...</div>
+        <div class="fg">
+          <label>Atribuir para</label>
+          <select id="nu-migrate-coord">
+            <option value="">— selecione um coordenador —</option>
+          </select>
+        </div>
+        <label style="font-size:.82rem;display:flex;align-items:center;gap:8px;margin:8px 0 14px;cursor:pointer">
+          <input type="checkbox" id="nu-migrate-zona" checked style="accent-color:#3b82f6">
+          Mover registros para a zona do coordenador selecionado
+        </label>
+        <div id="nu-migrate-msg" style="color:var(--danger);font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-primary" onclick="executarMigracaoDados()" style="width:100%">Executar migração</button>
+      </div>
+
     </div>
   </div>
 </div>
