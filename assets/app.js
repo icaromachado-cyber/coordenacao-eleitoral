@@ -1686,8 +1686,7 @@ function renderArvore() {
             <div class="tree-count-pill">🗳️ <strong>${apoiosL}</strong> apoios</div>
           </div>
           <div style="display:flex;gap:6px;margin-left:8px">
-            <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Ver">👁</button>
-            <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Editar">✏️</button>
+            <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">👁</button>
           </div>
           <span class="tree-toggle open" id="tog-l-${ci}-${li}" style="margin-left:6px">▶</span>
         </div>
@@ -1703,7 +1702,7 @@ function renderArvore() {
           <span class="tree-m-nome">${h(m.nome)}</span>
           <span class="tree-m-bairro">${h(m.bairro || '')}</span>
           ${m.votos ? `<span class="tree-m-votos">🗳️ ${m.votos}</span>` : ''}
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Editar">✏️</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">👁</button>
         </div>`;
       });
 
@@ -1733,7 +1732,8 @@ function renderArvore() {
           <span class="badge badge-${a(l.tipo)}">${h(l.tipo)}</span>
           <span class="orphan-name">${h(l.nome)}</span>
           <span class="orphan-bairro">${h(l.bairro || '')}</span>
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Vincular">✏️</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">👁</button>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Editar">✏️</button>
         </div>`;
       });
     }
@@ -1745,7 +1745,8 @@ function renderArvore() {
           <span class="badge badge-${a(m.tipo)}">${h(m.tipo)}</span>
           <span class="orphan-name">${h(m.nome)}</span>
           <span class="orphan-bairro">${h(m.bairro || '')}</span>
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Vincular">✏️</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">👁</button>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Editar">✏️</button>
         </div>`;
       });
     }
