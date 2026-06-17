@@ -3179,23 +3179,22 @@ async function sincronizarCAsCoord() {
     let jaExistem = 0;
 
     for (const coord of coords) {
-      // Verifica se já tem registro CA criado por esse UID
-      const caSnap = await colecao()
-        .where('_criadoPor', '==', coord.uid)
-        .where('tipo', '==', 'CA')
-        .limit(1).get();
+      // Verifica se já tem registro CA criado por esse UID (filtra tipo em JS para evitar índice composto)
+      const coordSnap = await colecao().where('_criadoPor', '==', coord.uid).get();
+      const jaTemCA = coordSnap.docs.some(d => d.data().tipo === 'CA');
 
-      if (!caSnap.empty) { jaExistem++; continue; }
+      if (jaTemCA) { jaExistem++; continue; }
 
-      // Cria o CA
-      const snapZona = await colecao().where('_zona', '==', coord.region).get();
-      const maxId = Math.max(...snapZona.docs.map(d => +(d.data().id) || 0), 0);
+      // Usa os docs já carregados de _criadoPor para calcular o max ID global
+      const allZonaSnap = await colecao().where('_zona', '==', coord.region).get();
+      const maxId = allZonaSnap.docs.reduce((m, d) => Math.max(m, +(d.data().id) || 0), 0);
       const novoId = String(maxId + 1).padStart(3, '0');
       const primeiroNome = (coord.name || '').split(' ')[0];
+      const nomeCompleto = (coord.name || coord.email || 'COORDENADOR').toUpperCase();
 
       await colecao().add({
         id: novoId,
-        nome: (coord.name || coord.email || '').toUpperCase(),
+        nome: nomeCompleto,
         tipo: 'CA',
         _zona: coord.region,
         _criadoPor: coord.uid,
