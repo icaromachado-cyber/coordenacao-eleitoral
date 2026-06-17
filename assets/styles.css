@@ -206,9 +206,9 @@ body {
   border-radius: 10px;
   color: var(--muted);
   cursor: pointer;
-  font-size: .78rem;
+  font-size: .80rem;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 9px 13px;
   white-space: nowrap;
 }
 
@@ -225,12 +225,12 @@ body {
   min-width: 220px;
   background: var(--surface-solid);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: 0 16px 44px rgba(0,0,0,.28);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 12px;
   z-index: 500;
 }
 
@@ -347,8 +347,8 @@ body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px;
+  gap: 11px;
+  padding: 10px 18px;
   background: #1e2028;
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
@@ -367,8 +367,8 @@ body {
   border-radius: 8px;
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.85rem;
-  padding: 8px 12px 8px 36px;
+  font-size: 0.87rem;
+  padding: 10px 13px 10px 38px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -391,8 +391,8 @@ select {
   border-radius: 8px;
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.82rem;
-  padding: 8px 12px;
+  font-size: 0.84rem;
+  padding: 10px 13px;
   outline: none;
   cursor: pointer;
 }
@@ -400,12 +400,12 @@ select {
 select:focus { border-color: var(--accent, #e8433a); }
 
 .btn {
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 500;
   transition: all 0.15s;
   display: flex;
@@ -453,7 +453,7 @@ select:focus { border-color: var(--accent, #e8433a); }
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   min-width: 680px;
 }
 
@@ -481,10 +481,10 @@ thead {
 }
 
 th {
-  padding: 11px 14px;
+  padding: 12px 16px;
   text-align: left;
   font-family: 'Syne', sans-serif;
-  font-size: 0.67rem;
+  font-size: 0.70rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -501,7 +501,7 @@ th .si { opacity: 0.35; }
 th.sorted .si { opacity: 1; }
 
 td {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(37,42,64,0.6);
   vertical-align: middle;
   white-space: nowrap;
@@ -512,9 +512,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
   font-family: 'Syne', sans-serif;
   text-transform: uppercase;
@@ -1503,18 +1503,18 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .campanha-bar {
   background: #1a1d28;
   border-bottom: 1px solid var(--border);
-  padding: 0 16px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 34px;
+  gap: 10px;
+  height: 40px;
   flex-shrink: 0;
 }
 
 body.theme-light .campanha-bar { background: #e8eaf5; border-bottom-color: #dde1ee; }
 
 .campanha-label {
-  font-size: .7rem;
+  font-size: .72rem;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--muted);
@@ -1532,9 +1532,9 @@ body.theme-light .campanha-bar { background: #e8eaf5; border-bottom-color: #dde1
   flex: 1;
   min-width: 180px;
   max-width: 360px;
-  height: 28px;
-  padding: 3px 10px;
-  font-size: .72rem;
+  height: 32px;
+  padding: 6px 12px;
+  font-size: .75rem;
   background: rgba(255,255,255,.04);
   border-color: var(--border);
 }
