@@ -196,11 +196,19 @@ const ZONAS_CFG = {
 };
 
 const TIPO_LABELS = {
-  CA: 'CR',
-  L: 'RF',
-  M: 'EQ',
-  LE: 'RE',
-  ME: 'EE'
+  CA: 'CA',
+  L: 'L',
+  M: 'M',
+  LE: 'LE',
+  ME: 'ME'
+};
+
+const TIPO_NOMES = {
+  CA: 'Coordenador de Área',
+  L: 'Liderança',
+  M: 'Mobilizador',
+  LE: 'Liderança SEMAM',
+  ME: 'Mobilizador SEMAM'
 };
 
 const CICLOS_NEUTROS = {
@@ -232,6 +240,10 @@ const CATEGORIA_CORES = {
 
 function tipoLabel(tipo) {
   return TIPO_LABELS[tipo] || tipo || '—';
+}
+
+function tipoNome(tipo) {
+  return TIPO_NOMES[tipo] || tipoLabel(tipo);
 }
 
 function nomeCiclo(id, campanha) {
@@ -335,6 +347,7 @@ async function carregarDoFirebase() {
     mostrarLoading(false);
     atualizarNavCounts();
     trocarZona('todas');
+    abrirDashboardInicial();
   } catch(e) {
     console.error('Erro ao carregar Firebase:', e);
     DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
@@ -343,6 +356,7 @@ async function carregarDoFirebase() {
     mostrarLoading(false);
     atualizarNavCounts();
     trocarZona('todas');
+    abrirDashboardInicial();
     toast('⚠️ Usando dados locais — sem conexão com banco', true);
   }
 }
@@ -671,9 +685,9 @@ function verDrawer(id, zona) {
     <div class="drawer-tab-content active" id="tab-info">
       <div class="d-row"><span class="d-lbl">Status</span><span class="d-val">${statusBadge(d.status)}</span></div>
       <div class="d-row"><span class="d-lbl">Reunião</span><span class="d-val">${reuniaoBadge(d.reuniao_feita, d.reuniao_data)}</span></div>
-      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} referências</span></div>` : ''}
+      ${d.tipo==='CA' ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#fb923c;font-weight:700">${getEquipeDeUm(d).length} lideranças</span></div>` : ''}
       ${(d.tipo==='L'||d.tipo==='LE') && d.coord_area_nome ? `<div class="d-row"><span class="d-lbl">🏛️ Coordenador</span><span class="d-val" style="color:#fb923c;font-size:.75rem">${h(d.coord_area_nome)}</span></div>` : ''}
-      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Equipe</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
+      ${(d.tipo==='L'||d.tipo==='LE') ? `<div class="d-row"><span class="d-lbl">👥 Mobilizadores</span><span class="d-val" style="color:#22c55e;font-weight:700">${getEquipeDeUm(d).length}</span></div>` : ''}
       ${(d.tipo==='M'||d.tipo==='ME') && d.lider_nome ? `<div class="d-row"><span class="d-lbl">👤 Liderança</span><span class="d-val" style="color:#60a5fa;font-size:.75rem">${h(d.lider_nome)}</span></div>` : ''}
       <div class="d-total-box">
         <div class="d-total-lbl">💰 Total investido</div>
@@ -1121,9 +1135,17 @@ function getEquipeDeUm(d) {
 
 // ===================== DASHBOARD =====================
 let dashboardView = false;
+let dashboardInicialAberto = false;
 
 function dadosDoCicloAtual() {
   return Object.values(DB).flat();
+}
+
+// Abre o Dashboard como tela inicial logo após o carregamento dos dados.
+function abrirDashboardInicial() {
+  if (dashboardInicialAberto) return;
+  dashboardInicialAberto = true;
+  if (!dashboardView) toggleDashboardView();
 }
 
 function closeDashboardView() {
@@ -1232,9 +1254,9 @@ function renderDashboard() {
   document.getElementById('dashboardTitle').textContent = cicloNome;
   document.getElementById('dashboardCards').innerHTML = [
     ['Total', total.toLocaleString('pt-BR'), 'registros no ciclo'],
-    ['Referências', referencias.toLocaleString('pt-BR'), 'pontos de contato'],
-    ['Equipe', equipe.toLocaleString('pt-BR'), 'campo operacional'],
-    ['Coordenação', coordenacao.toLocaleString('pt-BR'), 'regionais'],
+    ['Lideranças', referencias.toLocaleString('pt-BR'), 'pontos de contato'],
+    ['Mobilizadores', equipe.toLocaleString('pt-BR'), 'campo operacional'],
+    ['Coordenadores', coordenacao.toLocaleString('pt-BR'), 'regionais'],
     ['Apoios', apoios.toLocaleString('pt-BR'), 'previstos'],
     ['Recursos', 'R$ ' + recursos.toLocaleString('pt-BR'), 'total aplicado'],
     ['Pendentes', pendentes.toLocaleString('pt-BR'), 'precisam de revisão'],
@@ -1248,7 +1270,7 @@ function renderDashboard() {
   `).join('');
 
   const regioes = Object.entries(ZONAS_CFG).map(([zona, cfg]) => [cfg.label, (DB[zona] || []).length]);
-  const perfis = Object.entries(countBy(dados, d => tipoLabel(d.tipo))).sort((a,b) => b[1] - a[1]);
+  const perfis = Object.entries(countBy(dados, d => tipoNome(d.tipo))).sort((a,b) => b[1] - a[1]);
   const status = Object.entries(countBy(dados, d => d.status || 'ativo')).sort((a,b) => b[1] - a[1]);
   const bairros = Object.entries(countBy(dados.filter(d => d.bairro), d => d.bairro))
     .sort((a,b) => b[1] - a[1])
@@ -1327,9 +1349,9 @@ function renderArvore() {
   const totalApoios = dados.reduce((s,d) => s+(d.votos||0), 0);
   const semVinculo = liderancas.filter(l => !l.coord_area_id).length;
   document.getElementById('treeStats').innerHTML = `
-    <div class="tree-stat">Coordenação: <strong>${coords.length}</strong></div>
-    <div class="tree-stat">Referências: <strong>${liderancas.length}</strong></div>
-    <div class="tree-stat">Equipe: <strong>${mobilizadores.length}</strong></div>
+    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
+    <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
     <div class="tree-stat">Total de apoios: <strong>${totalApoios.toLocaleString('pt-BR')}</strong></div>
     ${semVinculo > 0 ? `<div class="tree-stat" style="border-color:rgba(234,179,8,.3)">⚠️ Sem vínculo: <strong style="color:#f59e0b">${semVinculo}</strong></div>` : ''}
   `;
@@ -1427,7 +1449,7 @@ function renderArvore() {
     html += `</div></div>`;
   });
 
-  // Sem vínculo — Referências sem coordenação
+  // Sem vínculo — Lideranças sem coordenação
   const lidersSemCA = liderancas.filter(l => !l.coord_area_id || l.coord_area_id === '');
   const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
 
@@ -1435,13 +1457,13 @@ function renderArvore() {
     html += `<div class="tree-orphans">
       <div class="tree-orphans-header" data-action="toggle-node" data-node-id="orphans">
         <h4>⚠️ Sem vínculo definido</h4>
-        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> referências · <strong>${mobsSemL.length}</strong> mobilizadores</span>
+        <span class="tree-count-pill"><strong>${lidersSemCA.length}</strong> lideranças · <strong>${mobsSemL.length}</strong> mobilizadores</span>
         <span class="tree-toggle" id="tog-orphans">▶</span>
       </div>
       <div class="tree-orphans-body" id="orphans">`;
 
     if (lidersSemCA.length > 0) {
-      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Referências sem coordenação</div>`;
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:4px">Lideranças sem coordenação</div>`;
       lidersSemCA.forEach(l => {
         html += `<div class="orphan-item">
           <span class="badge badge-${a(l.tipo)}">${h(l.tipo)}</span>
@@ -1453,7 +1475,7 @@ function renderArvore() {
     }
 
     if (mobsSemL.length > 0) {
-      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Equipe sem liderança</div>`;
+      html += `<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;margin-top:12px">Mobilizadores sem liderança</div>`;
       mobsSemL.forEach(m => {
         html += `<div class="orphan-item">
           <span class="badge badge-${a(m.tipo)}">${h(m.tipo)}</span>
