@@ -836,7 +836,8 @@ function renderTable() {
       <td class="num-td ${custoClass(d.custo_out)}">${d.custo_out?'R$'+d.custo_out.toLocaleString('pt-BR'):'—'}</td>
       <td class="total-td" style="${totalStyle(d.total)}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}</td>
       <td style="text-align:center;white-space:nowrap">
-        <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Ver">👁</button>
+        <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">👁</button>
+        <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
       </td>
     </tr>`;
   }).join('');
@@ -2344,7 +2345,10 @@ function bindStaticEvents() {
     const drawer = document.getElementById('drawer');
     if (drawer?.classList.contains('open')) {
       // Fecha se clicou fora do drawer e não no botão que o abriu
-      if (!drawer.contains(e.target) && !e.target.closest('[data-action="ver-drawer"]')) {
+      const dentroDrawer = drawer.contains(e.target);
+      const abrindoDrawer = e.target.closest('[data-action="ver-drawer"]');
+      const abrindoModal  = e.target.closest('[data-action="editar-registro"]') || e.target.closest('.overlay');
+      if (!dentroDrawer && !abrindoDrawer && !abrindoModal) {
         fecharDrawer();
       }
     }
