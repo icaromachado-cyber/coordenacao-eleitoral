@@ -294,6 +294,7 @@ const BAIRROS = {
 // ===================== ESTADO =====================
 let currentUserRole = null; // { role, region, zona, name }
 let zonaAtual = 'norte';
+let coordFiltroAtivo = null; // uid do coordenador selecionado no nav lateral
 let filtrado = [];
 let sortCol = 'id';
 let sortAsc = true;
@@ -339,6 +340,74 @@ function configurarNavPorRole() {
   if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
   const btnUsuarios = document.getElementById('btnGerenciarUsuarios');
   if (btnUsuarios) btnUsuarios.style.display = admin ? '' : 'none';
+}
+
+// ===================== NAV POR COORDENADOR =====================
+const COORD_COLORS = { norte: '#ef4444', leste: '#3b82f6', sul: '#22c55e', sudeste: '#a855f7', rural: '#f59e0b' };
+const REGION_CAP   = { norte: 'Norte', leste: 'Leste', sul: 'Sul', sudeste: 'Sudeste', rural: 'Rural' };
+
+async function renderNavCoord() {
+  if (!isAdminUser()) return;
+  const container = document.getElementById('nav-coord-items');
+  const section   = document.getElementById('sidebar-coord-section');
+  if (!container || !section) return;
+  try {
+    const snap = await db.collection('users').get();
+    const allRecords = Object.values(DB).flat();
+    const coords = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!d.region) return;
+      const count = allRecords.filter(r => r._criadoPor === doc.id).length;
+      const label = (REGION_CAP[d.region] || d.region) + (d.zona ? ' ' + d.zona : '');
+      coords.push({ uid: doc.id, label, name: d.name || d.email || '—', region: d.region, zona: d.zona || '', count });
+    });
+    coords.sort((a, b) => {
+      const r = a.region.localeCompare(b.region, 'pt-BR');
+      return r !== 0 ? r : a.zona.localeCompare(b.zona);
+    });
+    if (!coords.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    container.innerHTML = coords.map(c => `
+      <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
+        <div class="nav-dot" style="background:${COORD_COLORS[c.region]||'#888'}"></div>
+        <div style="flex:1;min-width:0;overflow:hidden">
+          <div class="nav-name">${h(c.label)}</div>
+          <div class="nav-coord-sub">${h(c.name)}</div>
+        </div>
+        <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
+      </div>`).join('');
+  } catch(e) {
+    section.style.display = 'none';
+  }
+}
+
+function selecionarCoord(uid) {
+  coordFiltroAtivo = uid;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-coord-' + uid)?.classList.add('active');
+  zonaAtual = 'todas';
+  const fc = document.getElementById('filtro-coord');
+  if (fc) fc.value = uid;
+  // Atualiza título com nome do coordenador
+  const item = document.getElementById('nav-coord-' + uid);
+  const label = item?.querySelector('.nav-name')?.textContent || '';
+  const nome  = item?.querySelector('.nav-coord-sub')?.textContent || '';
+  document.getElementById('zTitle').textContent = label + (nome ? ' — ' + nome : '');
+  document.getElementById('zBadge').style.background = '#3b82f6';
+  document.documentElement.style.setProperty('--accent', '#3b82f6');
+  pg = 1;
+  aplicarFiltros();
+}
+
+function atualizarNavCoordCounts() {
+  if (!isAdminUser()) return;
+  const allRecords = Object.values(DB).flat();
+  document.querySelectorAll('.nav-coord-item').forEach(el => {
+    const uid = el.id.replace('nav-coord-', '');
+    const countEl = document.getElementById('ncc-' + uid);
+    if (countEl) countEl.textContent = allRecords.filter(r => r._criadoPor === uid).length;
+  });
 }
 
 // ===================== INIT =====================
@@ -398,6 +467,7 @@ async function carregarDoFirebase() {
     mostrarLoading(false);
     atualizarNavCounts();
     configurarNavPorRole();
+    await renderNavCoord();
     const zonaInicial = isAdminUser() ? 'todas' : (currentUserRole?.region || 'norte');
     trocarZona(zonaInicial);
     abrirDashboardInicial();
@@ -412,6 +482,7 @@ async function carregarDoFirebase() {
     mostrarLoading(false);
     atualizarNavCounts();
     configurarNavPorRole();
+    await renderNavCoord();
     trocarZona(isAdminUser() ? 'todas' : (currentUserRole?.region || 'norte'));
     abrirDashboardInicial();
     if (isAdminUser()) toast('⚠️ Usando dados locais — sem conexão com banco', true);
@@ -422,14 +493,22 @@ function atualizarNavCounts() {
   let total = 0;
   Object.keys(DB).forEach(z => {
     const n = DB[z].length;
-    document.getElementById('nc-' + z).textContent = n;
+    const el = document.getElementById('nc-' + z);
+    if (el) el.textContent = n;
     total += n;
   });
-  document.getElementById('nc-todas').textContent = total;
+  const elTodas = document.getElementById('nc-todas');
+  if (elTodas) elTodas.textContent = total;
+  atualizarNavCoordCounts();
 }
 
 // ===================== TROCA ZONA =====================
 function trocarZona(z) {
+  // Limpa filtro de coordenador ao navegar por zona geográfica
+  coordFiltroAtivo = null;
+  const fc = document.getElementById('filtro-coord');
+  if (fc) fc.value = '';
+
   // Reset multi-zona when switching to a regular zone
   if (z !== 'multi') {
     multiZonaAtivo = false;
