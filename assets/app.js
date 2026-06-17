@@ -3087,12 +3087,39 @@ async function criarNovoUsuario() {
     if (zona) docData.zona = zona;
     await db.collection('users').doc(uid).set(docData);
 
+    // Auto-cria registro CA na liderança quando for coordenador regional
+    if (role === 'regional' && region) {
+      try {
+        const snapZona = await colecao().where('_zona', '==', region).get();
+        const maxId = Math.max(...snapZona.docs.map(d => +(d.data().id) || 0), 0);
+        const novoId = String(maxId + 1).padStart(3, '0');
+        const primeiroNome = nome.split(' ')[0];
+        await colecao().add({
+          id: novoId,
+          nome: nome.toUpperCase(),
+          tipo: 'CA',
+          _zona: region,
+          _criadoPor: uid,
+          _coordZona: zona || '',
+          _coordNome: primeiroNome,
+          status: 'ativo',
+          bairro: '',
+          telefone: '',
+          votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0,
+          reuniao: false
+        });
+      } catch(eCA) {
+        console.warn('Não foi possível criar registro CA automaticamente:', eCA.message);
+      }
+    }
+
     msg.style.color = 'var(--success, #22c55e)';
-    msg.textContent = `Conta criada para ${email}`;
+    msg.textContent = `✅ Conta criada${role === 'regional' ? ' e registro CA adicionado na liderança' : ''} — ${email}`;
     document.getElementById('nu-nome').value = '';
     document.getElementById('nu-email').value = '';
     document.getElementById('nu-senha').value = '';
     carregarListaUsuarios();
+    if (isAdminUser()) await renderNavCoord();
   } catch(e) {
     const erros = {
       'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
