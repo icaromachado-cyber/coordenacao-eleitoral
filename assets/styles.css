@@ -276,7 +276,7 @@ body {
 .strip-card.s-total::after { background: #3b82f6; }
 .strip-card.s-l::after { background: var(--z-leste); }
 .strip-card.s-m::after { background: var(--green); }
-.strip-card.s-semam::after { background: var(--z-sudeste); }
+.strip-card.s-empregado::after { background: var(--z-sudeste); }
 .strip-card.s-custo::after { background: var(--z-rural); }
 
 .strip-label {

@@ -21,4 +21,4 @@ This is a static, single-page web app (`index.html` + `assets/*.js` + `assets/st
 
 ### Role terminology
 
-- The five record types map to role names via `TIPO_LABELS` (short codes shown on badges) and `TIPO_NOMES` (full names) in `assets/app.js`: `L`=Liderança, `M`=Mobilizador, `CA`=Coordenador de Área, `LE`=Liderança SEMAM, `ME`=Mobilizador SEMAM.
+- The five record types map to role names via `TIPO_LABELS` (short codes shown on badges) and `TIPO_NOMES` (full names) in `assets/app.js`: `L`=Liderança, `M`=Mobilizador, `CA`=Coordenador de Área, `LE`=Liderança EMPREGADO, `ME`=Mobilizador EMPREGADO.
