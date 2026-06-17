@@ -265,13 +265,14 @@ body {
   justify-content: space-between;
   flex: 1 1 180px;
   min-width: 180px;
-  padding: 18px 20px;
+  padding: 24px 22px;
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.05);
   position: relative;
   overflow: hidden;
   transition: transform 0.18s ease, background 0.18s ease;
+  min-height: 140px;
 }
 
 .strip-card:hover {
@@ -295,25 +296,25 @@ body {
 .strip-card.s-custo::after { background: var(--z-rural); }
 
 .strip-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .strip-value {
   font-family: 'Syne', sans-serif;
-  font-size: 1.65rem;
+  font-size: 1.85rem;
   font-weight: 800;
   color: #fff;
-  line-height: 1.05;
+  line-height: 1.1;
 }
 
 .strip-sub {
-  font-size: 0.78rem;
+  font-size: 0.80rem;
   color: var(--muted);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 @media (max-width: 980px) {
@@ -2205,26 +2206,7 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
   .user-email { display: none; }
   .user-avatar { width: 28px; height: 28px; font-size: .68rem; }
 
-  /* Summary strip em grid 2x3 */
-  .summary-strip {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    overflow: hidden;
-  }
 
-  .strip-card {
-    padding: 10px 12px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .strip-card:nth-child(2n) { border-right: none; }
-  .strip-card:last-child { grid-column: 1 / -1; border-bottom: none; }
-
-  .strip-value { font-size: 1.1rem; }
-  .strip-label { font-size: .6rem; }
-
-  /* Controls em coluna */
   .controls-bar {
     padding: 8px 12px;
     gap: 8px;
