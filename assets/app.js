@@ -330,12 +330,8 @@ async function carregarDoFirebase() {
     });
 
     dbCarregado = true;
-    // Migra vínculos da planilha quando há dados para processar.
-    const possuiRegistros = Object.values(DB).some(registros => registros.length > 0);
-    if (possuiRegistros) {
-      await migrarVinculos();
-    }
-    // Recarrega para pegar os vínculos
+    // Deixa os registros sem vínculo na aba "Sem vínculo".
+    // A migração automática não roda mais aqui para não sobrescrever vínculos.
     const zonasReload = ['norte','leste','sul','sudeste','rural'];
     const snapsReload = await Promise.all(
       zonasReload.map(z => colecao().where('_zona','==',z).get())
