@@ -991,8 +991,8 @@ async function migrarVinculosForce() {
     const lider = docs.find(d => d.nome && normalizeName(d.nome).includes(nomeKeyL));
     if (!lider) { console.log('Lider nao encontrada:', nomeL); continue; }
 
-    // Vincula liderança à Raiane (se não for a própria Raiane)
-    if (lider._fireId !== raianeId && raianeId) {
+    // Vincula liderança à Raiane apenas se ela ainda não tiver coordenador
+    if (lider._fireId !== raianeId && raianeId && !lider.coord_area_id) {
       updates.push({ ref: colecao().doc(lider._fireId), data: {
         coord_area_id: raianeId,
         coord_area_nome: raianeNome
@@ -1000,11 +1000,12 @@ async function migrarVinculosForce() {
       count++;
     }
 
-    // Vincula mobilizadores à liderança
+    // Vincula mobilizadores à liderança apenas se ainda não tiverem uma liderança definida
     for (const nomeMob of nomesMobs) {
       const nomeKeyM = normalizeName(nomeMob).substring(0, 15);
       const mob = docs.find(d => d.nome && normalizeName(d.nome).includes(nomeKeyM));
       if (!mob) { console.log('Mob nao encontrado:', nomeMob); continue; }
+      if (mob.lider_id || mob.coord_area_id) continue;
       updates.push({ ref: colecao().doc(mob._fireId), data: {
         lider_id: lider._fireId,
         lider_nome: lider.nome,
@@ -1015,16 +1016,8 @@ async function migrarVinculosForce() {
     }
   }
 
-  // Vincula todas as referências restantes à Raiane também
-  docs.filter(d => (d.tipo === 'L' || d.tipo === 'LE') && d._fireId !== raianeId).forEach(l => {
-    if (!updates.find(u => u.ref.id === l._fireId && u.data.coord_area_id)) {
-      updates.push({ ref: colecao().doc(l._fireId), data: {
-        coord_area_id: raianeId,
-        coord_area_nome: raianeNome
-      }});
-      count++;
-    }
-  });
+  // Preserva vínculos já existentes e não reatribui lideranças que já têm coordenação
+  // (mantém apenas os vínculos explícitos do mapa de migração).
 
   // Executa em batches de 400
   for (let i = 0; i < updates.length; i += 400) {
