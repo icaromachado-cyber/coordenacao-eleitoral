@@ -255,6 +255,14 @@ body {
   width: 100%;
 }
 
+#filtro-coord {
+  border-color: rgba(59,130,246,.4);
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+#filtro-coord option { color: var(--text); font-weight: 400; }
+
 
 /* Financeiro panel */
 .financeiro-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; margin-top: 12px; }

@@ -322,6 +322,11 @@ function configurarNavPorRole() {
     const el = document.getElementById(id);
     if (el) el.style.display = admin ? '' : 'none';
   });
+  // Filtro de coordenadores — visível somente para admin
+  const filtroCoord = document.getElementById('filtro-coord');
+  if (filtroCoord) filtroCoord.style.display = admin ? '' : 'none';
+  if (admin) carregarCoordFiltro();
+
   // Exibe número de zona ao lado do nome da região para coordenadores regionais
   if (!admin && currentUserRole?.region && currentUserRole?.zona) {
     const navName = document.querySelector(`#nav-${currentUserRole.region} .nav-name`);
@@ -504,16 +509,43 @@ function norm(s) {
   return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
+async function carregarCoordFiltro() {
+  if (!isAdminUser()) return;
+  const sel = document.getElementById('filtro-coord');
+  if (!sel) return;
+  try {
+    const snap = await db.collection('users').get();
+    const REGION_CAP = { norte: 'Norte', leste: 'Leste', sul: 'Sul', sudeste: 'Sudeste', rural: 'Rural' };
+    const coords = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!d.region) return; // sem região = admin global sem zona, não listar
+      const zona = d.zona ? ' ' + d.zona : '';
+      const nome = d.name ? ' — ' + d.name : '';
+      const regLabel = REGION_CAP[d.region] || d.region;
+      coords.push({ uid: doc.id, label: regLabel + zona + nome, region: d.region, zona: d.zona || '' });
+    });
+    coords.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    sel.innerHTML = '<option value="">Todos os coordenadores</option>' +
+      coords.map(c => `<option value="${a(c.uid)}">${h(c.label)}</option>`).join('');
+    sel.style.display = '';
+  } catch(e) {
+    console.error('Erro ao carregar filtro de coordenadores:', e);
+  }
+}
+
 function aplicarFiltros() {
   const q = norm(document.getElementById('search').value);
   const tipo = document.getElementById('filtro-tipo').value;
   const bairro = document.getElementById('filtro-bairro').value;
+  const coord = (document.getElementById('filtro-coord')?.value || '');
 
   filtrado = getDados().filter(d => {
     const mn = norm(d.nome), mb = norm(d.bairro), mt = (d.telefone||'').toLowerCase();
     return (!q || mn.includes(q) || mb.includes(q) || mt.includes(q))
         && (!tipo || d.tipo === tipo)
-        && (!bairro || d.bairro === bairro);
+        && (!bairro || d.bairro === bairro)
+        && (!coord || d._criadoPor === coord);
   });
 
   doSort();
@@ -526,6 +558,8 @@ function limpar() {
   document.getElementById('search').value = '';
   document.getElementById('filtro-tipo').value = '';
   document.getElementById('filtro-bairro').value = '';
+  const fc = document.getElementById('filtro-coord');
+  if (fc) fc.value = '';
   aplicarFiltros();
 }
 
@@ -2170,6 +2204,7 @@ function bindStaticEvents() {
   on('search', 'input', () => { pg = 1; aplicarFiltros(); });
   on('filtro-tipo', 'change', () => { pg = 1; aplicarFiltros(); });
   on('filtro-bairro', 'change', () => { pg = 1; aplicarFiltros(); });
+  on('filtro-coord', 'change', () => { pg = 1; aplicarFiltros(); });
   on('treeSearch', 'input', renderArvore);
   on('loginBtn', 'click', fazerLogin);
   on('mobOverlay', 'click', toggleSidebar);
