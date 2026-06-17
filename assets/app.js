@@ -313,29 +313,55 @@ function getZonasVisiveis() {
 }
 
 function configurarNavPorRole() {
-  const zonasVisiveis = getZonasVisiveis();
   const admin = isAdminUser();
-  ['norte', 'leste', 'sul', 'sudeste', 'rural'].forEach(z => {
-    const nav = document.getElementById('nav-' + z);
-    if (nav) nav.style.display = zonasVisiveis.includes(z) ? '' : 'none';
-  });
-  ['nav-todas', 'nav-multi'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = admin ? '' : 'none';
-  });
+
+  if (admin) {
+    // Admin: esconde seção de regiões e filtro combinado; mostra "Todos os Dados"
+    const secRegioes = document.getElementById('nav-section-regioes');
+    if (secRegioes) secRegioes.style.display = 'none';
+    const secFiltro = document.getElementById('nav-section-filtro');
+    if (secFiltro) secFiltro.style.display = 'none';
+
+    const labelGeral = document.getElementById('nav-label-geral');
+    if (labelGeral) labelGeral.textContent = 'Coordenações';
+    const todasLabel = document.getElementById('nav-todas-label');
+    if (todasLabel) todasLabel.textContent = 'Todos os Dados';
+
+    const navTodas = document.getElementById('nav-todas');
+    if (navTodas) navTodas.style.display = '';
+  } else {
+    // Coordenador regional: mostra apenas sua região, esconde "Todos os Dados" e coord section
+    const secRegioes = document.getElementById('nav-section-regioes');
+    if (secRegioes) secRegioes.style.display = '';
+    const secFiltro = document.getElementById('nav-section-filtro');
+    if (secFiltro) secFiltro.style.display = '';
+
+    const navTodas = document.getElementById('nav-todas');
+    if (navTodas) navTodas.style.display = 'none';
+    const navMulti = document.getElementById('nav-multi');
+    if (navMulti) navMulti.style.display = 'none';
+
+    const zonasVisiveis = getZonasVisiveis();
+    ['norte', 'leste', 'sul', 'sudeste', 'rural'].forEach(z => {
+      const nav = document.getElementById('nav-' + z);
+      if (nav) nav.style.display = zonasVisiveis.includes(z) ? '' : 'none';
+    });
+
+    // Exibe número de zona ao lado do nome da região
+    if (currentUserRole?.region && currentUserRole?.zona) {
+      const navName = document.querySelector(`#nav-${currentUserRole.region} .nav-name`);
+      if (navName) {
+        const REGION_LABEL = { norte: 'Região Norte', leste: 'Região Leste', sul: 'Região Sul', sudeste: 'Região Sudeste', rural: 'Região Rural' };
+        navName.textContent = (REGION_LABEL[currentUserRole.region] || '') + ' · ' + currentUserRole.zona;
+      }
+    }
+  }
+
   // Filtro de coordenadores — visível somente para admin
   const filtroCoord = document.getElementById('filtro-coord');
   if (filtroCoord) filtroCoord.style.display = admin ? '' : 'none';
   if (admin) carregarCoordFiltro();
 
-  // Exibe número de zona ao lado do nome da região para coordenadores regionais
-  if (!admin && currentUserRole?.region && currentUserRole?.zona) {
-    const navName = document.querySelector(`#nav-${currentUserRole.region} .nav-name`);
-    if (navName) {
-      const REGION_LABEL = { norte: 'Região Norte', leste: 'Região Leste', sul: 'Região Sul', sudeste: 'Região Sudeste', rural: 'Região Rural' };
-      navName.textContent = (REGION_LABEL[currentUserRole.region] || '') + ' · ' + currentUserRole.zona;
-    }
-  }
   const btnMigrar = document.getElementById('btnMigrarBairro');
   if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
   const btnUsuarios = document.getElementById('btnGerenciarUsuarios');

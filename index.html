@@ -54,38 +54,40 @@
     <p>Organização por região</p>
   </div>
   <nav class="sidebar-nav">
-    <div class="nav-label">Visão Geral</div>
+    <div class="nav-label" id="nav-label-geral">Coordenações</div>
     <div class="nav-item active" id="nav-todas" data-zone-nav="todas">
       <div class="nav-dot" style="background:linear-gradient(135deg,#3b82f6,#a855f7)"></div>
-      <span class="nav-name">Todas as Regiões</span>
+      <span class="nav-name" id="nav-todas-label">Todas as Regiões</span>
       <span class="nav-count" id="nc-todas">0</span>
     </div>
 
-    <div class="nav-label" style="margin-top:10px">Regiões</div>
-    <div class="nav-item" id="nav-norte" data-zone-nav="norte">
-      <div class="nav-dot" style="background:#ef4444"></div>
-      <span class="nav-name">Região Norte</span>
-      <span class="nav-count" id="nc-norte">0</span>
-    </div>
-    <div class="nav-item" id="nav-leste" data-zone-nav="leste">
-      <div class="nav-dot" style="background:#3b82f6"></div>
-      <span class="nav-name">Região Leste</span>
-      <span class="nav-count" id="nc-leste">0</span>
-    </div>
-    <div class="nav-item" id="nav-sul" data-zone-nav="sul">
-      <div class="nav-dot" style="background:#22c55e"></div>
-      <span class="nav-name">Região Sul</span>
-      <span class="nav-count" id="nc-sul">0</span>
-    </div>
-    <div class="nav-item" id="nav-sudeste" data-zone-nav="sudeste">
-      <div class="nav-dot" style="background:#a855f7"></div>
-      <span class="nav-name">Região Sudeste</span>
-      <span class="nav-count" id="nc-sudeste">0</span>
-    </div>
-    <div class="nav-item" id="nav-rural" data-zone-nav="rural">
-      <div class="nav-dot" style="background:#f59e0b"></div>
-      <span class="nav-name">Região Rural</span>
-      <span class="nav-count" id="nc-rural">0</span>
+    <div id="nav-section-regioes">
+      <div class="nav-label" style="margin-top:10px">Regiões</div>
+      <div class="nav-item" id="nav-norte" data-zone-nav="norte">
+        <div class="nav-dot" style="background:#ef4444"></div>
+        <span class="nav-name">Região Norte</span>
+        <span class="nav-count" id="nc-norte">0</span>
+      </div>
+      <div class="nav-item" id="nav-leste" data-zone-nav="leste">
+        <div class="nav-dot" style="background:#3b82f6"></div>
+        <span class="nav-name">Região Leste</span>
+        <span class="nav-count" id="nc-leste">0</span>
+      </div>
+      <div class="nav-item" id="nav-sul" data-zone-nav="sul">
+        <div class="nav-dot" style="background:#22c55e"></div>
+        <span class="nav-name">Região Sul</span>
+        <span class="nav-count" id="nc-sul">0</span>
+      </div>
+      <div class="nav-item" id="nav-sudeste" data-zone-nav="sudeste">
+        <div class="nav-dot" style="background:#a855f7"></div>
+        <span class="nav-name">Região Sudeste</span>
+        <span class="nav-count" id="nc-sudeste">0</span>
+      </div>
+      <div class="nav-item" id="nav-rural" data-zone-nav="rural">
+        <div class="nav-dot" style="background:#f59e0b"></div>
+        <span class="nav-name">Região Rural</span>
+        <span class="nav-count" id="nc-rural">0</span>
+      </div>
     </div>
 
     <!-- Seção por Coordenador — gerada dinamicamente para admin -->
@@ -94,6 +96,7 @@
       <div id="nav-coord-items"></div>
     </div>
 
+    <div id="nav-section-filtro">
     <div class="nav-label" style="margin-top:10px">Filtro combinado</div>
     <div class="nav-item" id="nav-multi" data-action="toggle-multi-zona">
       <div class="nav-dot" style="background:#60a5fa"></div>
@@ -109,6 +112,7 @@
         <label class="mz-item"><input type="checkbox" value="rural" > <span style="color:#f59e0b">●</span> Rural</label>
       </div>
     </div>
+    </div><!-- /nav-section-filtro -->
   </nav>
   <div class="sidebar-footer">
     <div id="sync-status" style="margin-top:6px;font-size:.68rem;color:var(--muted)">🔄 Conectando…</div>
