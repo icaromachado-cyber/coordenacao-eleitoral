@@ -873,7 +873,8 @@ function goPg(p) {
 
 // ===================== DRAWER =====================
 function findById(zona, id) {
-  return DB[zona]?.find(x => x.id === id || String(x.id) === String(id));
+  const sid = String(id);
+  return DB[zona]?.find(x => String(x.id) === sid);
 }
 
 function verDrawer(id, zona) {
@@ -2445,9 +2446,7 @@ function handleActionClick(event) {
   if (el instanceof HTMLButtonElement && el.disabled) return;
 
   const ds = el.dataset;
-  // Preserva string para IDs não-numéricos (ex: 'CA-norte-01'); converte para número quando possível
-  const _rawId = ds.id;
-  const id = _rawId ? (isNaN(Number(_rawId)) ? _rawId : Number(_rawId)) : null;
+  const id = ds.id || null;  // Mantém como string — findById normaliza a comparação
 
   switch (ds.action) {
     case 'toggle-multi-zona':
