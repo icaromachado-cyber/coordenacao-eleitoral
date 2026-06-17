@@ -144,10 +144,11 @@ body {
   background: #2a2d38;
   border-bottom: 1px solid var(--border);
   padding: 0 24px;
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   gap: 16px;
+  overflow: visible;
 }
 
 .zone-title {
@@ -163,10 +164,12 @@ body {
 }
 
 .zone-title h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #fff;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .topbar-pills {
