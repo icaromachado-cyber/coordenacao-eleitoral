@@ -1134,8 +1134,10 @@ function closeDashboardView() {
   if (btn) btn.textContent = '📊 Dashboard';
   document.getElementById('dashboardArea')?.classList.remove('active');
   document.querySelector('.table-area')?.classList.remove('hidden');
-  document.getElementById('pag').style.display = '';
-  document.querySelector('.controls-bar').style.display = '';
+  const pag = document.getElementById('pag');
+  const ctrlBar = document.querySelector('.controls-bar');
+  if (pag) pag.style.display = '';
+  if (ctrlBar) ctrlBar.style.display = '';
 }
 
 function toggleDashboardView() {
@@ -1159,6 +1161,10 @@ function toggleDashboardView() {
   const tableArea = document.querySelector('.table-area');
   const pag = document.getElementById('pag');
   const ctrlBar = document.querySelector('.controls-bar');
+  if (!btn || !dashboardArea || !tableArea || !pag || !ctrlBar) {
+    toast('❌ Não foi possível abrir o Dashboard', true);
+    return;
+  }
 
   if (dashboardView) {
     btn.classList.add('active');
@@ -1167,7 +1173,14 @@ function toggleDashboardView() {
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
     dashboardArea.classList.add('active');
-    renderDashboard();
+    try {
+      renderDashboard();
+    } catch(e) {
+      console.error('Erro render dashboard:', e);
+      const cards = document.getElementById('dashboardCards');
+      if (cards) cards.innerHTML = '<div class="dash-empty">Não foi possível carregar o Dashboard.</div>';
+      toast('❌ Erro ao carregar o Dashboard', true);
+    }
   } else {
     btn.classList.remove('active');
     btn.textContent = '📊 Dashboard';

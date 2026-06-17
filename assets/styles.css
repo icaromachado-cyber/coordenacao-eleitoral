@@ -1411,6 +1411,20 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .btn-import { background: rgba(255,255,255,.05); border: 1px solid var(--border); color: var(--muted); }
 .btn-import:hover { border-color: var(--muted); color: var(--text); }
 
+.btn-dashboard {
+  background: rgba(59,130,246,.12);
+  border: 1px solid rgba(59,130,246,.25);
+  color: #93c5fd;
+  padding: 8px 12px;
+}
+
+.btn-dashboard:hover,
+.btn-dashboard.active {
+  background: rgba(59,130,246,.2);
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+
 /* ============================================================
    CAMPANHAS
    ============================================================ */
