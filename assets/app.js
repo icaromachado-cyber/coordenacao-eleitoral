@@ -1016,8 +1016,17 @@ async function migrarVinculosForce() {
     }
   }
 
-  // Preserva vínculos já existentes e não reatribui lideranças que já têm coordenação
-  // (mantém apenas os vínculos explícitos do mapa de migração).
+  // Aplica a coordenação da Raiane a todos os registros sem coordenação
+  docs.filter(d => ['L','LE','M','ME'].includes(d.tipo) && !d.coord_area_id && d._fireId !== raianeId)
+    .forEach(d => {
+      if (!updates.find(u => u.ref.id === d._fireId && u.data.coord_area_id)) {
+        updates.push({ ref: colecao().doc(d._fireId), data: {
+          coord_area_id: raianeId,
+          coord_area_nome: raianeNome
+        }});
+        count++;
+      }
+    });
 
   // Executa em batches de 400
   for (let i = 0; i < updates.length; i += 400) {
