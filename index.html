@@ -134,7 +134,6 @@
     </div>
     <div class="topbar-actions">
       <button class="btn-tree-toggle" id="btnTheme" title="Alternar tema">☀️</button>
-      <button class="btn btn-dashboard" id="btnDashboardToggle" type="button">📊 Dashboard</button>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">?</div>
         <span class="user-email" id="userEmail"></span>
@@ -200,6 +199,35 @@
   <!-- ZONE PANEL -->
   <div id="zone-panel"></div>
 
+  <!-- DASHBOARD VIEW -->
+  <div class="dashboard-area" id="dashboardArea">
+    <div class="dashboard-header">
+      <div>
+        <span class="dashboard-kicker">Visão do ciclo</span>
+        <h3 id="dashboardTitle">Dashboard</h3>
+      </div>
+    </div>
+    <div class="dashboard-grid" id="dashboardCards"></div>
+    <div class="dashboard-panels">
+      <div class="dashboard-panel">
+        <h4>Por região</h4>
+        <div id="dashboardRegioes"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Por perfil</h4>
+        <div id="dashboardPerfis"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Status</h4>
+        <div id="dashboardStatus"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Top bairros</h4>
+        <div id="dashboardBairros"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- CONTROLS -->
   <div class="controls-bar">
     <div class="search-wrap">
@@ -262,35 +290,6 @@
   <!-- PAGINATION -->
   <div class="pagination" id="pag"></div>
 
-  <!-- DASHBOARD VIEW -->
-  <div class="dashboard-area" id="dashboardArea">
-    <div class="dashboard-header">
-      <div>
-        <span class="dashboard-kicker">Visão do ciclo</span>
-        <h3 id="dashboardTitle">Dashboard</h3>
-      </div>
-      <button class="btn btn-outline" id="btnDashboardClose">Voltar para lista</button>
-    </div>
-    <div class="dashboard-grid" id="dashboardCards"></div>
-    <div class="dashboard-panels">
-      <div class="dashboard-panel">
-        <h4>Por região</h4>
-        <div id="dashboardRegioes"></div>
-      </div>
-      <div class="dashboard-panel">
-        <h4>Por perfil</h4>
-        <div id="dashboardPerfis"></div>
-      </div>
-      <div class="dashboard-panel">
-        <h4>Status</h4>
-        <div id="dashboardStatus"></div>
-      </div>
-      <div class="dashboard-panel">
-        <h4>Top bairros</h4>
-        <div id="dashboardBairros"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- MAP VIEW -->
   <div class="map-area" id="mapArea">

@@ -1067,11 +1067,10 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 /* DASHBOARD VIEW */
 .dashboard-area {
-  flex: 1;
-  display: none;
-  overflow-y: auto;
+  display: block;
   background: var(--bg);
-  padding: 18px;
+  padding: 12px 18px 4px;
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-area.active { display: block; }

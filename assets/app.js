@@ -725,6 +725,7 @@ function aplicarFiltros() {
   pg = 1;
   renderCards();
   renderTable();
+  try { renderDashboard(); } catch(e) { console.error('renderDashboard:', e); }
 }
 
 function limpar() {
@@ -1480,35 +1481,23 @@ function getEquipeDeUm(d) {
 }
 
 // ===================== DASHBOARD =====================
-let dashboardView = false;
+let dashboardView = true; // sempre visível
 let dashboardInicialAberto = false;
 
 function dadosDoCicloAtual() {
   return Object.values(DB).flat();
 }
 
-// Abre o Dashboard como tela inicial logo após o carregamento dos dados.
 function abrirDashboardInicial() {
-  if (dashboardInicialAberto) return;
-  dashboardInicialAberto = true;
-  if (!dashboardView) toggleDashboardView();
+  // Dashboard é sempre visível — garante que está ativo
+  document.getElementById('dashboardArea')?.classList.add('active');
+  renderDashboard();
 }
 
-function closeDashboardView() {
-  if (!dashboardView) return;
-  dashboardView = false;
-  document.getElementById('btnDashboardToggle')?.classList.remove('active');
-  const btn = document.getElementById('btnDashboardToggle');
-  if (btn) btn.textContent = '📊 Dashboard';
-  document.getElementById('dashboardArea')?.classList.remove('active');
-  document.querySelector('.table-area')?.classList.remove('hidden');
-  const pag = document.getElementById('pag');
-  const ctrlBar = document.querySelector('.controls-bar');
-  if (pag) pag.style.display = '';
-  if (ctrlBar) ctrlBar.style.display = '';
-}
+function closeDashboardView() { /* dashboard sempre visível, não fecha */ }
 
 function toggleDashboardView() {
+  // Mantido para compatibilidade com mapa/árvore; dashboard não alterna mais
   if (mapView) {
     mapView = false;
     document.getElementById('btnMapToggle').classList.remove('active');
@@ -1522,41 +1511,8 @@ function toggleDashboardView() {
     document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
     document.getElementById('treeArea').classList.remove('active');
   }
-
-  dashboardView = !dashboardView;
-  const btn = document.getElementById('btnDashboardToggle');
-  const dashboardArea = document.getElementById('dashboardArea');
-  const tableArea = document.querySelector('.table-area');
-  const pag = document.getElementById('pag');
-  const ctrlBar = document.querySelector('.controls-bar');
-  if (!btn || !dashboardArea || !tableArea || !pag || !ctrlBar) {
-    toast('❌ Não foi possível abrir o Dashboard', true);
-    return;
-  }
-
-  if (dashboardView) {
-    btn.classList.add('active');
-    btn.textContent = '📋 Lista';
-    tableArea.classList.add('hidden');
-    pag.style.display = 'none';
-    ctrlBar.style.display = 'none';
-    dashboardArea.classList.add('active');
-    try {
-      renderDashboard();
-    } catch(e) {
-      console.error('Erro render dashboard:', e);
-      const cards = document.getElementById('dashboardCards');
-      if (cards) cards.innerHTML = '<div class="dash-empty">Não foi possível carregar o Dashboard.</div>';
-      toast('❌ Erro ao carregar o Dashboard', true);
-    }
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '📊 Dashboard';
-    tableArea.classList.remove('hidden');
-    pag.style.display = '';
-    ctrlBar.style.display = '';
-    dashboardArea.classList.remove('active');
-  }
+  document.getElementById('dashboardArea')?.classList.add('active');
+  renderDashboard();
 }
 
 function countBy(items, getter) {
@@ -2097,7 +2053,7 @@ async function trocarCampanha(id) {
   mostrarLoading(false);
   atualizarNavCounts();
   aplicarFiltros();
-  if (dashboardView) renderDashboard();
+  renderDashboard();
   toast(`📁 Ciclo: ${nomeCiclo(id, campanhas[id])}`);
 }
 
