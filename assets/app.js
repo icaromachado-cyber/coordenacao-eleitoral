@@ -418,8 +418,8 @@ async function renderNavCoord() {
               <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
                 <div class="nav-coord-indicator" style="background:${color}"></div>
                 <div style="flex:1;min-width:0;overflow:hidden">
-                  <div class="nav-name" style="font-size:.8rem">${h(label)}${c.zona ? ' ' + h(c.zona) : ''}</div>
-                  <div style="font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(c.name)}</div>
+                  <div class="nav-name" style="font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(c.name)}</div>
+                  <div style="font-size:.68rem;color:var(--muted)">${h(label)}${c.zona ? ' · Zona ' + h(c.zona) : ''}</div>
                 </div>
                 <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
               </div>`).join('')}
