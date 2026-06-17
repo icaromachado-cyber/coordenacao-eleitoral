@@ -1076,19 +1076,19 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .dashboard-card,
 .dashboard-panel {
   background: var(--surface-solid);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .dashboard-card {
-  padding: 14px 14px 14px 16px;
+  padding: 16px 18px;
   position: relative;
   overflow: hidden;
 }
@@ -1115,7 +1115,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-card-label {
   color: var(--muted);
-  font-size: .68rem;
+  font-size: .70rem;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -1124,43 +1124,43 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .dashboard-card-value {
   color: var(--text);
   font-family: 'Syne', sans-serif;
-  font-size: 1.55rem;
+  font-size: 1.70rem;
   font-weight: 800;
-  margin-top: 8px;
+  margin-top: 10px;
   line-height: 1.1;
 }
 
 .dashboard-card-sub {
   color: var(--muted);
-  font-size: .72rem;
-  margin-top: 4px;
+  font-size: .75rem;
+  margin-top: 6px;
 }
 
 .dashboard-panels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .dashboard-panel {
-  padding: 14px;
+  padding: 16px 18px;
 }
 
 .dashboard-panel h4 {
   color: var(--text);
   font-family: 'Syne', sans-serif;
-  font-size: .82rem;
+  font-size: .88rem;
   font-weight: 800;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .dash-bar-row {
   display: grid;
   grid-template-columns: minmax(80px, 1fr) 1.8fr auto;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  font-size: .78rem;
+  gap: 11px;
+  margin-bottom: 11px;
+  font-size: .80rem;
 }
 
 .dash-bar-label {
