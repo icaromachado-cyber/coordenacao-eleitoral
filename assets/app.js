@@ -645,8 +645,12 @@ function renderTable() {
     const colegio = d.colegio || '';
     const colegioDisplay = colegio ? colegio.substring(0,18)+(colegio.length>18?'…':'') : '—';
     const c = ZONAS_CFG[d._zona] || {};
+    const regionShort = d._zona ? d._zona.charAt(0).toUpperCase() + d._zona.slice(1) : '';
+    const coordTag = isAdminUser() && d._coordZona
+      ? `<br><span style="font-size:.63rem;color:var(--muted);font-weight:600">${regionShort} ${d._coordZona}${d._coordNome ? ' · ' + d._coordNome.split(' ')[0] : ''}</span>`
+      : '';
     return `<tr>
-      <td class="muted-td mono" style="font-size:.72rem">${d.id}${showZona?`<br><span style="color:${c.cor};font-size:.65rem">${c.label||''}</span>`:''}</td>
+      <td class="muted-td mono" style="font-size:.72rem">${d.id}${showZona?`<br><span style="color:${c.cor};font-size:.65rem">${c.label||''}</span>`:''}${coordTag}</td>
       <td><span class="badge badge-${a(d.tipo)}">${h(tipoLabel(d.tipo))}</span></td>
       <td class="nome-td" title="${a(nome)}">${h(nomeDisplay)}</td>
       <td class="muted-td mono">${fmtWhats(d.telefone)}</td>
@@ -703,9 +707,15 @@ function verDrawer(id, zona) {
   const pct = Math.min(100, (d.total/maxC)*100);
   const cfg = ZONAS_CFG[zona];
 
+  const regionShortD = zona ? zona.charAt(0).toUpperCase() + zona.slice(1) : '';
+  const coordInfo = isAdminUser() && d._coordZona
+    ? `<span style="font-size:.7rem;color:var(--muted);margin-left:8px">📍 ${regionShortD} ${d._coordZona}${d._coordNome ? ' · ' + d._coordNome.split(' ')[0] : ''}</span>`
+    : '';
+
   document.getElementById('drawer-content').innerHTML = `
     <div class="d-badge-wrap"><span class="badge badge-${a(d.tipo)}">${h(tipoLabel(d.tipo))}</span>
     ${cfg?`<span style="font-size:.7rem;color:${cfg.cor};margin-left:8px">${cfg.label}</span>`:''}
+    ${coordInfo}
     </div>
     <div class="d-name">${h(d.nome)}</div>
     <div class="d-row"><span class="d-lbl">📞 Telefone</span><span class="d-val">${fmtWhats(d.telefone)}</span></div>
@@ -947,7 +957,11 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
     delete docData._fireId;
 
     const u = firebase.auth().currentUser;
-    if (u && !docData._criadoPor) docData._criadoPor = u.uid;
+    if (u && !docData._criadoPor) {
+      docData._criadoPor = u.uid;
+      if (currentUserRole?.zona) docData._coordZona = currentUserRole.zona;
+      if (currentUserRole?.name) docData._coordNome = currentUserRole.name;
+    }
 
     if (editIdOrig !== null && fireId) {
       if (zonaChanged) {
