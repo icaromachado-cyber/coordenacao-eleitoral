@@ -872,8 +872,12 @@ function goPg(p) {
 }
 
 // ===================== DRAWER =====================
+function findById(zona, id) {
+  return DB[zona]?.find(x => x.id === id || String(x.id) === String(id));
+}
+
 function verDrawer(id, zona) {
-  const d = DB[zona].find(x=>x.id===id);
+  const d = findById(zona, id);
   if (!d) return;
   const maxC = Math.max(...getDados().map(x=>x.total), 1);
   const pct = Math.min(100, (d.total/maxC)*100);
@@ -1013,7 +1017,7 @@ function abrirModal(id, zona) {
     });
     if (!isAdminUser() && currentUserRole?.region && zonaFieldEl) zonaFieldEl.value = currentUserRole.region;
   } else {
-    const d = DB[_editZona].find(x=>x.id===id);
+    const d = findById(_editZona, id);
     if (!d) return;
     const setIf = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     setIf('f-tipo', d.tipo||'M');
@@ -1085,7 +1089,7 @@ function salvar() {
   }
 
   // Recupera o _fireId do registro original antes de qualquer alteração
-  const regOriginal = editId !== null ? DB[zonaOrigem].find(x => x.id === editId) : null;
+  const regOriginal = editId !== null ? findById(zonaOrigem, editId) : null;
   const fireId = regOriginal ? regOriginal._fireId : null;
 
   const reg = {
@@ -1176,7 +1180,7 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
 }
 
 function deletar(id, zona) {
-  const d = DB[zona].find(x => x.id === id);
+  const d = findById(zona, id);
   if (!d || !confirm(`Excluir "${d.nome}"?`)) return;
   deletarNoFirebase(d, zona);
 }
@@ -2148,7 +2152,7 @@ async function criarCampanha() {
 
 // Adiciona pessoa em outro ciclo
 function migrarPessoa(fireId, localId, zona) {
-  const d = DB[zona].find(x => x.id === localId);
+  const d = findById(zona, localId);
   if (!d) return;
 
   const outrasCamps = Object.keys(campanhas).filter(id => id !== campanhaAtual);
@@ -2441,7 +2445,9 @@ function handleActionClick(event) {
   if (el instanceof HTMLButtonElement && el.disabled) return;
 
   const ds = el.dataset;
-  const id = ds.id ? Number(ds.id) : null;
+  // Preserva string para IDs não-numéricos (ex: 'CA-norte-01'); converte para número quando possível
+  const _rawId = ds.id;
+  const id = _rawId ? (isNaN(Number(_rawId)) ? _rawId : Number(_rawId)) : null;
 
   switch (ds.action) {
     case 'toggle-multi-zona':
