@@ -407,7 +407,7 @@ async function renderNavCoord() {
       const label   = REGION_CAP[region] || region;
       return `
         <div class="nav-region-group">
-          <div class="nav-region-header" onclick="toggleNavRegion('${region}')">
+          <div class="nav-region-header" onclick="toggleNavRegion('${region}','${color}','${label}')">
             <div class="nav-dot" style="background:${color}"></div>
             <span class="nav-region-label">${h(label)}</span>
             <span class="nav-count" id="nrc-${region}">${total}</span>
@@ -423,11 +423,6 @@ async function renderNavCoord() {
                 </div>
                 <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
               </div>`).join('')}
-            <div class="nav-item nav-region-total" onclick="verRegiaoTotal('${region}','${color}','${label}')">
-              <div class="nav-coord-indicator" style="background:${color};opacity:.4"></div>
-              <span style="flex:1;font-size:.75rem;color:var(--muted);font-style:italic">${h(label)} · total</span>
-              <span class="nav-count" id="nrc-total-${region}">${total}</span>
-            </div>
           </div>
         </div>`;
     }).join('');
@@ -436,12 +431,14 @@ async function renderNavCoord() {
   }
 }
 
-function toggleNavRegion(region) {
+function toggleNavRegion(region, color, label) {
   const children = document.getElementById('nav-region-children-' + region);
   const arrow    = document.getElementById('nav-arrow-' + region);
   if (!children) return;
   const open = children.classList.toggle('open');
   if (arrow) arrow.textContent = open ? '▾' : '▸';
+  // Clicar no cabeçalho já navega para o total da região
+  verRegiaoTotal(region, color || COORD_COLORS[region] || '#888', label || REGION_CAP[region] || region);
 }
 
 function verRegiaoTotal(region, color, label) {
