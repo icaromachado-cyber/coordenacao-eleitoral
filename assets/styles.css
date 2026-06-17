@@ -1002,7 +1002,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   flex: 1;
   display: none;
   overflow-y: auto;
-  background: #1c1e24;
+  background: var(--bg);
   padding: 18px;
 }
 
@@ -1041,14 +1041,36 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-card,
 .dashboard-panel {
-  background: #252832;
+  background: var(--surface-solid);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
 
 .dashboard-card {
-  padding: 14px;
+  padding: 14px 14px 14px 16px;
+  position: relative;
+  overflow: hidden;
 }
+
+/* Faixa colorida lateral para dar identidade visual a cada cartão */
+.dashboard-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--accent);
+}
+
+.dashboard-card:nth-child(1)::before { background: #3b82f6; }
+.dashboard-card:nth-child(2)::before { background: #22c55e; }
+.dashboard-card:nth-child(3)::before { background: #a855f7; }
+.dashboard-card:nth-child(4)::before { background: #fb923c; }
+.dashboard-card:nth-child(5)::before { background: #06b6d4; }
+.dashboard-card:nth-child(6)::before { background: #eab308; }
+.dashboard-card:nth-child(7)::before { background: #ef4444; }
+.dashboard-card:nth-child(8)::before { background: #ec4899; }
 
 .dashboard-card-label {
   color: var(--muted);
@@ -1061,9 +1083,10 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .dashboard-card-value {
   color: var(--text);
   font-family: 'Syne', sans-serif;
-  font-size: 1.45rem;
+  font-size: 1.55rem;
   font-weight: 800;
   margin-top: 8px;
+  line-height: 1.1;
 }
 
 .dashboard-card-sub {
@@ -1099,9 +1122,17 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   font-size: .78rem;
 }
 
-.dash-bar-label,
-.dash-bar-value {
+.dash-bar-label {
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-bar-value {
+  color: var(--text);
+  font-weight: 700;
+  text-align: right;
 }
 
 .dash-bar-track {
@@ -1936,6 +1967,21 @@ body.theme-light .tree-stat strong { color: #1e2235; }
 body.theme-light .map-legend { background: #ffffff; border-color: #dde1ee; }
 body.theme-light .map-legend h4 { color: #7880a0; }
 body.theme-light .legend-item { color: #1e2235; }
+
+/* DASHBOARD — tema claro */
+body.theme-light .dashboard-area { background: #f0f2f8; }
+body.theme-light .dashboard-card,
+body.theme-light .dashboard-panel { background: #ffffff; border-color: #dde1ee; box-shadow: 0 1px 3px rgba(16,24,64,.05); }
+body.theme-light .dashboard-card-label { color: #7880a0; }
+body.theme-light .dashboard-card-value { color: #1e2235; }
+body.theme-light .dashboard-card-sub { color: #7880a0; }
+body.theme-light .dashboard-kicker { color: #7880a0; }
+body.theme-light .dashboard-header h3 { color: #1e2235; }
+body.theme-light .dashboard-panel h4 { color: #1e2235; }
+body.theme-light .dash-bar-label { color: #7880a0; }
+body.theme-light .dash-bar-value { color: #1e2235; }
+body.theme-light .dash-bar-track { background: #eef0f8; }
+body.theme-light .dash-empty { color: #7880a0; }
 
 body.theme-light .zone-title h2 { color: #1e2235; }
 body.theme-light .zone-badge { border: 2px solid rgba(0,0,0,.1); }
