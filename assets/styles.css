@@ -323,6 +323,8 @@ body {
   margin-top: 10px;
 }
 
+.strip-card.s-custo { display: none; }
+
 @media (max-width: 980px) {
   .summary-strip {
     justify-content: center;
