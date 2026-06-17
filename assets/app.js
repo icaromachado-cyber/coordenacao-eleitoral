@@ -3178,22 +3178,28 @@ async function sincronizarCAsCoord() {
     let criados = 0;
     let jaExistem = 0;
 
+    // Carrega todos os CAs existentes de uma vez (evita múltiplas queries)
+    const todosCASnap = await colecao().where('tipo', '==', 'CA').get();
+    const todosCA = todosCASnap.docs.map(d => d.data());
+
     for (const coord of coords) {
-      // Verifica se já tem registro CA criado por esse UID (filtra tipo em JS para evitar índice composto)
-      const coordSnap = await colecao().where('_criadoPor', '==', coord.uid).get();
-      const jaTemCA = coordSnap.docs.some(d => d.data().tipo === 'CA');
+      const primeiroNomeUpper = (coord.name || '').toUpperCase().split(' ')[0];
+
+      // Considera que já tem CA se: mesmo _criadoPor OU mesmo nome na mesma zona
+      const jaTemCA = todosCA.some(ca =>
+        ca._criadoPor === coord.uid ||
+        (ca._zona === coord.region && primeiroNomeUpper && ca.nome && ca.nome.includes(primeiroNomeUpper))
+      );
 
       if (jaTemCA) { jaExistem++; continue; }
 
-      // Usa os docs já carregados de _criadoPor para calcular o max ID global
-      const allZonaSnap = await colecao().where('_zona', '==', coord.region).get();
-      const maxId = allZonaSnap.docs.reduce((m, d) => Math.max(m, +(d.data().id) || 0), 0);
-      const novoId = String(maxId + 1).padStart(3, '0');
+      // ID único baseado na região+zona para evitar conflito com sequencial
+      const coordId = `CA-${coord.region}-${coord.zona || '00'}`;
       const primeiroNome = (coord.name || '').split(' ')[0];
       const nomeCompleto = (coord.name || coord.email || 'COORDENADOR').toUpperCase();
 
       await colecao().add({
-        id: novoId,
+        id: coordId,
         nome: nomeCompleto,
         tipo: 'CA',
         _zona: coord.region,
