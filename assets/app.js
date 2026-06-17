@@ -383,32 +383,76 @@ async function renderNavCoord() {
   try {
     const snap = await db.collection('users').get();
     const allRecords = Object.values(DB).flat();
-    const coords = [];
+
+    // Agrupa coordenadores por região
+    const gruposPorRegiao = {};
     snap.forEach(doc => {
       const d = doc.data();
       if (!d.region) return;
       const count = allRecords.filter(r => r._criadoPor === doc.id).length;
-      const label = (REGION_CAP[d.region] || d.region) + (d.zona ? ' ' + d.zona : '');
-      coords.push({ uid: doc.id, label, name: d.name || d.email || '—', region: d.region, zona: d.zona || '', count });
+      if (!gruposPorRegiao[d.region]) gruposPorRegiao[d.region] = [];
+      gruposPorRegiao[d.region].push({ uid: doc.id, name: d.name || d.email || '—', zona: d.zona || '', count });
     });
-    coords.sort((a, b) => {
-      const r = a.region.localeCompare(b.region, 'pt-BR');
-      return r !== 0 ? r : a.zona.localeCompare(b.zona);
-    });
-    if (!coords.length) { section.style.display = 'none'; return; }
+
+    Object.values(gruposPorRegiao).forEach(arr => arr.sort((a, b) => a.zona.localeCompare(b.zona)));
+    const regioes = Object.keys(gruposPorRegiao).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    if (!regioes.length) { section.style.display = 'none'; return; }
     section.style.display = '';
-    container.innerHTML = coords.map(c => `
-      <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
-        <div class="nav-dot" style="background:${COORD_COLORS[c.region]||'#888'}"></div>
-        <div style="flex:1;min-width:0;overflow:hidden">
-          <div class="nav-name">${h(c.label)}</div>
-          <div class="nav-coord-sub">${h(c.name)}</div>
-        </div>
-        <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
-      </div>`).join('');
+
+    container.innerHTML = regioes.map(region => {
+      const coords  = gruposPorRegiao[region];
+      const total   = allRecords.filter(r => r._zona === region).length;
+      const color   = COORD_COLORS[region] || '#888';
+      const label   = REGION_CAP[region] || region;
+      return `
+        <div class="nav-region-group">
+          <div class="nav-region-header" onclick="toggleNavRegion('${region}')">
+            <div class="nav-dot" style="background:${color}"></div>
+            <span class="nav-region-label">${h(label)}</span>
+            <span class="nav-count" id="nrc-${region}">${total}</span>
+            <span class="nav-region-arrow" id="nav-arrow-${region}">▸</span>
+          </div>
+          <div class="nav-region-children" id="nav-region-children-${region}">
+            ${coords.map(c => `
+              <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
+                <div class="nav-coord-indicator" style="background:${color}"></div>
+                <div style="flex:1;min-width:0;overflow:hidden">
+                  <div class="nav-name" style="font-size:.8rem">${h(c.name)}</div>
+                  ${c.zona ? `<div style="font-size:.68rem;color:var(--muted)">Zona ${h(c.zona)}</div>` : ''}
+                </div>
+                <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
+              </div>`).join('')}
+            <div class="nav-item nav-region-total" onclick="verRegiaoTotal('${region}','${color}','${label}')">
+              <div class="nav-coord-indicator" style="background:${color};opacity:.4"></div>
+              <span style="flex:1;font-size:.75rem;color:var(--muted);font-style:italic">${h(label)} · total</span>
+              <span class="nav-count" id="nrc-total-${region}">${total}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   } catch(e) {
     section.style.display = 'none';
   }
+}
+
+function toggleNavRegion(region) {
+  const children = document.getElementById('nav-region-children-' + region);
+  const arrow    = document.getElementById('nav-arrow-' + region);
+  if (!children) return;
+  const open = children.classList.toggle('open');
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+}
+
+function verRegiaoTotal(region, color, label) {
+  coordFiltroAtivo = null;
+  const fc = document.getElementById('filtro-coord');
+  if (fc) fc.value = '';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  trocarZona(region);
+  document.getElementById('zTitle').textContent = label + ' · Total';
+  document.getElementById('zBadge').style.background = color;
+  document.documentElement.style.setProperty('--accent', color);
 }
 
 function selecionarCoord(uid) {
@@ -418,11 +462,10 @@ function selecionarCoord(uid) {
   zonaAtual = 'todas';
   const fc = document.getElementById('filtro-coord');
   if (fc) fc.value = uid;
-  // Atualiza título com nome do coordenador
-  const item = document.getElementById('nav-coord-' + uid);
-  const label = item?.querySelector('.nav-name')?.textContent || '';
-  const nome  = item?.querySelector('.nav-coord-sub')?.textContent || '';
-  document.getElementById('zTitle').textContent = label + (nome ? ' — ' + nome : '');
+  const item  = document.getElementById('nav-coord-' + uid);
+  const nome  = item?.querySelector('.nav-name')?.textContent || '';
+  const zona  = item?.querySelector('[style*="68rem"]')?.textContent || '';
+  document.getElementById('zTitle').textContent = nome + (zona ? ' · ' + zona : '');
   document.getElementById('zBadge').style.background = '#3b82f6';
   document.documentElement.style.setProperty('--accent', '#3b82f6');
   pg = 1;
@@ -436,6 +479,13 @@ function atualizarNavCoordCounts() {
     const uid = el.id.replace('nav-coord-', '');
     const countEl = document.getElementById('ncc-' + uid);
     if (countEl) countEl.textContent = allRecords.filter(r => r._criadoPor === uid).length;
+  });
+  ['norte','leste','sul','sudeste','rural'].forEach(region => {
+    const total = allRecords.filter(r => r._zona === region).length;
+    const el1 = document.getElementById('nrc-' + region);
+    const el2 = document.getElementById('nrc-total-' + region);
+    if (el1) el1.textContent = total;
+    if (el2) el2.textContent = total;
   });
 }
 

@@ -2349,7 +2349,44 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
   margin-top: 1px;
 }
 
-.nav-coord-item { align-items: center; }
+.nav-coord-item { align-items: center; padding-left: 4px; }
+
+/* Grupo de região collapsível */
+.nav-region-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  user-select: none;
+  transition: background .15s;
+}
+.nav-region-header:hover { background: rgba(255,255,255,.06); }
+.nav-region-label { flex: 1; font-size: .82rem; font-weight: 600; color: var(--text); }
+.nav-region-arrow { font-size: .65rem; color: var(--muted); transition: transform .2s; margin-left: 2px; }
+
+/* Sub-itens da região */
+.nav-region-children { display: none; overflow: hidden; }
+.nav-region-children.open { display: block; }
+
+/* Linha lateral colorida nos sub-itens */
+.nav-coord-indicator {
+  width: 2px;
+  height: 28px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+/* Item "Norte · total" */
+.nav-region-total {
+  align-items: center;
+  padding-left: 4px;
+  margin-bottom: 4px;
+  opacity: .7;
+}
+.nav-region-total:hover { opacity: 1; }
 
 .mob-menu-btn { display: none; }
 
