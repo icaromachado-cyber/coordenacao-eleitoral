@@ -330,29 +330,32 @@ function configurarNavPorRole() {
     const navTodas = document.getElementById('nav-todas');
     if (navTodas) navTodas.style.display = '';
   } else {
-    // Coordenador regional: mostra apenas sua região, esconde "Todos os Dados" e coord section
+    // Coordenador regional: mostra só sua região, sem seção de coordenadores e sem filtro combinado
     const secRegioes = document.getElementById('nav-section-regioes');
     if (secRegioes) secRegioes.style.display = '';
     const secFiltro = document.getElementById('nav-section-filtro');
-    if (secFiltro) secFiltro.style.display = '';
+    if (secFiltro) secFiltro.style.display = 'none';
+    const secCoord = document.getElementById('sidebar-coord-section');
+    if (secCoord) secCoord.style.display = 'none';
 
+    const labelGeral = document.getElementById('nav-label-geral');
+    if (labelGeral) labelGeral.style.display = 'none';
     const navTodas = document.getElementById('nav-todas');
     if (navTodas) navTodas.style.display = 'none';
-    const navMulti = document.getElementById('nav-multi');
-    if (navMulti) navMulti.style.display = 'none';
 
-    const zonasVisiveis = getZonasVisiveis();
+    // Mostra apenas a zona do coordenador
+    const region = currentUserRole?.region;
     ['norte', 'leste', 'sul', 'sudeste', 'rural'].forEach(z => {
       const nav = document.getElementById('nav-' + z);
-      if (nav) nav.style.display = zonasVisiveis.includes(z) ? '' : 'none';
+      if (nav) nav.style.display = z === region ? '' : 'none';
     });
 
     // Exibe número de zona ao lado do nome da região
-    if (currentUserRole?.region && currentUserRole?.zona) {
-      const navName = document.querySelector(`#nav-${currentUserRole.region} .nav-name`);
+    if (region && currentUserRole?.zona) {
+      const navName = document.querySelector(`#nav-${region} .nav-name`);
       if (navName) {
         const REGION_LABEL = { norte: 'Região Norte', leste: 'Região Leste', sul: 'Região Sul', sudeste: 'Região Sudeste', rural: 'Região Rural' };
-        navName.textContent = (REGION_LABEL[currentUserRole.region] || '') + ' · ' + currentUserRole.zona;
+        navName.textContent = (REGION_LABEL[region] || '') + ' · ' + currentUserRole.zona;
       }
     }
   }
@@ -459,16 +462,17 @@ async function carregarDoFirebase() {
       }
     }
 
-    const zonas = getZonasVisiveis();
+    // Coordenadores carregam TODAS as zonas filtradas por _criadoPor (podem ter registros em qualquer zona)
+    const todasZonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
     const uid = firebase.auth().currentUser?.uid;
     const snaps = await Promise.all(
-      zonas.map(z => {
+      todasZonas.map(z => {
         let q = colecao().where('_zona', '==', z);
         if (!isAdminUser() && uid) q = q.where('_criadoPor', '==', uid);
         return q.get();
       })
     );
-    zonas.forEach((zona, i) => {
+    todasZonas.forEach((zona, i) => {
       DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
       BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
     });
@@ -482,9 +486,9 @@ async function carregarDoFirebase() {
         await migrarVinculos();
       }
       const snapsReload = await Promise.all(
-        zonas.map(z => colecao().where('_zona', '==', z).get())
+        todasZonas.map(z => colecao().where('_zona', '==', z).get())
       );
-      zonas.forEach((zona, i) => {
+      todasZonas.forEach((zona, i) => {
         DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
         BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
       });
@@ -525,6 +529,13 @@ function atualizarNavCounts() {
   });
   const elTodas = document.getElementById('nc-todas');
   if (elTodas) elTodas.textContent = total;
+
+  // Para coordenador regional: mostra total de todos os registros dele no item da sua zona
+  if (!isAdminUser() && currentUserRole?.region) {
+    const el = document.getElementById('nc-' + currentUserRole.region);
+    if (el) el.textContent = total;
+  }
+
   atualizarNavCoordCounts();
 }
 
@@ -590,6 +601,14 @@ function trocarZona(z) {
 
 // ===================== FILTROS =====================
 function getDados() {
+  // Coordenador regional sempre vê todos os seus registros (podem estar em qualquer zona)
+  if (!isAdminUser()) {
+    const all = [];
+    Object.entries(DB).forEach(([z, arr]) => {
+      arr.forEach(d => all.push({...d, _zona: d._zona || z}));
+    });
+    return all;
+  }
   if (zonaAtual === 'todas') {
     const all = [];
     Object.entries(DB).forEach(([z, arr]) => {
