@@ -1,5 +1,6 @@
 {
   "scripts": {
-    "check": "node scripts/check-code.mjs"
+    "check": "node scripts/check-code.mjs",
+    "dev": "node scripts/dev-server.mjs"
   }
 }
