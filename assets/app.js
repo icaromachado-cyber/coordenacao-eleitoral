@@ -1544,7 +1544,7 @@ function renderBars(elId, rows, color) {
 }
 
 function renderDashboard() {
-  const dados = dadosDoCicloAtual();
+  const dados = filtrado && filtrado.length > 0 ? filtrado : dadosDoCicloAtual();
   const total = dados.length;
   const referencias = dados.filter(d => d.tipo === 'L' || d.tipo === 'LE').length;
   const equipe = dados.filter(d => d.tipo === 'M' || d.tipo === 'ME').length;
@@ -2396,7 +2396,6 @@ function bindStaticEvents() {
   }, true);
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
-  on('btnDashboardToggle', 'click', toggleDashboardView);
   on('btnDashboardClose', 'click', closeDashboardView);
   on('btnTreeToggle', 'click', toggleTreeView);
   on('btnMapToggle', 'click', toggleMapView);
