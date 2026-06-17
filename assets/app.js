@@ -2332,6 +2332,13 @@ function bindStaticEvents() {
   on('treeSearch', 'input', renderArvore);
   on('loginBtn', 'click', fazerLogin);
   on('mobOverlay', 'click', toggleSidebar);
+
+  // Fechar todos os dropdowns (details) ao clicar fora
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.tools-menu[open], .filters-menu[open]').forEach(d => {
+      if (!d.contains(e.target)) d.removeAttribute('open');
+    });
+  }, true);
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
   on('btnDashboardToggle', 'click', toggleDashboardView);
