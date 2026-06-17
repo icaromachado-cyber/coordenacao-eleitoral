@@ -1268,7 +1268,6 @@ function renderDashboard() {
     ['Mobilizadores', equipe.toLocaleString('pt-BR'), 'campo operacional'],
     ['Coordenadores', coordenacao.toLocaleString('pt-BR'), 'regionais'],
     ['Apoios', apoios.toLocaleString('pt-BR'), 'previstos'],
-    ['Recursos', 'R$ ' + recursos.toLocaleString('pt-BR'), 'total aplicado'],
     ['Pendentes', pendentes.toLocaleString('pt-BR'), 'precisam de revisão'],
     ['Sem contato', semContato.toLocaleString('pt-BR'), `${semBairro} sem bairro`]
   ].map(([label, value, sub]) => `
@@ -1956,7 +1955,7 @@ async function abrirModalImportarBase() {
   _mcsBaseRegistros = [];
 
   document.getElementById('mcs-titulo').textContent = '📋 Importar do ciclo base';
-  document.getElementById('mcs-desc').textContent = 'Selecione quem vai continuar neste novo ciclo. Apoios e recursos serão zerados.';
+  document.getElementById('mcs-desc').textContent = 'Selecione quem vai continuar neste novo ciclo. Apoios serão zerados.';
   const search = document.getElementById('mcs-search');
   search.style.display = '';
   search.value = '';
