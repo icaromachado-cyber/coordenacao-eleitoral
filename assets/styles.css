@@ -248,6 +248,31 @@ body {
   width: 100%;
 }
 
+.tools-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.tools-resource-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.tools-resource-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
 /* SUMMARY STRIP */
 .summary-strip {
   flex-shrink: 0;

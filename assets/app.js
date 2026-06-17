@@ -557,6 +557,7 @@ function renderCards() {
   document.getElementById('sc-empregado').textContent = src.filter(d=>d.tipo==='CA').length;
   const ct = src.reduce((s,d)=>s+d.total,0);
   document.getElementById('sc-custo').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
+  document.getElementById('toolsResourceValue').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
 
   const totalApoios = src.reduce((s,d)=>s+(d.votos||0),0);
   document.getElementById('tp1').innerHTML = `Apoios: <strong>${totalApoios.toLocaleString('pt-BR')}</strong>`;
