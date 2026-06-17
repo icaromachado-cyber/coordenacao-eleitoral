@@ -313,11 +313,13 @@ body {
   height: 4px;
 }
 
-.strip-card.s-total::after { background: #3b82f6; }
-.strip-card.s-l::after { background: var(--z-leste); }
-.strip-card.s-m::after { background: var(--green); }
+.strip-card.s-total::after    { background: #3b82f6; }
+.strip-card.s-l::after        { background: var(--z-leste); }
+.strip-card.s-m::after        { background: var(--green); }
+.strip-card.s-le::after       { background: var(--z-sudeste); }
+.strip-card.s-me::after       { background: #f59e0b; }
 .strip-card.s-empregado::after { background: var(--z-sudeste); }
-.strip-card.s-custo::after { background: var(--z-rural); }
+.strip-card.s-custo::after    { background: var(--z-rural); }
 
 .strip-label {
   font-size: 0.73rem;

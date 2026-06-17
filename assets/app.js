@@ -418,8 +418,8 @@ async function renderNavCoord() {
               <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
                 <div class="nav-coord-indicator" style="background:${color}"></div>
                 <div style="flex:1;min-width:0;overflow:hidden">
-                  <div class="nav-name" style="font-size:.8rem">${h(c.name)}</div>
-                  ${c.zona ? `<div style="font-size:.68rem;color:var(--muted)">Zona ${h(c.zona)}</div>` : ''}
+                  <div class="nav-name" style="font-size:.8rem">${h(label)}${c.zona ? ' ' + h(c.zona) : ''}</div>
+                  <div style="font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(c.name)}</div>
                 </div>
                 <span class="nav-count" id="ncc-${a(c.uid)}">${c.count}</span>
               </div>`).join('')}
@@ -816,9 +816,12 @@ function totalStyle(v) {
 function renderCards() {
   const src = filtrado;
   document.getElementById('sc-total').textContent = src.length;
-  document.getElementById('sc-l').textContent = src.filter(d=>d.tipo==='L'||d.tipo==='LE').length;
-  document.getElementById('sc-m').textContent = src.filter(d=>d.tipo==='M'||d.tipo==='ME').length;
-  document.getElementById('sc-empregado').textContent = src.filter(d=>d.tipo==='CA').length;
+  document.getElementById('sc-l').textContent  = src.filter(d=>d.tipo==='L').length;
+  document.getElementById('sc-m').textContent  = src.filter(d=>d.tipo==='M').length;
+  const scLe = document.getElementById('sc-le');
+  const scMe = document.getElementById('sc-me');
+  if (scLe) scLe.textContent = src.filter(d=>d.tipo==='LE').length;
+  if (scMe) scMe.textContent = src.filter(d=>d.tipo==='ME').length;
   const ct = src.reduce((s,d)=>s+d.total,0);
   document.getElementById('sc-custo').textContent = 'R$ '+ct.toLocaleString('pt-BR',{minimumFractionDigits:0});
 
