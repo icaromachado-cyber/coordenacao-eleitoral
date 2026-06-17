@@ -51,9 +51,9 @@ body {
 }
 
 .sidebar-logo h1 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #fff;
   line-height: 1.3;
 }
@@ -259,7 +259,7 @@ body {
 /* Financeiro panel */
 .financeiro-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; margin-top: 12px; }
 .financeiro-card { padding: 16px; max-width: 560px; }
-.financeiro-card h3 { font-family: 'Syne', sans-serif; margin-bottom: 10px; font-size: 1rem; }
+.financeiro-card h3 { font-family: 'DM Sans', sans-serif; margin-bottom: 10px; font-size: 1rem; }
 .financeiro-card .fg label { font-size: 0.72rem; }
 .financeiro-card input { width: 160px; }
 .financeiro-card #fin-total { font-weight:800; }
@@ -321,9 +321,9 @@ body {
 }
 
 .strip-value {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #fff;
   line-height: 1.1;
   word-break: break-word;
@@ -502,7 +502,7 @@ thead {
 th {
   padding: 13px 16px;
   text-align: left;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -535,7 +535,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   border-radius: 12px;
   font-size: 0.71rem;
   font-weight: 700;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -559,7 +559,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .mono { font-family: 'DM Mono', monospace; }
 
 .votos-td {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   text-align: center;
 }
@@ -572,7 +572,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .c3 { color: #f87171; }
 
 .total-td {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   text-align: right;
 }
@@ -667,9 +667,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 @keyframes su { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 
 .modal h2 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #fff;
   margin-bottom: 20px;
 }
@@ -741,14 +741,14 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .drawer-close:hover { color: var(--text); }
 
 .d-badge-wrap { margin-bottom: 8px; }
-.d-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: #fff; line-height: 1.35; margin-bottom: 14px; }
+.d-name { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 600; color: #fff; line-height: 1.35; margin-bottom: 14px; }
 .d-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid rgba(37,42,64,.8); gap: 13px; font-size: 0.875rem; }
 .d-row:last-child { border-bottom: none; }
 .d-lbl { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0; }
 .d-val { color: var(--text); text-align: right; }
 .d-total-box { background: var(--bg); border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
 .d-total-lbl { font-size: 0.70rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
-.d-total-val { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+.d-total-val { font-family: 'DM Sans', sans-serif; font-size: 1.4rem; font-weight: 600; }
 .cost-bar { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 8px; border: 1px solid var(--border); }
 .cost-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
 
@@ -787,9 +787,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .tree-header h3 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #fff;
 }
 
@@ -824,7 +824,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   color: var(--muted);
 }
 
-.tree-stat strong { color: var(--text); font-family: 'Syne', sans-serif; }
+.tree-stat strong { color: var(--text); font-family: 'DM Sans', sans-serif; }
 
 /* CA node */
 .tree-ca {
@@ -859,7 +859,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .tree-ca-info { flex: 1; }
 .tree-ca-nome {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   font-size: .9rem;
   color: #fff;
@@ -980,7 +980,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .tree-orphans-header h4 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: .82rem;
   font-weight: 700;
   color: var(--muted);
@@ -1086,9 +1086,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-header h3 {
   color: var(--text);
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 600;
   margin-top: 4px;
 }
 
@@ -1142,9 +1142,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-card-value {
   color: var(--text);
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.85rem;
-  font-weight: 800;
+  font-weight: 600;
   margin-top: 10px;
   line-height: 1.1;
 }
@@ -1167,9 +1167,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-panel h4 {
   color: var(--text);
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: .95rem;
-  font-weight: 800;
+  font-weight: 600;
   margin-bottom: 14px;
 }
 
@@ -1228,7 +1228,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .map-legend h4 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -1307,7 +1307,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .leaflet-popup-tip { background: var(--surface2) !important; }
 
-.popup-nome { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #fff; }
+.popup-nome { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #fff; }
 .popup-row { display: flex; justify-content: space-between; gap: 10px; font-size: .75rem; padding: 3px 0; border-bottom: 1px solid rgba(37,42,64,.6); }
 .popup-row:last-child { border: none; }
 .popup-lbl { color: var(--muted); }
@@ -1371,9 +1371,9 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 .login-logo h1 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #fff;
 }
 
@@ -1418,7 +1418,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   border: none;
   border-radius: 10px;
   padding: 12px;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -1466,7 +1466,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   font-size: 0.75rem;
   font-weight: 700;
   color: #fff;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   flex-shrink: 0;
 }
 
@@ -1563,7 +1563,7 @@ body.theme-light .campanha-bar { background: #e8eaf5; border-bottom-color: #dde1
   border-radius: 6px;
   font-size: .7rem;
   font-weight: 600;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   white-space: nowrap;
   border: 1px solid transparent;
@@ -1638,9 +1638,9 @@ body.theme-light .campanha-tab.active { background: rgba(59,130,246,.1); border-
 body.theme-light .modal-campanha-box { background: #fff; border-color: #dde1ee; }
 
 .modal-campanha-box h2 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text);
   margin-bottom: 20px;
 }
@@ -1695,9 +1695,9 @@ body.theme-light .mc-footer { border-top-color: #dde1ee; }
 body.theme-light .modal-camps-sel-box { background: #fff; border-color: #dde1ee; }
 
 .modal-camps-sel-box h3 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text);
   margin-bottom: 6px;
 }
@@ -1864,7 +1864,7 @@ body.theme-light .mcs-footer { border-top-color: #dde1ee; }
 }
 
 .zone-card-name {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: .82rem;
   font-weight: 700;
   color: var(--text);
@@ -1893,9 +1893,9 @@ body.theme-light .mcs-footer { border-top-color: #dde1ee; }
 }
 
 .zone-stat-val {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -2077,7 +2077,7 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
   display: inline-flex; align-items: center; gap: 4px;
   padding: 2px 9px; border-radius: 10px;
   font-size: .65rem; font-weight: 700;
-  font-family: 'Syne', sans-serif; text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif; text-transform: uppercase;
   letter-spacing: .04em;
 }
 
