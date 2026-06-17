@@ -3236,6 +3236,60 @@ async function sincronizarCAsCoord() {
   }
 }
 
+async function limparCAsDuplicados() {
+  const msgEl = document.getElementById('nu-dedup-msg');
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Verificando CAs duplicados…';
+
+  try {
+    const snap = await colecao().where('tipo', '==', 'CA').get();
+    const todos = snap.docs.map(d => ({ _fireId: d.id, ref: d.ref, ...d.data() }));
+
+    // Agrupa por zona + primeiro nome do coordenador
+    const grupos = {};
+    todos.forEach(ca => {
+      const chave = `${ca._zona || ''}|${(ca.nome || '').split(' ')[0]}`;
+      if (!grupos[chave]) grupos[chave] = [];
+      grupos[chave].push(ca);
+    });
+
+    let removidos = 0;
+    const batch = db.batch();
+
+    Object.values(grupos).forEach(lista => {
+      if (lista.length <= 1) return;
+      // Mantém o que tem _criadoPor definido; se todos têm, mantém o primeiro
+      const comVinculo = lista.filter(ca => ca._criadoPor);
+      const manter = comVinculo.length ? comVinculo[0] : lista[0];
+      lista.forEach(ca => {
+        if (ca._fireId !== manter._fireId) {
+          batch.delete(ca.ref);
+          removidos++;
+        }
+      });
+    });
+
+    if (removidos === 0) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = '✅ Nenhum duplicado encontrado.';
+      return;
+    }
+
+    await batch.commit();
+    msgEl.style.color = '#4ade80';
+    msgEl.textContent = `✅ ${removidos} CA(s) duplicado(s) removido(s).`;
+    toast(`✅ ${removidos} CA(s) duplicado(s) removido(s)`);
+
+  } catch(e) {
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent = 'Erro: ' + e.message;
+    console.error('[limparCAsDuplicados]', e);
+    return;
+  }
+
+  try { await carregarDoFirebase(); } catch(e2) { console.error(e2); }
+}
+
 async function verificarRegistrosSemCoord() {
   const infoEl  = document.getElementById('nu-migrate-info');
   const selCoord = document.getElementById('nu-migrate-coord');

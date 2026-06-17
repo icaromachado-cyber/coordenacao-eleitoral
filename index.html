@@ -552,6 +552,14 @@
         <button class="btn btn-outline" onclick="sincronizarCAsCoord()" style="width:100%">Sincronizar coordenadores → CA</button>
       </div>
 
+      <!-- Limpar duplicados -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600">Limpar CAs duplicados</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Remove registros CA extras, mantendo apenas 1 por coordenador.</div>
+        <div id="nu-dedup-msg" style="font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-outline" onclick="limparCAsDuplicados()" style="width:100%;border-color:rgba(239,68,68,.4);color:#f87171">Limpar duplicados</button>
+      </div>
+
     </div>
   </div>
 </div>
