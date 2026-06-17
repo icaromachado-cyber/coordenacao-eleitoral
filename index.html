@@ -544,6 +544,14 @@
         <button class="btn btn-primary" onclick="executarMigracaoDados()" style="width:100%">Executar migração</button>
       </div>
 
+      <!-- Sincronizar CAs -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600">Sincronizar registros CA</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Cria o registro tipo CA na liderança para coordenadores que ainda não possuem.</div>
+        <div id="nu-sync-msg" style="font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-outline" onclick="sincronizarCAsCoord()" style="width:100%">Sincronizar coordenadores → CA</button>
+      </div>
+
     </div>
   </div>
 </div>

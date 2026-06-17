@@ -3159,6 +3159,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===================== MIGRAÇÃO DE REGISTROS =====================
 
+async function sincronizarCAsCoord() {
+  const msgEl = document.getElementById('nu-sync-msg');
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Verificando coordenadores…';
+
+  try {
+    const usersSnap = await db.collection('users').get();
+    const coords = [];
+    usersSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.region) coords.push({ uid: doc.id, ...d });
+    });
+
+    if (!coords.length) { msgEl.textContent = 'Nenhum coordenador com região encontrado.'; return; }
+
+    let criados = 0;
+    let jaExistem = 0;
+
+    for (const coord of coords) {
+      // Verifica se já tem registro CA criado por esse UID
+      const caSnap = await colecao()
+        .where('_criadoPor', '==', coord.uid)
+        .where('tipo', '==', 'CA')
+        .limit(1).get();
+
+      if (!caSnap.empty) { jaExistem++; continue; }
+
+      // Cria o CA
+      const snapZona = await colecao().where('_zona', '==', coord.region).get();
+      const maxId = Math.max(...snapZona.docs.map(d => +(d.data().id) || 0), 0);
+      const novoId = String(maxId + 1).padStart(3, '0');
+      const primeiroNome = (coord.name || '').split(' ')[0];
+
+      await colecao().add({
+        id: novoId,
+        nome: (coord.name || coord.email || '').toUpperCase(),
+        tipo: 'CA',
+        _zona: coord.region,
+        _criadoPor: coord.uid,
+        _coordZona: coord.zona || '',
+        _coordNome: primeiroNome,
+        status: 'ativo',
+        bairro: '',
+        telefone: '',
+        votos: 0, custo_jul: 0, custo_ago: 0, custo_set: 0, custo_out: 0, total: 0,
+        reuniao: false
+      });
+      criados++;
+    }
+
+    msgEl.style.color = '#4ade80';
+    msgEl.textContent = `✅ ${criados} CA(s) criado(s). ${jaExistem} já existia(m).`;
+    toast(`✅ Sincronização concluída — ${criados} CA(s) criado(s)`);
+    await carregarDoFirebase();
+
+  } catch(e) {
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent = 'Erro: ' + e.message;
+  }
+}
+
 async function verificarRegistrosSemCoord() {
   const infoEl  = document.getElementById('nu-migrate-info');
   const selCoord = document.getElementById('nu-migrate-coord');
