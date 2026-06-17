@@ -2333,11 +2333,21 @@ function bindStaticEvents() {
   on('loginBtn', 'click', fazerLogin);
   on('mobOverlay', 'click', toggleSidebar);
 
-  // Fechar todos os dropdowns (details) ao clicar fora
+  // Fechar todos os dropdowns e painéis ao clicar fora
   document.addEventListener('click', e => {
+    // Menus details (Ferramentas, Filtros)
     document.querySelectorAll('.tools-menu[open], .filters-menu[open]').forEach(d => {
       if (!d.contains(e.target)) d.removeAttribute('open');
     });
+
+    // Drawer (painel lateral de detalhes)
+    const drawer = document.getElementById('drawer');
+    if (drawer?.classList.contains('open')) {
+      // Fecha se clicou fora do drawer e não no botão que o abriu
+      if (!drawer.contains(e.target) && !e.target.closest('[data-action="ver-drawer"]')) {
+        fecharDrawer();
+      }
+    }
   }, true);
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
