@@ -10,6 +10,10 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// App secundário para criar usuários sem deslogar o admin
+const secondaryApp = firebase.initializeApp(firebaseConfig, 'secondary');
+const secondaryAuth = secondaryApp.auth();
 const {
   escapeHtml: h,
   escapeAttr: a,
@@ -320,6 +324,8 @@ function configurarNavPorRole() {
   });
   const btnMigrar = document.getElementById('btnMigrarBairro');
   if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
+  const btnUsuarios = document.getElementById('btnGerenciarUsuarios');
+  if (btnUsuarios) btnUsuarios.style.display = admin ? '' : 'none';
 }
 
 // ===================== INIT =====================
@@ -2711,3 +2717,123 @@ async function renderMapa() {
 
   setTimeout(() => leafletMap.invalidateSize(), 200);
 }
+
+// ===================== GERENCIAR USUÁRIOS (ADMIN) =====================
+
+function abrirGerenciarUsuarios() {
+  document.getElementById('overlayUsuarios').style.display = 'flex';
+  document.getElementById('nu-msg').textContent = '';
+  document.getElementById('nu-nome').value = '';
+  document.getElementById('nu-email').value = '';
+  document.getElementById('nu-senha').value = '';
+  document.getElementById('nu-role').value = 'regional';
+  document.getElementById('nu-region').value = 'norte';
+  document.getElementById('nu-zona').value = '';
+  document.getElementById('nu-region-group').style.display = '';
+  carregarListaUsuarios();
+}
+
+function fecharGerenciarUsuarios() {
+  document.getElementById('overlayUsuarios').style.display = 'none';
+}
+
+async function carregarListaUsuarios() {
+  const lista = document.getElementById('nu-lista');
+  lista.textContent = 'Carregando…';
+  try {
+    const snap = await db.collection('users').get();
+    if (snap.empty) {
+      lista.textContent = 'Nenhum usuário cadastrado.';
+      return;
+    }
+    const ROLE_LABELS = { admin: 'Admin', regional: 'Coordenador' };
+    const REGION_LABELS = { norte: 'Norte', sul: 'Sul', leste: 'Leste', sudeste: 'Sudeste', rural: 'Rural' };
+    let html = '<table style="width:100%;border-collapse:collapse">';
+    html += '<tr style="font-size:.78rem;color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px">Nome</th><th style="text-align:left;padding:4px 6px">E-mail</th><th style="text-align:left;padding:4px 6px">Função</th><th style="text-align:left;padding:4px 6px">Região</th></tr>';
+    snap.forEach(doc => {
+      const d = doc.data();
+      const role = ROLE_LABELS[d.role] || d.role;
+      const region = d.region ? (REGION_LABELS[d.region] || d.region) + (d.zona ? ' / Zona ' + d.zona : '') : '—';
+      html += `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:5px 6px">${h(d.name || '—')}</td>
+        <td style="padding:5px 6px;font-size:.8rem">${h(d.email || '—')}</td>
+        <td style="padding:5px 6px">${h(role)}</td>
+        <td style="padding:5px 6px">${h(region)}</td>
+      </tr>`;
+    });
+    html += '</table>';
+    lista.innerHTML = html;
+  } catch(e) {
+    lista.textContent = 'Erro ao carregar usuários.';
+  }
+}
+
+async function criarNovoUsuario() {
+  const nome = document.getElementById('nu-nome').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const senha = document.getElementById('nu-senha').value;
+  const role = document.getElementById('nu-role').value;
+  const region = role === 'regional' ? document.getElementById('nu-region').value : null;
+  const zona = role === 'regional' ? document.getElementById('nu-zona').value.trim() : null;
+  const msg = document.getElementById('nu-msg');
+  const btn = document.getElementById('btnCriarUsuario');
+
+  if (!nome || !email || !senha) {
+    msg.textContent = 'Preencha nome, e-mail e senha.';
+    return;
+  }
+  if (senha.length < 6) {
+    msg.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Criando…';
+  msg.textContent = '';
+
+  try {
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, senha);
+    const uid = cred.user.uid;
+    await secondaryAuth.signOut();
+
+    const docData = { email, name: nome, role };
+    if (region) docData.region = region;
+    if (zona) docData.zona = zona;
+    await db.collection('users').doc(uid).set(docData);
+
+    msg.style.color = 'var(--success, #22c55e)';
+    msg.textContent = `Conta criada para ${email}`;
+    document.getElementById('nu-nome').value = '';
+    document.getElementById('nu-email').value = '';
+    document.getElementById('nu-senha').value = '';
+    carregarListaUsuarios();
+  } catch(e) {
+    const erros = {
+      'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
+    };
+    msg.style.color = 'var(--danger)';
+    msg.textContent = erros[e.code] || 'Erro ao criar conta: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Criar conta';
+  }
+}
+
+// Mostrar/ocultar campo de região conforme função selecionada
+document.addEventListener('DOMContentLoaded', () => {
+  const roleSelect = document.getElementById('nu-role');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', () => {
+      document.getElementById('nu-region-group').style.display =
+        roleSelect.value === 'regional' ? '' : 'none';
+    });
+  }
+  const btnGerenciar = document.getElementById('btnGerenciarUsuarios');
+  if (btnGerenciar) btnGerenciar.addEventListener('click', abrirGerenciarUsuarios);
+  const btnFecharU = document.getElementById('btnFecharUsuarios');
+  if (btnFecharU) btnFecharU.addEventListener('click', fecharGerenciarUsuarios);
+  const btnCriarU = document.getElementById('btnCriarUsuario');
+  if (btnCriarU) btnCriarU.addEventListener('click', criarNovoUsuario);
+});

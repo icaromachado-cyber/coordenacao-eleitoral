@@ -4,8 +4,8 @@ service cloud.firestore {
 
     // Users collection: users/{uid} stores role and region
     match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false; // manage users from admin console or Cloud Function
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
     }
 
     // Campanhas collection: admins can do everything, regionais only their zone

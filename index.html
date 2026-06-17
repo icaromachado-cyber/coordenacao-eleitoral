@@ -146,6 +146,7 @@
           </label>
           <button class="btn btn-import" id="btnExport" title="Exportar dados da região atual em Excel">📤 Exportar</button>
           <button class="btn btn-import" id="btnMigrarBairro" title="Organizar pessoas por região com base no bairro">🔄 Organizar Regiões</button>
+          <button class="btn btn-import" id="btnGerenciarUsuarios" title="Criar e gerenciar coordenadores">👥 Usuários</button>
         </div>
       </details>
       <button class="btn btn-primary" id="btnNovoRegistro">+ Novo</button>
@@ -459,6 +460,64 @@
     <div class="mcs-footer">
       <button class="btn btn-outline" id="btnFecharCampsSel">Pular</button>
       <button class="btn btn-primary" id="btnConfirmarCampsSel">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR USUÁRIOS (só admin) -->
+<div class="overlay" id="overlayUsuarios" style="display:none">
+  <div class="modal" style="max-width:520px;max-height:85vh;overflow-y:auto">
+    <h2>👥 Gerenciar Coordenadores</h2>
+
+    <div style="margin-bottom:16px">
+      <h3 style="font-size:.9rem;margin-bottom:10px;color:var(--muted)">Criar novo login</h3>
+      <div class="fg">
+        <label>Nome</label>
+        <input type="text" id="nu-nome" placeholder="Nome completo">
+      </div>
+      <div class="fg">
+        <label>E-mail</label>
+        <input type="email" id="nu-email" placeholder="email@exemplo.com">
+      </div>
+      <div class="fg">
+        <label>Senha</label>
+        <input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="fg">
+        <label>Função</label>
+        <select id="nu-role">
+          <option value="regional">Coordenador Regional</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div id="nu-region-group">
+        <div class="fg">
+          <label>Região</label>
+          <select id="nu-region">
+            <option value="norte">Norte</option>
+            <option value="sul">Sul</option>
+            <option value="leste">Leste</option>
+            <option value="sudeste">Sudeste</option>
+            <option value="rural">Rural</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Zona (número do coordenador)</label>
+          <input type="text" id="nu-zona" placeholder="Ex: 01, 02...">
+        </div>
+      </div>
+      <div id="nu-msg" style="color:var(--danger);font-size:.85rem;margin-top:6px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-outline" id="btnFecharUsuarios">Fechar</button>
+        <button class="btn btn-primary" id="btnCriarUsuario">Criar conta</button>
+      </div>
+    </div>
+
+    <hr style="border-color:var(--border);margin:16px 0">
+
+    <div>
+      <h3 style="font-size:.9rem;margin-bottom:10px;color:var(--muted)">Coordenadores cadastrados</h3>
+      <div id="nu-lista" style="font-size:.85rem"></div>
     </div>
   </div>
 </div>
