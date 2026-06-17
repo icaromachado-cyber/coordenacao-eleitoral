@@ -8,13 +8,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Campanhas collection: admins can do everything, regionais only their zone
+    // Campanhas collection: admins can do everything, regionais only their own records
     match /campanhas/{campanhaId}/liderancas/{liderancaId} {
       allow read, write: if isAdmin();
-      allow read: if isRegional() && resource.data._zona == getUserRegion();
-      allow create: if isRegional() && request.resource.data._zona == getUserRegion();
-      allow update: if isRegional() && resource.data._zona == getUserRegion() && request.resource.data._zona == getUserRegion();
-      allow delete: if isRegional() && resource.data._zona == getUserRegion();
+      allow read: if isRegional() && resource.data._zona == getUserRegion() && resource.data._criadoPor == request.auth.uid;
+      allow create: if isRegional() && request.resource.data._zona == getUserRegion() && request.resource.data._criadoPor == request.auth.uid;
+      allow update: if isRegional() && resource.data._criadoPor == request.auth.uid && request.resource.data._zona == getUserRegion() && request.resource.data._criadoPor == request.auth.uid;
+      allow delete: if isRegional() && resource.data._criadoPor == request.auth.uid;
     }
 
     // Campanha metadata: admins full access, regionais read-only

@@ -353,8 +353,13 @@ async function carregarDoFirebase() {
 
     // Carrega apenas as zonas visíveis ao usuário
     const zonas = getZonasVisiveis();
+    const uid = firebase.auth().currentUser?.uid;
     const snaps = await Promise.all(
-      zonas.map(z => colecao().where('_zona', '==', z).get())
+      zonas.map(z => {
+        let q = colecao().where('_zona', '==', z);
+        if (!isAdminUser() && uid) q = q.where('_criadoPor', '==', uid);
+        return q.get();
+      })
     );
     zonas.forEach((zona, i) => {
       DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
@@ -370,7 +375,11 @@ async function carregarDoFirebase() {
     // Recarrega para pegar os vínculos aplicados.
     const zonasReload = getZonasVisiveis();
     const snapsReload = await Promise.all(
-      zonasReload.map(z => colecao().where('_zona','==',z).get())
+      zonasReload.map(z => {
+        let q = colecao().where('_zona', '==', z);
+        if (!isAdminUser() && uid) q = q.where('_criadoPor', '==', uid);
+        return q.get();
+      })
     );
     zonasReload.forEach((zona, i) => {
       DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
@@ -802,6 +811,14 @@ function abrirModal(id, zona) {
   document.getElementById('modal-title').textContent = id===null ? '📋 Novo Registro' : '✏️ Editar Registro';
   const flds = ['f-tipo','f-zona','f-nome','f-tel','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
 
+  const zonaFieldEl = document.getElementById('f-zona');
+  if (!isAdminUser() && currentUserRole?.region) {
+    if (zonaFieldEl) { zonaFieldEl.value = currentUserRole.region; zonaFieldEl.disabled = true; }
+    _editZona = currentUserRole.region;
+  } else {
+    if (zonaFieldEl) zonaFieldEl.disabled = false;
+  }
+
   if (id === null) {
     flds.forEach(f => {
       const el=document.getElementById(f);
@@ -812,6 +829,7 @@ function abrirModal(id, zona) {
         el.value = '';
       }
     });
+    if (!isAdminUser() && currentUserRole?.region && zonaFieldEl) zonaFieldEl.value = currentUserRole.region;
   } else {
     const d = DB[_editZona].find(x=>x.id===id);
     if (!d) return;
@@ -928,6 +946,9 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
     const fireId = docData._fireId;
     delete docData._fireId;
 
+    const u = firebase.auth().currentUser;
+    if (u && !docData._criadoPor) docData._criadoPor = u.uid;
+
     if (editIdOrig !== null && fireId) {
       if (zonaChanged) {
         await colecao().doc(fireId).delete();
@@ -990,7 +1011,12 @@ async function deletarNoFirebase(d, zona) {
 }
 
 async function recarregarZona(zona) {
-  const snap = await colecao().where('_zona', '==', zona).get();
+  let q = colecao().where('_zona', '==', zona);
+  if (!isAdminUser()) {
+    const uid = firebase.auth().currentUser?.uid;
+    if (uid) q = q.where('_criadoPor', '==', uid);
+  }
+  const snap = await q.get();
   DB[zona] = snap.docs.map(d => ({...d.data(), _fireId: d.id}));
   BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
 }
