@@ -840,6 +840,7 @@ function renderTable() {
       <td style="text-align:center;white-space:nowrap">
         <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">👁</button>
         <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
+        ${d.tipo !== 'CA' ? `<button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -1196,9 +1197,16 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
 }
 
 function deletar(id, zona) {
-  const d = findById(zona, id);
+  let d = findById(zona, id);
+  let zonaReal = zona;
+  if (!d) {
+    for (const z of ['norte','leste','sul','sudeste','rural']) {
+      d = findById(z, id);
+      if (d) { zonaReal = z; break; }
+    }
+  }
   if (!d || !confirm(`Excluir "${d.nome}"?`)) return;
-  deletarNoFirebase(d, zona);
+  deletarNoFirebase(d, zonaReal);
 }
 
 async function deletarNoFirebase(d, zona) {
