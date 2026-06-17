@@ -1105,13 +1105,17 @@ function salvar() {
     return;
   }
 
-  // Recupera o _fireId do registro original antes de qualquer alteração
+  // Recupera o _fireId e campos de ownership do registro original
   const regOriginal = editId !== null ? findById(zonaOrigem, editId) : null;
   const fireId = regOriginal ? regOriginal._fireId : null;
 
   const reg = {
     id: editId !== null ? editId : getNextId(zonaDestino),
-    _fireId: fireId, // preserva o ID do Firebase para deletar/atualizar corretamente
+    _fireId: fireId,
+    // Preserva quem criou o registro — evita sobrescrever _criadoPor ao editar como admin
+    _criadoPor: regOriginal?._criadoPor || null,
+    _coordZona: regOriginal?._coordZona || '',
+    _coordNome: regOriginal?._coordNome || '',
     tipo: raw.tipo,
     nome: raw.nome.toUpperCase(),
     telefone: raw.telefone,
