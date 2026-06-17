@@ -126,8 +126,8 @@ async function migrarPorBairro() {
       await batch.commit();
     }
 
-    // Recarrega todas as zonas
-    const zonas = ['norte','leste','sul','sudeste','rural'];
+    // Recarrega zonas visíveis
+    const zonas = getZonasVisiveis();
     const snaps = await Promise.all(zonas.map(z => colecao().where('_zona','==',z).get()));
     zonas.forEach((zona, i) => {
       DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
@@ -288,6 +288,7 @@ const BAIRROS = {
 };
 
 // ===================== ESTADO =====================
+let currentUserRole = null; // { role, region, zona, name }
 let zonaAtual = 'norte';
 let filtrado = [];
 let sortCol = 'id';
@@ -295,6 +296,31 @@ let sortAsc = true;
 let pg = 1;
 const PER = 50;
 let editId = null;
+
+// ===================== ROLE HELPERS =====================
+function isAdminUser() {
+  return !currentUserRole || currentUserRole.role === 'admin';
+}
+
+function getZonasVisiveis() {
+  if (isAdminUser()) return ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+  return [currentUserRole.region].filter(Boolean);
+}
+
+function configurarNavPorRole() {
+  const zonasVisiveis = getZonasVisiveis();
+  const admin = isAdminUser();
+  ['norte', 'leste', 'sul', 'sudeste', 'rural'].forEach(z => {
+    const nav = document.getElementById('nav-' + z);
+    if (nav) nav.style.display = zonasVisiveis.includes(z) ? '' : 'none';
+  });
+  ['nav-todas', 'nav-multi'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = admin ? '' : 'none';
+  });
+  const btnMigrar = document.getElementById('btnMigrarBairro');
+  if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
+}
 
 // ===================== INIT =====================
 function init() {
@@ -319,8 +345,8 @@ async function carregarDoFirebase() {
       await migrarDadosNorte();
     }
 
-    // Carrega todas as zonas em paralelo
-    const zonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
+    // Carrega apenas as zonas visíveis ao usuário
+    const zonas = getZonasVisiveis();
     const snaps = await Promise.all(
       zonas.map(z => colecao().where('_zona', '==', z).get())
     );
@@ -336,7 +362,7 @@ async function carregarDoFirebase() {
       await migrarVinculos();
     }
     // Recarrega para pegar os vínculos aplicados.
-    const zonasReload = ['norte','leste','sul','sudeste','rural'];
+    const zonasReload = getZonasVisiveis();
     const snapsReload = await Promise.all(
       zonasReload.map(z => colecao().where('_zona','==',z).get())
     );
@@ -346,7 +372,9 @@ async function carregarDoFirebase() {
     });
     mostrarLoading(false);
     atualizarNavCounts();
-    trocarZona('todas');
+    configurarNavPorRole();
+    const zonaInicial = isAdminUser() ? 'todas' : (currentUserRole?.region || 'norte');
+    trocarZona(zonaInicial);
     abrirDashboardInicial();
   } catch(e) {
     console.error('Erro ao carregar Firebase:', e);
@@ -355,7 +383,8 @@ async function carregarDoFirebase() {
     dbCarregado = true;
     mostrarLoading(false);
     atualizarNavCounts();
-    trocarZona('todas');
+    configurarNavPorRole();
+    trocarZona(isAdminUser() ? 'todas' : (currentUserRole?.region || 'norte'));
     abrirDashboardInicial();
     toast('⚠️ Usando dados locais — sem conexão com banco', true);
   }
@@ -2247,17 +2276,22 @@ function setSyncStatus(msg, cor) {
 const auth = firebase.auth();
 
 // Observa estado de login
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
   if (user) {
-    // Logado — mostra sistema
     document.getElementById('loginScreen').classList.add('hidden');
     const initials = user.email.substring(0, 2).toUpperCase();
     document.getElementById('userAvatar').textContent = initials;
     document.getElementById('userEmail').textContent = user.email;
     setSyncStatus('🔄 Carregando dados…', '#60a5fa');
+    try {
+      const roleDoc = await db.collection('users').doc(user.uid).get();
+      currentUserRole = roleDoc.exists ? roleDoc.data() : null;
+    } catch(e) {
+      currentUserRole = null;
+    }
     init();
   } else {
-    // Não logado — mostra tela de login
+    currentUserRole = null;
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('loading-overlay').style.display = 'none';
     setSyncStatus('🔒 Aguardando login', 'var(--muted)');

@@ -1,0 +1,24 @@
+{
+  "admins": [
+    {
+      "email": "icarocaio18@gmail.com",
+      "password": "CHANGE_ME"
+    },
+    {
+      "email": "shelydarodrigues@gmail.com",
+      "password": "CHANGE_ME",
+      "name": "Shelyda Raiane",
+      "region": "norte",
+      "zona": "01"
+    }
+  ],
+  "regionais": [
+    {
+      "email": "silmarrcunha@gmail.com",
+      "password": "CHANGE_ME",
+      "region": "norte",
+      "zona": "02",
+      "name": "Silmar Cunha"
+    }
+  ]
+}

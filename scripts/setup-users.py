@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 Setup script: Create Firebase users and populate Firestore with roles/regions.
+Reads configuration from users-config.json
 Requires: firebase-admin, python-dotenv
 Usage: python scripts/setup-users.py
 """
 
 import os
 import json
+import sys
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from getpass import getpass
@@ -40,48 +42,85 @@ def create_user(email, password):
         print(f"  ❌ Error creating user {email}: {e}")
         return None
 
-def set_user_role(db, uid, email, role, region=None):
-    """Set role and region in Firestore."""
+def set_user_role(db, uid, email, role, region=None, zona=None, name=None):
+    """Set role, region, zona, and name in Firestore."""
     doc_data = {"email": email, "role": role}
     if region:
         doc_data["region"] = region
+    if zona:
+        doc_data["zona"] = zona
+    if name:
+        doc_data["name"] = name
     
     db.collection('users').document(uid).set(doc_data, merge=True)
-    print(f"  ✅ {email} → role={role}, region={region or 'N/A'}")
+    info = f"{email} → role={role}"
+    if region:
+        info += f", region={region}"
+    if zona:
+        info += f", zona={zona}"
+    print(f"  ✅ {info}")
+
+def load_config(config_path):
+    """Load users configuration from JSON file."""
+    try:
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"❌ Config file not found: {config_path}")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"❌ Invalid JSON in {config_path}: {e}")
+        sys.exit(1)
 
 def main():
     print("=" * 60)
     print("Firebase User Setup — Financeiro & Regional")
     print("=" * 60)
     
+    # Load config
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "..", "users-config.json")
+    config = load_config(config_path)
+    
     db = init_firebase()
     
-    # Admin user
-    print("\n📌 ADMIN USER")
-    admin_email = "icarocaio18@gmail.com"
-    admin_pwd = getpass(f"Password for {admin_email}: ")
-    admin_uid = create_user(admin_email, admin_pwd)
-    if admin_uid:
-        set_user_role(db, admin_uid, admin_email, "admin")
+    # Create admin users
+    if "admins" in config and config["admins"]:
+        print("\n📌 ADMIN USERS")
+        for admin in config["admins"]:
+            email = admin.get("email")
+            password = admin.get("password")
+            name = admin.get("name")
+            
+            if password == "CHANGE_ME":
+                password = getpass(f"Password for {email}: ")
+            
+            region = admin.get("region")
+            zona = admin.get("zona")
+            uid = create_user(email, password)
+            if uid:
+                set_user_role(db, uid, email, "admin", region=region, zona=zona, name=name)
     
-    # Regional users
-    print("\n🌍 REGIONAL USERS")
-    regions = [
-        ("norte", "norte@coord.local"),
-        ("leste", "leste@coord.local"),
-        ("sul", "sul@coord.local"),
-        ("sudeste", "sudeste@coord.local"),
-        ("rural", "rural@coord.local"),
-    ]
-    
-    default_pwd = "Temp@1234!"  # CHANGE THIS IN PRODUCTION
-    print(f"(Using default password: {default_pwd})")
-    print("⚠️  IMPORTANT: Change these passwords after first login!\n")
-    
-    for region, email in regions:
-        uid = create_user(email, default_pwd)
-        if uid:
-            set_user_role(db, uid, email, "regional", region)
+    # Create regional users
+    if "regionais" in config and config["regionais"]:
+        print("\n🌍 REGIONAL USERS")
+        for regional in config["regionais"]:
+            email = regional.get("email")
+            if email == "PREENCHER":
+                print(f"  ⏭️  Skipping user with email 'PREENCHER' (configure users-config.json)")
+                continue
+            
+            password = regional.get("password")
+            region = regional.get("region")
+            zona = regional.get("zona")
+            name = regional.get("name")
+            
+            if password == "CHANGE_ME":
+                password = getpass(f"Password for {email}: ")
+            
+            uid = create_user(email, password)
+            if uid:
+                set_user_role(db, uid, email, "regional", region=region, zona=zona, name=name)
     
     print("\n" + "=" * 60)
     print("✅ Users created successfully!")
@@ -90,10 +129,13 @@ def main():
     print("1. Deploy Firestore rules: firebase deploy --only firestore:rules")
     print("2. Test login with regional accounts")
     print("3. Change default passwords in Firebase Console")
+    print(f"\nConfig used: {config_path}")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
         print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         exit(1)

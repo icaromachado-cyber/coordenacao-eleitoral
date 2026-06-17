@@ -8,6 +8,21 @@ service cloud.firestore {
       allow write: if false; // manage users from admin console or Cloud Function
     }
 
+    // Campanhas collection: admins can do everything, regionais only their zone
+    match /campanhas/{campanhaId}/liderancas/{liderancaId} {
+      allow read, write: if isAdmin();
+      allow read: if isRegional() && resource.data._zona == getUserRegion();
+      allow create: if isRegional() && request.resource.data._zona == getUserRegion();
+      allow update: if isRegional() && resource.data._zona == getUserRegion() && request.resource.data._zona == getUserRegion();
+      allow delete: if isRegional() && resource.data._zona == getUserRegion();
+    }
+
+    // Campanha metadata: admins full access, regionais read-only
+    match /campanhas/{campanhaId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
     // Financas collection: one doc per ciclo_region (e.g. 2024_norte)
     match /financas/{financeId} {
       allow read: if isAdmin() || isRegionalOwner(resource.data.region);
@@ -21,11 +36,22 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isRegional() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'regional';
+    }
+
+    function getUserRegion() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.region;
     }
 
     function isRegionalOwner(region) {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.region == region;
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.region == region;
     }
   }
 }
