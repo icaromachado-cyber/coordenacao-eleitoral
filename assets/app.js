@@ -322,6 +322,14 @@ function configurarNavPorRole() {
     const el = document.getElementById(id);
     if (el) el.style.display = admin ? '' : 'none';
   });
+  // Exibe número de zona ao lado do nome da região para coordenadores regionais
+  if (!admin && currentUserRole?.region && currentUserRole?.zona) {
+    const navName = document.querySelector(`#nav-${currentUserRole.region} .nav-name`);
+    if (navName) {
+      const REGION_LABEL = { norte: 'Região Norte', leste: 'Região Leste', sul: 'Região Sul', sudeste: 'Região Sudeste', rural: 'Região Rural' };
+      navName.textContent = (REGION_LABEL[currentUserRole.region] || '') + ' · ' + currentUserRole.zona;
+    }
+  }
   const btnMigrar = document.getElementById('btnMigrarBairro');
   if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
   const btnUsuarios = document.getElementById('btnGerenciarUsuarios');
@@ -341,17 +349,16 @@ function mostrarLoading(show) {
 
 async function carregarDoFirebase() {
   try {
-    // Carrega ciclos disponíveis
     await carregarCampanhas();
 
-    // Importa dados iniciais apenas para o ciclo semente e somente uma vez.
-    // Ciclos limpos pelo usuário devem permanecer vazios após atualizar a página.
-    const snapCheck = await colecao().limit(1).get();
-    if (snapCheck.empty && deveImportarDadosIniciais()) {
-      await migrarDadosNorte();
+    // Operações de migração somente para admin — regionais não têm permissão de leitura global
+    if (isAdminUser()) {
+      const snapCheck = await colecao().limit(1).get();
+      if (snapCheck.empty && deveImportarDadosIniciais()) {
+        await migrarDadosNorte();
+      }
     }
 
-    // Carrega apenas as zonas visíveis ao usuário
     const zonas = getZonasVisiveis();
     const uid = firebase.auth().currentUser?.uid;
     const snaps = await Promise.all(
@@ -367,24 +374,22 @@ async function carregarDoFirebase() {
     });
 
     dbCarregado = true;
-    // Migra vínculos automaticamente, preservando relacionamentos existentes.
-    const possuiRegistros = Object.values(DB).some(registros => registros.length > 0);
-    if (possuiRegistros) {
-      await migrarVinculos();
+
+    // migrarVinculos lê todos os docs sem filtro — somente admin pode executar
+    if (isAdminUser()) {
+      const possuiRegistros = Object.values(DB).some(registros => registros.length > 0);
+      if (possuiRegistros) {
+        await migrarVinculos();
+      }
+      const snapsReload = await Promise.all(
+        zonas.map(z => colecao().where('_zona', '==', z).get())
+      );
+      zonas.forEach((zona, i) => {
+        DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+        BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+      });
     }
-    // Recarrega para pegar os vínculos aplicados.
-    const zonasReload = getZonasVisiveis();
-    const snapsReload = await Promise.all(
-      zonasReload.map(z => {
-        let q = colecao().where('_zona', '==', z);
-        if (!isAdminUser() && uid) q = q.where('_criadoPor', '==', uid);
-        return q.get();
-      })
-    );
-    zonasReload.forEach((zona, i) => {
-      DB[zona] = snapsReload[i].docs.map(d => ({...d.data(), _fireId: d.id}));
-      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
-    });
+
     mostrarLoading(false);
     atualizarNavCounts();
     configurarNavPorRole();
@@ -393,15 +398,18 @@ async function carregarDoFirebase() {
     abrirDashboardInicial();
   } catch(e) {
     console.error('Erro ao carregar Firebase:', e);
-    DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
-    BAIRROS.norte = [...new Set(DB.norte.map(d => d.bairro).filter(Boolean))].sort();
+    // Fallback local somente para admin; regional recebe tela em branco
+    if (isAdminUser()) {
+      DB.norte = DADOS_NORTE.map(d => ({...d, _zona: 'norte'}));
+      BAIRROS.norte = [...new Set(DB.norte.map(d => d.bairro).filter(Boolean))].sort();
+    }
     dbCarregado = true;
     mostrarLoading(false);
     atualizarNavCounts();
     configurarNavPorRole();
     trocarZona(isAdminUser() ? 'todas' : (currentUserRole?.region || 'norte'));
     abrirDashboardInicial();
-    toast('⚠️ Usando dados locais — sem conexão com banco', true);
+    if (isAdminUser()) toast('⚠️ Usando dados locais — sem conexão com banco', true);
   }
 }
 
@@ -433,8 +441,12 @@ function trocarZona(z) {
   zonaAtual = z;
   const cfg = z === 'todas' ? { label: 'Todas as Regiões', cor: '#e8433a' } : ZONAS_CFG[z];
 
-  // Update topbar
-  document.getElementById('zTitle').textContent = cfg.label;
+  // Update topbar — appends zona number for regional coordinators
+  let titulo = cfg.label;
+  if (!isAdminUser() && currentUserRole?.zona && z === currentUserRole?.region) {
+    titulo += ' · ' + currentUserRole.zona;
+  }
+  document.getElementById('zTitle').textContent = titulo;
   document.getElementById('zBadge').style.background = cfg.cor;
   document.documentElement.style.setProperty('--accent', cfg.cor);
 
