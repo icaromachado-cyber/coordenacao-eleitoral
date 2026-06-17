@@ -630,7 +630,9 @@ function getDados() {
 }
 
 function norm(s) {
-  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if (s === null || s === undefined) return '';
+  if (typeof s !== 'string') s = String(s);
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
 async function carregarCoordFiltro() {
@@ -3218,11 +3220,19 @@ async function sincronizarCAsCoord() {
     msgEl.style.color = '#4ade80';
     msgEl.textContent = `✅ ${criados} CA(s) criado(s). ${jaExistem} já existia(m).`;
     toast(`✅ Sincronização concluída — ${criados} CA(s) criado(s)`);
-    await carregarDoFirebase();
 
   } catch(e) {
     msgEl.style.color = 'var(--danger)';
     msgEl.textContent = 'Erro: ' + e.message;
+    console.error('[sincronizarCAsCoord]', e);
+    return;
+  }
+
+  // Recarrega fora do try para não confundir erros de render com erros de sync
+  try {
+    await carregarDoFirebase();
+  } catch(e2) {
+    console.error('[sincronizarCAsCoord] carregarDoFirebase falhou:', e2);
   }
 }
 
