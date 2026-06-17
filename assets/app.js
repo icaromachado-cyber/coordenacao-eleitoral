@@ -3290,11 +3290,14 @@ async function repararCriadoPorCAs() {
 
     caSnap.docs.forEach(doc => {
       const ca = doc.data();
-      // Encontra o usuário com mesma região (zona é opcional — região já é suficiente para CAs únicos por região)
-      const dono = coordUsers.find(u =>
-        u.region === ca._zona &&
-        (!ca._coordZona || !u.zona || u.zona === ca._coordZona)
-      ) || coordUsers.find(u => u.region === ca._zona);
+      const caNome0 = norm((ca.nome || '').split(' ')[0]); // primeiro nome normalizado
+
+      // 1ª tentativa: região + zona exata
+      let dono = coordUsers.find(u => u.region === ca._zona && u.zona && u.zona === ca._coordZona);
+      // 2ª tentativa: região + primeiro nome
+      if (!dono) dono = coordUsers.find(u => u.region === ca._zona && norm((u.name||'').split(' ')[0]) === caNome0);
+      // 3ª tentativa: só primeiro nome (independente de zona)
+      if (!dono) dono = coordUsers.find(u => norm((u.name||'').split(' ')[0]) === caNome0);
 
       if (!dono) return;
       if (ca._criadoPor === dono.uid) return; // já correto
