@@ -768,33 +768,42 @@ function abrirModal(id, zona) {
   const flds = ['f-tipo','f-zona','f-nome','f-tel','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
 
   if (id === null) {
-    flds.forEach(f => { const el=document.getElementById(f); if(el.tagName==='SELECT') el.value=(f==='f-zona'?(_editZona==='todas'?'norte':_editZona):'M'); else el.value=''; });
+    flds.forEach(f => {
+      const el=document.getElementById(f);
+      if (!el) return;
+      if (el.tagName === 'SELECT') {
+        el.value = (f==='f-zona'?(_editZona==='todas'?'norte':_editZona):'M');
+      } else {
+        el.value = '';
+      }
+    });
   } else {
     const d = DB[_editZona].find(x=>x.id===id);
     if (!d) return;
-    document.getElementById('f-tipo').value = d.tipo||'M';
-    document.getElementById('f-zona').value = _editZona;
-    document.getElementById('f-nome').value = d.nome||'';
-    document.getElementById('f-tel').value = d.telefone||'';
-    document.getElementById('f-bairro').value = d.bairro||'';
-    document.getElementById('f-end').value = d.endereco||'';
-    document.getElementById('f-votos').value = d.votos||'';
-    document.getElementById('f-jul').value = d.custo_jul||'';
-    document.getElementById('f-ago').value = d.custo_ago||'';
-    document.getElementById('f-set').value = d.custo_set||'';
-    document.getElementById('f-out').value = d.custo_out||'';
-    document.getElementById('f-total').value = d.total||'';
-    document.getElementById('f-status').value = d.status||'ativo';
-    document.getElementById('f-reuniao').value = d.reuniao_feita||'nao';
-    document.getElementById('f-reuniao-data').value = d.reuniao_data||'';
-    document.getElementById('f-colegio').value = d.colegio||'';
-    document.getElementById('f-secao').value = d.secao||'';
-    document.getElementById('f-zona-el').value = d.zona_eleitoral||'';
+    const setIf = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    setIf('f-tipo', d.tipo||'M');
+    setIf('f-zona', _editZona);
+    setIf('f-nome', d.nome||'');
+    setIf('f-tel', d.telefone||'');
+    setIf('f-bairro', d.bairro||'');
+    setIf('f-end', d.endereco||'');
+    setIf('f-votos', d.votos||'');
+    setIf('f-jul', d.custo_jul||'');
+    setIf('f-ago', d.custo_ago||'');
+    setIf('f-set', d.custo_set||'');
+    setIf('f-out', d.custo_out||'');
+    setIf('f-total', d.total||'');
+    setIf('f-status', d.status||'ativo');
+    setIf('f-reuniao', d.reuniao_feita||'nao');
+    setIf('f-reuniao-data', d.reuniao_data||'');
+    setIf('f-colegio', d.colegio||'');
+    setIf('f-secao', d.secao||'');
+    setIf('f-zona-el', d.zona_eleitoral||'');
     // Carrega hierarquia
     atualizarCamposHierarquia();
     setTimeout(() => {
-      document.getElementById('f-coord-area').value = d.coord_area_id||'';
-      document.getElementById('f-lider').value = d.lider_id||'';
+      const ca = document.getElementById('f-coord-area'); if (ca) ca.value = d.coord_area_id||'';
+      const fl = document.getElementById('f-lider'); if (fl) fl.value = d.lider_id||'';
     }, 50);
   }
   if (id === null) atualizarCamposHierarquia();
@@ -822,13 +831,14 @@ function salvar() {
     reuniao_feita: document.getElementById('f-reuniao').value || 'nao',
     reuniao_data: document.getElementById('f-reuniao-data').value || ''
   };
+  const safeVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
   const numeric = {
-    votos: parseNonNegativeNumber(document.getElementById('f-votos').value, 'Apoios'),
-    custo_jul: parseNonNegativeNumber(document.getElementById('f-jul').value, 'Recurso de julho'),
-    custo_ago: parseNonNegativeNumber(document.getElementById('f-ago').value, 'Recurso de agosto'),
-    custo_set: parseNonNegativeNumber(document.getElementById('f-set').value, 'Recurso de setembro'),
-    custo_out: parseNonNegativeNumber(document.getElementById('f-out').value, 'Recurso de outubro'),
-    total: parseNonNegativeNumber(document.getElementById('f-total').value, 'Total aplicado')
+    votos: parseNonNegativeNumber(safeVal('f-votos'), 'Apoios'),
+    custo_jul: parseNonNegativeNumber(safeVal('f-jul'), 'Recurso de julho'),
+    custo_ago: parseNonNegativeNumber(safeVal('f-ago'), 'Recurso de agosto'),
+    custo_set: parseNonNegativeNumber(safeVal('f-set'), 'Recurso de setembro'),
+    custo_out: parseNonNegativeNumber(safeVal('f-out'), 'Recurso de outubro'),
+    total: parseNonNegativeNumber(safeVal('f-total'), 'Total aplicado')
   };
   const errors = [
     ...validateRecordInput(raw),
