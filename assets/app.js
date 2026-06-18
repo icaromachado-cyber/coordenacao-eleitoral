@@ -297,6 +297,16 @@ let zonaAtual = 'norte';
 let coordFiltroAtivo = null; // uid do coordenador selecionado no nav lateral
 let _coordZonaFiltro = '';   // zona do coordenador (ex: '01') para filtro secundário
 let _coordZonaRegiao = '';   // região do coordenador (ex: 'norte')
+
+// Retorna o _coordZona mais baixo (primeira zona) de uma região — recebe registros sem _coordZona
+function _primeiraZonaDeRegiao(region) {
+  if (!region) return '';
+  const zonas = (DB[region] || [])
+    .map(r => r._coordZona)
+    .filter(Boolean)
+    .sort();
+  return zonas[0] || '01'; // fallback '01'
+}
 let filtrado = [];
 let sortCol = 'id';
 let sortAsc = true;
@@ -461,15 +471,14 @@ function verRegiaoTotal(region, color, label) {
 }
 
 function selecionarCoord(uid, region, zona, nome, color) {
-  // Define filtro de zona ANTES do trocarZona (que vai chamar aplicarFiltros)
-  _coordZonaFiltro = zona || '';
-  _coordZonaRegiao = region || '';
-
-  // Navega para a zona — chama aplicarFiltros internamente
+  // trocarZona reseta _coordZonaFiltro e chama aplicarFiltros sem o filtro
   if (region) trocarZona(region);
 
-  // Ajusta estado e UI APÓS trocarZona (que reseta coordFiltroAtivo e título)
+  // Re-aplica o filtro de zona do coordenador APÓS trocarZona
+  _coordZonaFiltro = zona || '';
+  _coordZonaRegiao = region || '';
   coordFiltroAtivo = uid;
+
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('nav-coord-' + uid)?.classList.add('active');
 
@@ -478,6 +487,7 @@ function selecionarCoord(uid, region, zona, nome, color) {
   document.getElementById('zBadge').style.background = cor;
   document.documentElement.style.setProperty('--accent', cor);
   pg = 1;
+  aplicarFiltros(); // agora com _coordZonaFiltro definido
 }
 
 function atualizarNavCoordCounts() {
@@ -738,11 +748,14 @@ function aplicarFiltros() {
 
   filtrado = getDados().filter(d => {
     const mn = norm(d.nome), mb = norm(d.bairro), mt = (d.telefone||'').toLowerCase();
-    // Filtro por coord: quando admin seleciona coordenador no sidebar, usa zona (_coordZona)
-    // O filtro de UID (coord) só é usado para usuários não-admin via select
     const passaCoord = !coord || d._criadoPor === coord;
-    // Filtro secundário por zona do coordenador (quando selecionado via sidebar)
-    const passaCoordZona = !_coordZonaFiltro || !d._coordZona || d._coordZona === _coordZonaFiltro;
+    // Filtro por _coordZona: se o registro tem _coordZona, exige match exato
+    // Se não tem _coordZona, só aceita quando o filtro é o menor da zona (primeiro CA = "dono" dos não-marcados)
+    const passaCoordZona = !_coordZonaFiltro || (
+      d._coordZona
+        ? d._coordZona === _coordZonaFiltro
+        : _coordZonaFiltro === _primeiraZonaDeRegiao(_coordZonaRegiao)
+    );
     return (!q || mn.includes(q) || mb.includes(q) || mt.includes(q))
         && (!tipo || d.tipo === tipo)
         && (!bairro || d.bairro === bairro)
