@@ -1733,19 +1733,29 @@ function renderArvore() {
   const caLidsMap = new Map();
   const assignedLids = new Set();
 
-  // Primeiro, atribui por coord_area_id (vínculo explícito)
+  // Coleta todos os IDs válidos dos CAs (fireId + id customizado)
+  const allCaIds = new Set();
+  coords.forEach(ca => {
+    if (ca._fireId) allCaIds.add(ca._fireId);
+    if (ca.id) allCaIds.add(String(ca.id));
+  });
+
+  // Primeiro, atribui por coord_area_id (vínculo explícito e válido)
   coords.forEach(ca => {
     const caId = ca._fireId || String(ca.id);
-    const byLink = liderancas.filter(l => l.coord_area_id === caId);
+    const byLink = liderancas.filter(l =>
+      l.coord_area_id === caId ||
+      (l.coord_area_id && l.coord_area_id === String(ca.id))
+    );
     byLink.forEach(l => assignedLids.add(l._fireId || String(l.id)));
     caLidsMap.set(caId, byLink);
   });
 
-  // Depois, atribui não-vinculados por zona (fallback para dados importados)
+  // Fallback por zona: inclui registros sem coord_area_id OU com coord_area_id inválido (CA não existe mais)
   const casPorZona = {};
   coords.forEach(ca => { (casPorZona[ca._zona] = casPorZona[ca._zona] || []).push(ca); });
 
-  liderancas.filter(l => !l.coord_area_id).forEach(l => {
+  liderancas.filter(l => !l.coord_area_id || !allCaIds.has(l.coord_area_id)).forEach(l => {
     const lKey = l._fireId || String(l.id);
     if (assignedLids.has(lKey)) return;
     const casNaZona = casPorZona[l._zona] || [];
