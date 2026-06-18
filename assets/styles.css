@@ -1070,12 +1070,20 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 /* DASHBOARD VIEW */
 .dashboard-area {
   display: block;
+  flex-shrink: 0;
   background: var(--bg);
-  padding: 12px 18px 4px;
+  padding: 8px 18px 6px;
   border-bottom: 1px solid var(--border);
 }
 
+.dashboard-area .dashboard-header { display: none; }
+.dashboard-area .dashboard-panels { display: none; }
+
 .dashboard-area.active { display: block; }
+
+/* Modo expandido (árvore/mapa fechados) mostra tudo */
+.dashboard-area.expanded .dashboard-header { display: flex; }
+.dashboard-area.expanded .dashboard-panels { display: grid; }
 
 .dashboard-header {
   display: flex;
@@ -1103,10 +1111,18 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 0;
 }
+
+/* Cards compactos no modo inline (acima da tabela) */
+.dashboard-area:not(.expanded) .dashboard-card {
+  padding: 8px 12px 8px 16px;
+}
+.dashboard-area:not(.expanded) .dashboard-card-label { font-size: .68rem; }
+.dashboard-area:not(.expanded) .dashboard-card-value { font-size: 1.3rem; margin: 1px 0; }
+.dashboard-area:not(.expanded) .dashboard-card-sub   { font-size: .65rem; }
 
 .dashboard-card,
 .dashboard-panel {
