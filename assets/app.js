@@ -488,6 +488,7 @@ function selecionarCoord(uid, region, zona, nome, color) {
   document.documentElement.style.setProperty('--accent', cor);
   pg = 1;
   aplicarFiltros(); // agora com _coordZonaFiltro definido
+  if (treeView) renderArvore();
 }
 
 function atualizarNavCoordCounts() {
@@ -1721,7 +1722,11 @@ function renderArvore() {
     </div>`;
   }
 
-  // Pré-computa quais lideranças pertencem a cada CA
+  // Se um coordenador específico está selecionado, mostra só o CA dele
+  if (_coordZonaFiltro && zonaAtual !== 'todas') {
+    coords = coords.filter(ca => !ca._coordZona || ca._coordZona === _coordZonaFiltro);
+  }
+
   // Ordena CAs por _coordZona para que o fallback atribua ao menor (primeiro) da zona
   coords.sort((a, b) => (a._coordZona||'').localeCompare(b._coordZona||''));
 
