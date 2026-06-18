@@ -1118,7 +1118,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 /* DASHBOARD VIEW */
 .dashboard-area {
-  display: block;
+  display: none;
   flex-shrink: 0;
   background: var(--bg);
   padding: 8px 18px 6px;
