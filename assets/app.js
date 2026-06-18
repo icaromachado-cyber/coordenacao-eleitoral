@@ -2777,6 +2777,15 @@ function handleActionClick(event) {
       fecharMapPopup();
       verDrawer(id, ds.zona);
       break;
+    case 'toggle-relatorio':
+      toggleRelatorioView();
+      break;
+    case 'toggle-tree':
+      toggleTreeView();
+      break;
+    case 'toggle-map':
+      toggleMapView();
+      break;
     default:
       return;
   }

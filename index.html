@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=20260618b">
+<link rel="stylesheet" href="assets/styles.css?v=20260618c">
 <!-- Firebase SDK (compat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -143,9 +143,9 @@
         <summary>Ferramentas</summary>
         <div class="tools-menu-list">
           <button class="btn btn-import" id="btnFinanceiro">💰 Financeiro</button>
-          <button class="btn btn-import" id="btnRelatorioToggle" onclick="toggleRelatorioView()">📊 Relatório</button>
-          <button class="btn btn-import" id="btnTreeToggle" onclick="toggleTreeView()">🌳 Árvore</button>
-          <button class="btn btn-import" id="btnMapToggle" onclick="toggleMapView()">🗺️ Mapa</button>
+          <button class="btn btn-import" id="btnRelatorioToggle" data-action="toggle-relatorio">📊 Relatório</button>
+          <button class="btn btn-import" id="btnTreeToggle" data-action="toggle-tree">🌳 Árvore</button>
+          <button class="btn btn-import" id="btnMapToggle" data-action="toggle-map">🗺️ Mapa</button>
           <label class="btn btn-import" title="Importar planilha desta região">
             📥 <span>Importar</span>
             <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
@@ -492,7 +492,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
-<script src="assets/app.js?v=20260618b"></script>
+<script src="assets/app.js?v=20260618c"></script>
 <!-- MODAL SELEÇÃO DE CAMPANHAS -->
 <div class="modal-camps-sel" id="modalCampsSel">
   <div class="modal-camps-sel-box">
