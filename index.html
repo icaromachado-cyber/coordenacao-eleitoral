@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=20260618d">
+<link rel="stylesheet" href="assets/styles.css?v=20260618e">
 <!-- Firebase SDK (compat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -134,9 +134,9 @@
     </div>
     <div class="topbar-actions">
       <button class="btn-tree-toggle" id="btnTheme" title="Alternar tema">☀️</button>
-      <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" data-action="toggle-relatorio" title="Relatório Financeiro">📊</button>
-      <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" data-action="toggle-tree" title="Árvore de equipe">🌳</button>
-      <button class="btn btn-import topbar-view-btn" id="btnMapToggle" data-action="toggle-map" title="Mapa">🗺️</button>
+      <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" title="Relatório Financeiro">📊</button>
+      <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" title="Árvore de equipe">🌳</button>
+      <button class="btn btn-import topbar-view-btn" id="btnMapToggle" title="Mapa">🗺️</button>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">?</div>
         <span class="user-email" id="userEmail"></span>
@@ -492,7 +492,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
-<script src="assets/app.js?v=20260618d"></script>
+<script src="assets/app.js?v=20260618e"></script>
+<script>
+  // Bind direto — independente de DOMContentLoaded ou data-action
+  document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
+  document.getElementById('btnTreeToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleTreeView(); });
+  document.getElementById('btnMapToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleMapView(); });
+</script>
 <!-- MODAL SELEÇÃO DE CAMPANHAS -->
 <div class="modal-camps-sel" id="modalCampsSel">
   <div class="modal-camps-sel-box">
