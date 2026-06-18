@@ -389,14 +389,35 @@ body {
   .strip-sub   { font-size: .6rem; }
 
   .topbar { padding: 0 10px; gap: 8px; height: 52px; }
-  .zone-title h2 { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-  .topbar-actions { gap: 5px; }
+  .zone-title { flex: 1; min-width: 0; overflow: hidden; }
+  .zone-title h2 { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-actions { gap: 5px; flex-shrink: 0; }
   .btn-logout { display: none; }
   .tools-menu summary { font-size: .75rem; padding: 6px 8px; }
   .zone-badge { display: none; }
 
   /* Dashboard oculto no mobile — summary-strip já mostra os totais */
   .dashboard-area { display: none !important; }
+
+  /* Tabela: esconde colunas menos importantes no mobile */
+  table th:nth-child(6),  /* Ponto */
+  table td:nth-child(6),
+  table th:nth-child(7),  /* Seção */
+  table td:nth-child(7),
+  table th:nth-child(8),  /* Cód. */
+  table td:nth-child(8),
+  table th:nth-child(10), /* Reunião */
+  table td:nth-child(10),
+  table th:nth-child(12), /* Jul */
+  table td:nth-child(12),
+  table th:nth-child(13), /* Ago */
+  table td:nth-child(13),
+  table th:nth-child(14), /* Set */
+  table td:nth-child(14),
+  table th:nth-child(15), /* Out */
+  table td:nth-child(15),
+  table th:nth-child(16), /* Total */
+  table td:nth-child(16) { display: none; }
 }
 
 /* CONTROLS */

@@ -1167,7 +1167,8 @@ function fecharModal(e) {
 
 function getNextId(zona) {
   const arr = DB[zona];
-  return arr.length ? Math.max(...arr.map(d=>d.id)) + 1 : 1;
+  const nums = arr.map(d => +d.id).filter(n => Number.isFinite(n) && n > 0);
+  return nums.length ? Math.max(...nums) + 1 : 1;
 }
 
 function salvar() {
@@ -1341,7 +1342,13 @@ const VINCULOS_PLANILHA = {"EDNA MARIA DA SILVA SOUSA": ["MARIA SOLIDADE FERNAND
 const RAIANE_NOME = 'SHÉLYDA RAIANE RODRIGUES MACHADO (EMPREGADO)';
 
 async function migrarVinculos() {
-  // Sempre roda para garantir vínculos completos
+  // Verifica em memória se há registros sem vínculo antes de ler o Firestore
+  const semVinculo = Object.values(DB).flat()
+    .filter(d => ['L','LE','M','ME'].includes(d.tipo) && !d.coord_area_id);
+  if (semVinculo.length === 0) {
+    console.log('[migrarVinculos] Todos já têm vínculos — pulando.');
+    return;
+  }
   await migrarVinculosForce();
 }
 
