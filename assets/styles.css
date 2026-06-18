@@ -1112,6 +1112,24 @@ body.theme-light .fin-table tfoot td { background: rgba(0,0,0,.02); }
 .orphan-name { flex: 1; color: var(--text); }
 .orphan-bairro { color: var(--muted); font-size: .72rem; }
 
+.topbar-view-btn {
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+  border-radius: 8px !important;
+  padding: 7px 10px !important;
+  font-size: 1rem !important;
+  min-width: unset !important;
+  flex-shrink: 0;
+}
+.topbar-view-btn.active {
+  background: rgba(59,130,246,.15) !important;
+  border-color: rgba(59,130,246,.4) !important;
+  color: #3b82f6 !important;
+}
+body.theme-light .topbar-view-btn { background: #f0f2f8 !important; border-color: #dde1ee !important; color: #7880a0 !important; }
+body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !important; color: #3b82f6 !important; }
+
 .btn-tree-toggle {
   background: rgba(255,255,255,.06);
   border: 1px solid var(--border);
