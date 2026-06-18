@@ -2645,9 +2645,7 @@ function bindStaticEvents() {
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
   on('btnDashboardClose', 'click', closeDashboardView);
-  on('btnRelatorioToggle', 'click', toggleRelatorioView);
-  on('btnTreeToggle', 'click', toggleTreeView);
-  on('btnMapToggle', 'click', toggleMapView);
+  // btnRelatorioToggle, btnTreeToggle, btnMapToggle são bindados inline no HTML
   on('btnLogout', 'click', fazerLogout);
   on('importFile', 'change', importarArquivo);
   on('btnExport', 'click', exportarDados);
