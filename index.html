@@ -325,6 +325,17 @@
       <h3>📊 Relatório Financeiro</h3>
       <div id="relatorioStats" style="font-size:.78rem;color:var(--muted)"></div>
     </div>
+    <div class="rel-filter-bar">
+      <div class="rel-zone-pills">
+        <button class="rel-zpill active" data-zona="">Todas</button>
+        <button class="rel-zpill" data-zona="norte"   style="--zc:#ef4444">● Norte</button>
+        <button class="rel-zpill" data-zona="leste"   style="--zc:#3b82f6">● Leste</button>
+        <button class="rel-zpill" data-zona="sul"     style="--zc:#22c55e">● Sul</button>
+        <button class="rel-zpill" data-zona="sudeste" style="--zc:#a855f7">● Sudeste</button>
+        <button class="rel-zpill" data-zona="rural"   style="--zc:#f59e0b">● Rural</button>
+      </div>
+      <input class="rel-search" type="text" id="relSearch" placeholder="🔍 Buscar pessoa…">
+    </div>
     <div id="relatorioContent"></div>
   </div>
 

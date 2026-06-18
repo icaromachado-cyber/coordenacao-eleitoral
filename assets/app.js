@@ -1646,6 +1646,16 @@ function renderDashboard() {
 // ===================== ÁRVORE HIERÁRQUICA =====================
 let treeView = false;
 let relatorioView = false;
+let _relFiltroZona = '';
+let _relFiltroPessoa = '';
+
+function setRelZona(zona) {
+  _relFiltroZona = zona;
+  document.querySelectorAll('.rel-zpill').forEach(b => {
+    b.classList.toggle('active', b.dataset.zona === zona);
+  });
+  renderRelatorioFinanceiro();
+}
 
 function _fecharRelatorio() {
   if (!relatorioView) return;
@@ -1709,7 +1719,10 @@ function _toggleRelatorioViewInner() {
 }
 
 function renderRelatorioFinanceiro() {
-  const dados = getDados();
+  const pessoaQ = norm(_relFiltroPessoa || '');
+  const dados = getDados()
+    .filter(d => !_relFiltroZona || d._zona === _relFiltroZona)
+    .filter(d => !pessoaQ || norm(d.nome || '').includes(pessoaQ));
   const R = (v) => v ? 'R$ ' + Number(v).toLocaleString('pt-BR') : '—';
   const RCAP = { norte:'Norte', leste:'Leste', sul:'Sul', sudeste:'Sudeste', rural:'Rural' };
   const RCOR = { norte:'#ef4444', leste:'#3b82f6', sul:'#22c55e', sudeste:'#a855f7', rural:'#f59e0b' };
@@ -2687,6 +2700,10 @@ function bindStaticEvents() {
   on('filtro-bairro', 'change', () => { pg = 1; aplicarFiltros(); });
   on('filtro-coord', 'change', () => { pg = 1; aplicarFiltros(); });
   on('treeSearch', 'input', renderArvore);
+  on('relSearch', 'input', e => { _relFiltroPessoa = e.target.value; renderRelatorioFinanceiro(); });
+  document.querySelectorAll('.rel-zpill').forEach(b =>
+    b.addEventListener('click', () => setRelZona(b.dataset.zona))
+  );
   on('loginBtn', 'click', fazerLogin);
   on('mobOverlay', 'click', toggleSidebar);
 
