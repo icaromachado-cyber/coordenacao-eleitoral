@@ -1710,94 +1710,148 @@ function _toggleRelatorioViewInner() {
 
 function renderRelatorioFinanceiro() {
   const dados = getDados();
-  const fmtR = v => v ? 'R$ ' + Number(v).toLocaleString('pt-BR') : '<span style="color:var(--muted)">—</span>';
-  const RCAP  = { norte:'Norte', leste:'Leste', sul:'Sul', sudeste:'Sudeste', rural:'Rural' };
-  const RCOR  = { norte:'#ef4444', leste:'#3b82f6', sul:'#22c55e', sudeste:'#a855f7', rural:'#f59e0b' };
+  const R = (v) => v ? 'R$ ' + Number(v).toLocaleString('pt-BR') : '—';
+  const RCAP = { norte:'Norte', leste:'Leste', sul:'Sul', sudeste:'Sudeste', rural:'Rural' };
+  const RCOR = { norte:'#ef4444', leste:'#3b82f6', sul:'#22c55e', sudeste:'#a855f7', rural:'#f59e0b' };
+  const TCOR = { CA:'#fb923c', L:'#3b82f6', M:'#22c55e', LE:'#a855f7', ME:'#eab308' };
 
-  // Agrupa por coordenador (zona+coordZona)
   const grupos = new Map();
-
   dados.forEach(d => {
-    const key = `${d._zona}||${d._coordZona || ''}||${d._coordNome || ''}`;
-    if (!grupos.has(key)) {
-      grupos.set(key, {
-        zona: d._zona, coordZona: d._coordZona || '', coordNome: d._coordNome || '',
-        total_reg: 0, apoios: 0, jul: 0, ago: 0, set: 0, out: 0, total: 0
-      });
-    }
+    const key = `${d._zona}||${d._coordZona||''}||${d._coordNome||''}`;
+    if (!grupos.has(key)) grupos.set(key, {
+      zona: d._zona, coordZona: d._coordZona||'', coordNome: d._coordNome||'',
+      total_reg:0, apoios:0, jul:0, ago:0, set:0, out:0, total:0, membros:[]
+    });
     const g = grupos.get(key);
-    g.total_reg++;
-    g.apoios += d.votos   || 0;
-    g.jul    += d.custo_jul || 0;
-    g.ago    += d.custo_ago || 0;
-    g.set    += d.custo_set || 0;
-    g.out    += d.custo_out || 0;
-    g.total  += d.total   || 0;
+    g.total_reg++; g.apoios += d.votos||0;
+    g.jul += d.custo_jul||0; g.ago += d.custo_ago||0;
+    g.set += d.custo_set||0; g.out += d.custo_out||0;
+    g.total += d.total||0;
+    g.membros.push(d);
   });
 
-  const rows = [...grupos.values()].sort((a, b) => {
-    if (a.zona !== b.zona) return a.zona.localeCompare(b.zona);
-    return a.coordZona.localeCompare(b.coordZona);
-  });
+  const rows = [...grupos.values()].sort((a,b) =>
+    a.zona !== b.zona ? a.zona.localeCompare(b.zona) : a.coordZona.localeCompare(b.coordZona)
+  );
 
-  const tot = rows.reduce((t, r) => ({
-    total_reg: t.total_reg + r.total_reg, apoios: t.apoios + r.apoios,
-    jul: t.jul + r.jul, ago: t.ago + r.ago,
-    set: t.set + r.set, out: t.out + r.out, total: t.total + r.total
-  }), { total_reg: 0, apoios: 0, jul: 0, ago: 0, set: 0, out: 0, total: 0 });
+  const tot = rows.reduce((t,r) => ({
+    apoios: t.apoios+r.apoios, jul: t.jul+r.jul, ago: t.ago+r.ago,
+    set: t.set+r.set, out: t.out+r.out, total: t.total+r.total
+  }), {apoios:0, jul:0, ago:0, set:0, out:0, total:0});
 
   document.getElementById('relatorioStats').textContent =
-    `${rows.length} coordenadores · ${tot.total_reg} registros · Total: R$ ${tot.total.toLocaleString('pt-BR')}`;
+    `${rows.length} coordenadores · ${dados.length} registros · Total: R$ ${tot.total.toLocaleString('pt-BR')}`;
 
-  let html = `<div style="overflow-x:auto;padding:0 20px 40px">
-  <table class="fin-table">
-    <thead><tr>
-      <th>Coordenador</th>
-      <th style="text-align:center">Reg.</th>
-      <th style="text-align:right">Apoios</th>
-      <th style="text-align:right">Julho</th>
-      <th style="text-align:right">Agosto</th>
-      <th style="text-align:right">Setembro</th>
-      <th style="text-align:right">Outubro</th>
-      <th style="text-align:right">Total</th>
-    </tr></thead>
-    <tbody>`;
+  const meses = [
+    {label:'Julho',    val:tot.jul, cor:'#3b82f6'},
+    {label:'Agosto',   val:tot.ago, cor:'#8b5cf6'},
+    {label:'Setembro', val:tot.set, cor:'#ec4899'},
+    {label:'Outubro',  val:tot.out, cor:'#f59e0b'},
+  ];
+  const maxM = Math.max(...meses.map(m=>m.val), 1);
 
-  rows.forEach(r => {
-    const cor   = RCOR[r.zona] || '#888';
-    const reg   = RCAP[r.zona] || r.zona;
-    const nome  = r.coordNome || 'Sem coordenador';
-    const sub   = r.coordZona ? `${reg} · Zona ${r.coordZona}` : reg;
-    html += `<tr>
-      <td>
-        <div style="font-weight:600;font-size:.85rem">${h(nome)}</div>
-        <div style="font-size:.68rem;color:${cor};margin-top:2px">${sub}</div>
-      </td>
-      <td style="text-align:center;color:var(--muted);font-size:.82rem">${r.total_reg}</td>
-      <td style="text-align:right;color:#3b82f6;font-weight:600">${r.apoios || '<span style="color:var(--muted)">—</span>'}</td>
-      <td style="text-align:right">${fmtR(r.jul)}</td>
-      <td style="text-align:right">${fmtR(r.ago)}</td>
-      <td style="text-align:right">${fmtR(r.set)}</td>
-      <td style="text-align:right">${fmtR(r.out)}</td>
-      <td style="text-align:right;font-weight:700;color:${r.total > 0 ? '#22c55e' : 'var(--muted)'}">${fmtR(r.total)}</td>
-    </tr>`;
+  let html = `<div class="fin-wrap">
+  <div class="fin-top">
+    <div class="fin-month-cards">
+      ${meses.map(m=>`
+      <div class="fin-mc">
+        <div class="fin-mc-lbl">${m.label}</div>
+        <div class="fin-mc-val" style="color:${m.cor}">${R(m.val)}</div>
+      </div>`).join('')}
+      <div class="fin-mc fin-mc-total">
+        <div class="fin-mc-lbl">Total Geral</div>
+        <div class="fin-mc-val" style="color:#22c55e">${R(tot.total)}</div>
+      </div>
+      <div class="fin-mc">
+        <div class="fin-mc-lbl">Apoios</div>
+        <div class="fin-mc-val" style="color:#3b82f6">${tot.apoios.toLocaleString('pt-BR')}</div>
+      </div>
+    </div>
+    <div class="fin-chart-box">
+      <div class="fin-chart">
+        ${meses.map(m=>{
+          const pct = Math.round((m.val/maxM)*110);
+          return `<div class="fin-bar-col">
+            <div class="fin-bv">${R(m.val)}</div>
+            <div class="fin-bar" style="height:${Math.max(pct,4)}px;background:${m.cor}"></div>
+            <div class="fin-bl">${m.label.slice(0,3)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="fin-accordion">`;
+
+  rows.forEach((r,idx) => {
+    const cor  = RCOR[r.zona]||'#888';
+    const reg  = RCAP[r.zona]||r.zona;
+    const nome = r.coordNome||'Sem coordenador';
+    const sub  = r.coordZona ? `${reg} · Zona ${r.coordZona}` : reg;
+    const key  = `fac${idx}`;
+
+    const TORD = {CA:0,L:1,LE:2,M:3,ME:4};
+    const memRows = r.membros
+      .sort((a,b)=>(TORD[a.tipo]??9)-(TORD[b.tipo]??9))
+      .map(m=>`<tr>
+        <td><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></td>
+        <td style="font-weight:500;font-size:.83rem">${h(m.nome||'—')}</td>
+        <td style="text-align:center;color:#3b82f6;font-size:.8rem">${m.votos||'—'}</td>
+        <td style="text-align:right;font-size:.78rem">${m.custo_jul?R(m.custo_jul):'<span style="color:var(--muted)">—</span>'}</td>
+        <td style="text-align:right;font-size:.78rem">${m.custo_ago?R(m.custo_ago):'<span style="color:var(--muted)">—</span>'}</td>
+        <td style="text-align:right;font-size:.78rem">${m.custo_set?R(m.custo_set):'<span style="color:var(--muted)">—</span>'}</td>
+        <td style="text-align:right;font-size:.78rem">${m.custo_out?R(m.custo_out):'<span style="color:var(--muted)">—</span>'}</td>
+        <td style="text-align:right;font-size:.8rem;font-weight:${m.total?700:400};color:${m.total>0?'#22c55e':'var(--muted)'}">
+          ${m.total?R(m.total):'—'}</td>
+      </tr>`).join('');
+
+    html += `
+    <div class="fin-acc-item">
+      <div class="fin-acc-hd" onclick="toggleFinCoord('${key}')">
+        <div class="fin-acc-left">
+          <span class="fin-acc-dot" style="background:${cor}"></span>
+          <div>
+            <div class="fin-acc-nome">${h(nome)}</div>
+            <div class="fin-acc-sub" style="color:${cor}">${sub}</div>
+          </div>
+        </div>
+        <div class="fin-acc-stats">
+          <span class="fin-acc-s"><em>Reg.</em>${r.total_reg}</span>
+          <span class="fin-acc-s" style="color:#3b82f6"><em>Apoios</em>${r.apoios||'—'}</span>
+          <span class="fin-acc-s"><em>Jul</em>${R(r.jul)}</span>
+          <span class="fin-acc-s"><em>Ago</em>${R(r.ago)}</span>
+          <span class="fin-acc-s"><em>Set</em>${R(r.set)}</span>
+          <span class="fin-acc-s"><em>Out</em>${R(r.out)}</span>
+          <span class="fin-acc-total" style="color:${r.total>0?'#22c55e':'var(--muted)'}">
+            ${r.total?R(r.total):'—'}</span>
+          <span class="fin-acc-arrow" id="${key}-arr">▶</span>
+        </div>
+      </div>
+      <div class="fin-acc-body" id="${key}">
+        <table class="fin-mem-table">
+          <thead><tr>
+            <th>Tipo</th><th>Nome</th><th style="text-align:center">Apoios</th>
+            <th style="text-align:right">Jul</th><th style="text-align:right">Ago</th>
+            <th style="text-align:right">Set</th><th style="text-align:right">Out</th>
+            <th style="text-align:right">Total</th>
+          </tr></thead>
+          <tbody>${memRows}</tbody>
+        </table>
+      </div>
+    </div>`;
   });
 
-  html += `</tbody>
-    <tfoot><tr>
-      <td style="font-weight:700">TOTAL GERAL</td>
-      <td style="text-align:center;font-weight:700">${tot.total_reg}</td>
-      <td style="text-align:right;font-weight:700;color:#3b82f6">${tot.apoios.toLocaleString('pt-BR')}</td>
-      <td style="text-align:right;font-weight:700">${fmtR(tot.jul)}</td>
-      <td style="text-align:right;font-weight:700">${fmtR(tot.ago)}</td>
-      <td style="text-align:right;font-weight:700">${fmtR(tot.set)}</td>
-      <td style="text-align:right;font-weight:700">${fmtR(tot.out)}</td>
-      <td style="text-align:right;font-weight:800;font-size:1rem;color:#22c55e">R$ ${tot.total.toLocaleString('pt-BR')}</td>
-    </tr></tfoot>
-  </table></div>`;
-
+  html += `</div></div>`;
   document.getElementById('relatorioContent').innerHTML = html;
 }
+
+function toggleFinCoord(key) {
+  const body  = document.getElementById(key);
+  const arrow = document.getElementById(key+'-arr');
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (arrow) arrow.textContent = open ? '▼' : '▶';
+}
+
 
 function toggleTreeView() {
   // Fecha mapa se estiver aberto
