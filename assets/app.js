@@ -1717,10 +1717,12 @@ function renderRelatorioFinanceiro() {
 
   const grupos = new Map();
   dados.forEach(d => {
-    const key = `${d._zona}||${d._coordZona||''}||${d._coordNome||''}`;
+    // Agrupa só por zona+coordZona — ignora variações do nome (SHELYDA vs SHELYDA RAIANE)
+    const key = `${d._zona}||${d._coordZona||'sem-coord'}`;
     if (!grupos.has(key)) grupos.set(key, {
-      zona: d._zona, coordZona: d._coordZona||'', coordNome: d._coordNome||'',
-      total_reg:0, apoios:0, jul:0, ago:0, set:0, out:0, total:0, membros:[]
+      zona: d._zona, coordZona: d._coordZona||'', coordNome: '',
+      total_reg:0, apoios:0, jul:0, ago:0, set:0, out:0, total:0, membros:[],
+      _nomes: {}
     });
     const g = grupos.get(key);
     g.total_reg++; g.apoios += d.votos||0;
@@ -1728,6 +1730,17 @@ function renderRelatorioFinanceiro() {
     g.set += d.custo_set||0; g.out += d.custo_out||0;
     g.total += d.total||0;
     g.membros.push(d);
+    // Conta frequência dos nomes para escolher o mais completo
+    if (d._coordNome) g._nomes[d._coordNome] = (g._nomes[d._coordNome]||0) + 1;
+  });
+
+  // Resolve nome: pega o nome com maior frequência (desempate: mais longo)
+  grupos.forEach(g => {
+    const nomes = Object.entries(g._nomes);
+    if (nomes.length) {
+      nomes.sort((a,b) => b[1]-a[1] || b[0].length-a[0].length);
+      g.coordNome = nomes[0][0];
+    }
   });
 
   const rows = [...grupos.values()].sort((a,b) =>
