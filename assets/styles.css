@@ -1080,6 +1080,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .dashboard-area .dashboard-panels { display: none; }
 
 .dashboard-area.active { display: block; }
+.dashboard-area.hidden-by-view { display: none !important; }
 
 /* Modo expandido (árvore/mapa fechados) mostra tudo */
 .dashboard-area.expanded .dashboard-header { display: flex; }

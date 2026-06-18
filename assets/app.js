@@ -1539,7 +1539,14 @@ function abrirDashboardInicial() {
   renderDashboard();
 }
 
-function closeDashboardView() { /* dashboard sempre visível, não fecha */ }
+function closeDashboardView() {
+  // Oculta dashboard quando mapa ou árvore assumem a tela
+  document.getElementById('dashboardArea')?.classList.add('hidden-by-view');
+}
+
+function reopenDashboardView() {
+  document.getElementById('dashboardArea')?.classList.remove('hidden-by-view');
+}
 
 function toggleDashboardView() {
   // Mantido para compatibilidade com mapa/árvore; dashboard não alterna mais
@@ -1666,6 +1673,7 @@ function toggleTreeView() {
     pag.style.display = '';
     ctrlBar.style.display = '';
     treeArea.classList.remove('active');
+    reopenDashboardView();
   }
 }
 
@@ -1714,7 +1722,9 @@ function renderArvore() {
   }
 
   // Pré-computa quais lideranças pertencem a cada CA
-  // Prioridade: coord_area_id explícito > fallback por _zona/_coordZona
+  // Ordena CAs por _coordZona para que o fallback atribua ao menor (primeiro) da zona
+  coords.sort((a, b) => (a._coordZona||'').localeCompare(b._coordZona||''));
+
   const caLidsMap = new Map();
   const assignedLids = new Set();
 
@@ -2817,6 +2827,7 @@ function toggleMapView() {
     pag.style.display = '';
     mapArea.classList.remove('active');
     document.body.classList.remove('map-fullscreen');
+    reopenDashboardView();
   }
 }
 
