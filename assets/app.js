@@ -1731,48 +1731,33 @@ function renderArvore() {
   coords.sort((a, b) => (a._coordZona||'').localeCompare(b._coordZona||''));
 
   const caLidsMap = new Map();
-  const assignedLids = new Set();
+  const assignedIds = new Set();
 
-  // Coleta todos os IDs válidos dos CAs (fireId + id customizado)
-  const allCaIds = new Set();
+  // Passa 1: vínculo explícito por coord_area_id
   coords.forEach(ca => {
-    if (ca._fireId) allCaIds.add(ca._fireId);
-    if (ca.id) allCaIds.add(String(ca.id));
-  });
-
-  // Primeiro, atribui por coord_area_id (vínculo explícito e válido)
-  coords.forEach(ca => {
-    const caId = ca._fireId || String(ca.id);
-    const byLink = liderancas.filter(l =>
-      l.coord_area_id === caId ||
-      (l.coord_area_id && l.coord_area_id === String(ca.id))
+    const caKey = ca._fireId || String(ca.id);
+    const matched = liderancas.filter(l =>
+      l.coord_area_id && (l.coord_area_id === ca._fireId || l.coord_area_id === String(ca.id))
     );
-    byLink.forEach(l => assignedLids.add(l._fireId || String(l.id)));
-    caLidsMap.set(caId, byLink);
+    matched.forEach(l => assignedIds.add(l._fireId || String(l.id)));
+    caLidsMap.set(caKey, matched.slice());
   });
 
-  // Fallback por zona: inclui registros sem coord_area_id OU com coord_area_id inválido (CA não existe mais)
-  const casPorZona = {};
-  coords.forEach(ca => { (casPorZona[ca._zona] = casPorZona[ca._zona] || []).push(ca); });
+  // Passa 2: fallback por zona — TODOS os não-atribuídos vão para o primeiro CA da zona
+  const primeiroCAPorZona = {};
+  coords.forEach(ca => {
+    if (!primeiroCAPorZona[ca._zona]) primeiroCAPorZona[ca._zona] = ca;
+  });
 
-  liderancas.filter(l => !l.coord_area_id || !allCaIds.has(l.coord_area_id)).forEach(l => {
+  liderancas.forEach(l => {
     const lKey = l._fireId || String(l.id);
-    if (assignedLids.has(lKey)) return;
-    const casNaZona = casPorZona[l._zona] || [];
-    let ca = null;
-    if (casNaZona.length === 1) {
-      ca = casNaZona[0]; // único CA na zona
-    } else if (casNaZona.length > 1) {
-      // Múltiplos CAs: tenta bater por _coordZona
-      ca = l._coordZona
-        ? casNaZona.find(c => c._coordZona === l._coordZona) || casNaZona[0]
-        : casNaZona[0]; // sem _coordZona → primeiro CA da zona
-    }
+    if (assignedIds.has(lKey)) return; // já atribuído por link explícito
+    const ca = primeiroCAPorZona[l._zona];
     if (!ca) return;
-    const caId = ca._fireId || String(ca.id);
-    if (!caLidsMap.has(caId)) caLidsMap.set(caId, []);
-    caLidsMap.get(caId).push(l);
-    assignedLids.add(lKey);
+    const caKey = ca._fireId || String(ca.id);
+    if (!caLidsMap.has(caKey)) caLidsMap.set(caKey, []);
+    caLidsMap.get(caKey).push(l);
+    assignedIds.add(lKey);
   });
 
   // Nó de cada Coordenador
@@ -1855,7 +1840,7 @@ function renderArvore() {
   });
 
   // Sem vínculo — lideranças não atribuídas a nenhum CA (nem por link nem por zona)
-  const lidersSemCA = liderancas.filter(l => !assignedLids.has(l._fireId || String(l.id)));
+  const lidersSemCA = liderancas.filter(l => !assignedIds.has(l._fireId || String(l.id)));
   const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
 
   if (lidersSemCA.length > 0 || mobsSemL.length > 0) {
