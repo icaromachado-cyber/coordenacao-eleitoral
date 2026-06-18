@@ -897,11 +897,10 @@ body.theme-light .fin-table tfoot td { background: rgba(0,0,0,.02); }
 .rel-zpill {
   padding: 5px 12px; border-radius: 20px; font-size: .75rem; font-weight: 500;
   border: 1px solid var(--border); background: var(--surface);
-  color: var(--zc, var(--muted)); cursor: pointer; transition: all .15s;
+  color: var(--muted); cursor: pointer; transition: all .15s;
 }
 .rel-zpill:hover { opacity: .8; }
-.rel-zpill.active { background: var(--zc, #3b82f6); color: #fff; border-color: transparent; }
-.rel-zpill[data-zona=""].active { background: var(--surface2); color: var(--text); }
+.rel-zpill.active { color: var(--text); border-color: currentColor; font-weight: 700; }
 .rel-search {
   flex: 1; min-width: 180px; max-width: 280px;
   padding: 7px 12px; border-radius: 8px;
@@ -910,17 +909,16 @@ body.theme-light .fin-table tfoot td { background: rgba(0,0,0,.02); }
 }
 .rel-search:focus { outline: none; border-color: #3b82f6; }
 body.theme-light .rel-zpill { background: #fff; }
-body.theme-light .rel-zpill[data-zona=""].active { background: #e8eaf4; color: #1e2235; }
 body.theme-light .rel-search { background: #fff; }
 
 /* ── RELATÓRIO FINANCEIRO NOVO ── */
 .fin-wrap { padding: 0 20px 40px; }
-.fin-top { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; }
+.fin-top { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
 
-.fin-month-cards { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.fin-month-cards { display: flex; gap: 10px; flex-wrap: wrap; }
 .fin-mc {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 16px; flex: 1; min-width: 100px;
+  border-radius: 12px; padding: 14px 16px; flex: 1; min-width: 110px;
 }
 .fin-mc-total { border-style: dashed; }
 .fin-mc-lbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:5px; }
@@ -928,13 +926,13 @@ body.theme-light .rel-search { background: #fff; }
 
 .fin-chart-box {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 20px; flex-shrink: 0; width: 260px;
+  border-radius: 12px; padding: 20px 24px 14px;
 }
-.fin-chart { display:flex; align-items:flex-end; gap:12px; height:120px; }
-.fin-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
-.fin-bar { width:100%; border-radius:5px 5px 0 0; min-height:4px; }
-.fin-bl { font-size:.65rem; color:var(--muted); font-weight:500; }
-.fin-bv { font-size:.6rem; font-weight:600; color:var(--muted); text-align:center; }
+.fin-chart { display:flex; align-items:flex-end; gap:20px; height:130px; }
+.fin-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; max-width:120px; }
+.fin-bar { width:100%; border-radius:6px 6px 0 0; min-height:4px; }
+.fin-bl { font-size:.72rem; color:var(--muted); font-weight:500; }
+.fin-bv { font-size:.72rem; font-weight:600; color:var(--text); text-align:center; }
 
 .fin-accordion { display:flex; flex-direction:column; gap:8px; }
 .fin-acc-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }

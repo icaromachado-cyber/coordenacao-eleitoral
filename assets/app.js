@@ -1652,7 +1652,12 @@ let _relFiltroPessoa = '';
 function setRelZona(zona) {
   _relFiltroZona = zona;
   document.querySelectorAll('.rel-zpill').forEach(b => {
-    b.classList.toggle('active', b.dataset.zona === zona);
+    const active = b.dataset.zona === zona;
+    const cor = b.dataset.cor || '';
+    b.classList.toggle('active', active);
+    b.style.background = active && cor ? cor : '';
+    b.style.color = active && cor ? '#fff' : active ? '' : cor || '';
+    b.style.borderColor = active && cor ? cor : '';
   });
   renderRelatorioFinanceiro();
 }
@@ -1706,6 +1711,10 @@ function _toggleRelatorioViewInner() {
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
     relatorioArea.classList.add('active');
+    _relFiltroZona = '';
+    _relFiltroPessoa = '';
+    if (document.getElementById('relSearch')) document.getElementById('relSearch').value = '';
+    setRelZona('');
     renderRelatorioFinanceiro();
   } else {
     btn.classList.remove('active');
@@ -1796,11 +1805,11 @@ function renderRelatorioFinanceiro() {
     <div class="fin-chart-box">
       <div class="fin-chart">
         ${meses.map(m=>{
-          const pct = Math.round((m.val/maxM)*110);
+          const pct = maxM > 0 ? Math.round((m.val/maxM)*110) : 0;
           return `<div class="fin-bar-col">
             <div class="fin-bv">${R(m.val)}</div>
             <div class="fin-bar" style="height:${Math.max(pct,4)}px;background:${m.cor}"></div>
-            <div class="fin-bl">${m.label.slice(0,3)}</div>
+            <div class="fin-bl">${m.label}</div>
           </div>`;
         }).join('')}
       </div>

@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=20260619">
+<link rel="stylesheet" href="assets/styles.css?v=20260620">
 <!-- Firebase SDK (compat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -327,12 +327,12 @@
     </div>
     <div class="rel-filter-bar">
       <div class="rel-zone-pills">
-        <button class="rel-zpill active" data-zona="">Todas</button>
-        <button class="rel-zpill" data-zona="norte"   style="--zc:#ef4444">● Norte</button>
-        <button class="rel-zpill" data-zona="leste"   style="--zc:#3b82f6">● Leste</button>
-        <button class="rel-zpill" data-zona="sul"     style="--zc:#22c55e">● Sul</button>
-        <button class="rel-zpill" data-zona="sudeste" style="--zc:#a855f7">● Sudeste</button>
-        <button class="rel-zpill" data-zona="rural"   style="--zc:#f59e0b">● Rural</button>
+        <button class="rel-zpill active" data-zona="" data-cor="">Todas</button>
+        <button class="rel-zpill" data-zona="norte"   data-cor="#ef4444">● Norte</button>
+        <button class="rel-zpill" data-zona="leste"   data-cor="#3b82f6">● Leste</button>
+        <button class="rel-zpill" data-zona="sul"     data-cor="#22c55e">● Sul</button>
+        <button class="rel-zpill" data-zona="sudeste" data-cor="#a855f7">● Sudeste</button>
+        <button class="rel-zpill" data-zona="rural"   data-cor="#f59e0b">● Rural</button>
       </div>
       <input class="rel-search" type="text" id="relSearch" placeholder="🔍 Buscar pessoa…">
     </div>
@@ -503,7 +503,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
-<script src="assets/app.js?v=20260619"></script>
+<script src="assets/app.js?v=20260620"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
