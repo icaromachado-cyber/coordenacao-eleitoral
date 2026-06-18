@@ -295,6 +295,8 @@ const BAIRROS = {
 let currentUserRole = null; // { role, region, zona, name }
 let zonaAtual = 'norte';
 let coordFiltroAtivo = null; // uid do coordenador selecionado no nav lateral
+let _coordZonaFiltro = '';   // zona do coordenador (ex: '01') para filtro secundário
+let _coordZonaRegiao = '';   // região do coordenador (ex: 'norte')
 let filtrado = [];
 let sortCol = 'id';
 let sortAsc = true;
@@ -389,9 +391,13 @@ async function renderNavCoord() {
     snap.forEach(doc => {
       const d = doc.data();
       if (!d.region) return;
-      const count = allRecords.filter(r => r._criadoPor === doc.id).length;
+      const zona = d.zona || '';
+      // Conta registros da zona do coordenador; se zona definida, filtra por _coordZona também
+      const count = allRecords.filter(r =>
+        r._zona === d.region && (!zona || !r._coordZona || r._coordZona === zona)
+      ).length;
       if (!gruposPorRegiao[d.region]) gruposPorRegiao[d.region] = [];
-      gruposPorRegiao[d.region].push({ uid: doc.id, name: d.name || d.email || '—', zona: d.zona || '', count });
+      gruposPorRegiao[d.region].push({ uid: doc.id, name: d.name || d.email || '—', zona, count, region: d.region });
     });
 
     Object.values(gruposPorRegiao).forEach(arr => arr.sort((a, b) => a.zona.localeCompare(b.zona)));
@@ -415,7 +421,7 @@ async function renderNavCoord() {
           </div>
           <div class="nav-region-children" id="nav-region-children-${region}">
             ${coords.map(c => `
-              <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" onclick="selecionarCoord('${a(c.uid)}')">
+              <div class="nav-item nav-coord-item" id="nav-coord-${a(c.uid)}" data-region="${a(region)}" data-zona="${a(c.zona)}" onclick="selecionarCoord('${a(c.uid)}','${a(region)}','${a(c.zona)}','${a(c.name)}','${a(color)}')">
                 <div class="nav-coord-indicator" style="background:${color}"></div>
                 <div style="flex:1;min-width:0;overflow:hidden">
                   <div class="nav-name" style="font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(c.name)}</div>
@@ -443,6 +449,8 @@ function toggleNavRegion(region, color, label) {
 
 function verRegiaoTotal(region, color, label) {
   coordFiltroAtivo = null;
+  _coordZonaFiltro = '';
+  _coordZonaRegiao = '';
   const fc = document.getElementById('filtro-coord');
   if (fc) fc.value = '';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -452,21 +460,24 @@ function verRegiaoTotal(region, color, label) {
   document.documentElement.style.setProperty('--accent', color);
 }
 
-function selecionarCoord(uid) {
+function selecionarCoord(uid, region, zona, nome, color) {
+  // Define filtro de zona ANTES do trocarZona (que vai chamar aplicarFiltros)
+  _coordZonaFiltro = zona || '';
+  _coordZonaRegiao = region || '';
+
+  // Navega para a zona — chama aplicarFiltros internamente
+  if (region) trocarZona(region);
+
+  // Ajusta estado e UI APÓS trocarZona (que reseta coordFiltroAtivo e título)
   coordFiltroAtivo = uid;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('nav-coord-' + uid)?.classList.add('active');
-  zonaAtual = 'todas';
-  const fc = document.getElementById('filtro-coord');
-  if (fc) fc.value = uid;
-  const item  = document.getElementById('nav-coord-' + uid);
-  const nome  = item?.querySelector('.nav-name')?.textContent || '';
-  const zona  = item?.querySelector('[style*="68rem"]')?.textContent || '';
-  document.getElementById('zTitle').textContent = nome + (zona ? ' · ' + zona : '');
-  document.getElementById('zBadge').style.background = '#3b82f6';
-  document.documentElement.style.setProperty('--accent', '#3b82f6');
+
+  const cor = color || COORD_COLORS[region] || '#3b82f6';
+  document.getElementById('zTitle').textContent = (nome || '') + (zona ? ' · Zona ' + zona : '');
+  document.getElementById('zBadge').style.background = cor;
+  document.documentElement.style.setProperty('--accent', cor);
   pg = 1;
-  aplicarFiltros();
 }
 
 function atualizarNavCoordCounts() {
@@ -475,7 +486,17 @@ function atualizarNavCoordCounts() {
   document.querySelectorAll('.nav-coord-item').forEach(el => {
     const uid = el.id.replace('nav-coord-', '');
     const countEl = document.getElementById('ncc-' + uid);
-    if (countEl) countEl.textContent = allRecords.filter(r => r._criadoPor === uid).length;
+    if (!countEl) return;
+    // Usa data attributes para buscar por zona, não por _criadoPor
+    const region = el.dataset.region || '';
+    const zona   = el.dataset.zona   || '';
+    if (region) {
+      countEl.textContent = allRecords.filter(r =>
+        r._zona === region && (!zona || !r._coordZona || r._coordZona === zona)
+      ).length;
+    } else {
+      countEl.textContent = allRecords.filter(r => r._criadoPor === uid).length;
+    }
   });
   ['norte','leste','sul','sudeste','rural'].forEach(region => {
     const total = allRecords.filter(r => r._zona === region).length;
@@ -588,8 +609,10 @@ function atualizarNavCounts() {
 
 // ===================== TROCA ZONA =====================
 function trocarZona(z) {
-  // Limpa filtro de coordenador ao navegar por zona geográfica
+  // Limpa filtros de coordenador ao navegar por zona geográfica
   coordFiltroAtivo = null;
+  _coordZonaFiltro = '';
+  _coordZonaRegiao = '';
   const fc = document.getElementById('filtro-coord');
   if (fc) fc.value = '';
 
@@ -715,10 +738,16 @@ function aplicarFiltros() {
 
   filtrado = getDados().filter(d => {
     const mn = norm(d.nome), mb = norm(d.bairro), mt = (d.telefone||'').toLowerCase();
+    // Filtro por coord: quando admin seleciona coordenador no sidebar, usa zona (_coordZona)
+    // O filtro de UID (coord) só é usado para usuários não-admin via select
+    const passaCoord = !coord || d._criadoPor === coord;
+    // Filtro secundário por zona do coordenador (quando selecionado via sidebar)
+    const passaCoordZona = !_coordZonaFiltro || !d._coordZona || d._coordZona === _coordZonaFiltro;
     return (!q || mn.includes(q) || mb.includes(q) || mt.includes(q))
         && (!tipo || d.tipo === tipo)
         && (!bairro || d.bairro === bairro)
-        && (!coord || d._criadoPor === coord);
+        && passaCoord
+        && passaCoordZona;
   });
 
   doSort();
