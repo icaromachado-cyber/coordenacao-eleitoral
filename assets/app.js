@@ -2853,7 +2853,7 @@ async function getCurrentUserRole() {
 
 function openFinanceiro() {
   document.getElementById('financeiroMsg').textContent = '';
-  document.getElementById('financeiroArea').style.display = 'block';
+  document.getElementById('financeiroArea').style.display = 'flex';
   loadFinanceiro();
 }
 
@@ -2907,8 +2907,8 @@ async function saveFinanceiro() {
   try {
     await db.collection('financas').doc(id).set(data, { merge: true });
     document.getElementById('financeiroMsg').textContent = 'Salvo com sucesso.';
-    // update tools value
-    document.getElementById('toolsResourceValue').textContent = 'R$ ' + data.total.toLocaleString('pt-BR');
+    const trv = document.getElementById('toolsResourceValue');
+    if (trv) trv.textContent = 'R$ ' + data.total.toLocaleString('pt-BR');
   } catch(e) {
     console.error(e);
     document.getElementById('financeiroMsg').textContent = 'Erro ao salvar.';

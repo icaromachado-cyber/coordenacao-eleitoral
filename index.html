@@ -452,6 +452,30 @@
   </div>
 </div>
 
+<!-- FINANCEIRO MODAL -->
+<div class="overlay" id="financeiroArea" style="display:none" onclick="if(event.target===this)closeFinanceiro()">
+  <div class="modal" style="max-width:480px">
+    <h2>💰 Financeiro</h2>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:16px">
+      Ciclo: <strong id="fin-ciclo">—</strong> &nbsp;·&nbsp; Região: <strong id="fin-regiao">—</strong>
+    </div>
+    <div class="financeiro-card">
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label>Julho (R$)</label><input type="number" id="fin-jul" placeholder="0" min="0"></div>
+        <div class="fg"><label>Agosto (R$)</label><input type="number" id="fin-ago" placeholder="0" min="0"></div>
+        <div class="fg"><label>Setembro (R$)</label><input type="number" id="fin-set" placeholder="0" min="0"></div>
+        <div class="fg"><label>Outubro (R$)</label><input type="number" id="fin-out" placeholder="0" min="0"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><label>Total aplicado (R$)</label><input type="number" id="fin-total" placeholder="0" readonly style="font-weight:800;background:rgba(59,130,246,.08)"></div>
+    </div>
+    <div id="financeiroMsg" style="font-size:.82rem;margin:10px 0;min-height:20px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btnCloseFinance">Fechar</button>
+      <button class="btn btn-primary" id="btnSaveFinance">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
