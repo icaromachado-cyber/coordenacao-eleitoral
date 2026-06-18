@@ -143,9 +143,9 @@
         <summary>Ferramentas</summary>
         <div class="tools-menu-list">
           <button class="btn btn-import" id="btnFinanceiro">💰 Financeiro</button>
-          <button class="btn btn-import" id="btnRelatorioToggle">📊 Relatório</button>
-          <button class="btn btn-import" id="btnTreeToggle">🌳 Árvore</button>
-          <button class="btn btn-import" id="btnMapToggle">🗺️ Mapa</button>
+          <button class="btn btn-import" id="btnRelatorioToggle" onclick="toggleRelatorioView()">📊 Relatório</button>
+          <button class="btn btn-import" id="btnTreeToggle" onclick="toggleTreeView()">🌳 Árvore</button>
+          <button class="btn btn-import" id="btnMapToggle" onclick="toggleMapView()">🗺️ Mapa</button>
           <label class="btn btn-import" title="Importar planilha desta região">
             📥 <span>Importar</span>
             <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
