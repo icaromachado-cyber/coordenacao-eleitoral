@@ -1680,7 +1680,7 @@ function renderArvore() {
 
   // Stats
   const totalApoios = dados.reduce((s,d) => s+(d.votos||0), 0);
-  const semVinculo = liderancas.filter(l => !l.coord_area_id).length;
+  const semVinculo = 0; // calculado depois com assignedLids
   document.getElementById('treeStats').innerHTML = `
     <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
     <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
@@ -1700,20 +1700,55 @@ function renderArvore() {
     </div>`;
   }
 
+  // Pré-computa quais lideranças pertencem a cada CA
+  // Prioridade: coord_area_id explícito > fallback por _zona/_coordZona
+  const caLidsMap = new Map();
+  const assignedLids = new Set();
+
+  // Primeiro, atribui por coord_area_id (vínculo explícito)
+  coords.forEach(ca => {
+    const caId = ca._fireId || String(ca.id);
+    const byLink = liderancas.filter(l => l.coord_area_id === caId);
+    byLink.forEach(l => assignedLids.add(l._fireId || String(l.id)));
+    caLidsMap.set(caId, byLink);
+  });
+
+  // Depois, atribui não-vinculados por zona (fallback para dados importados)
+  const casPorZona = {};
+  coords.forEach(ca => { (casPorZona[ca._zona] = casPorZona[ca._zona] || []).push(ca); });
+
+  liderancas.filter(l => !l.coord_area_id).forEach(l => {
+    const lKey = l._fireId || String(l.id);
+    if (assignedLids.has(lKey)) return;
+    const casNaZona = casPorZona[l._zona] || [];
+    let ca = null;
+    if (casNaZona.length === 1) {
+      ca = casNaZona[0]; // único CA na zona
+    } else if (casNaZona.length > 1) {
+      // Múltiplos CAs: tenta bater por _coordZona
+      ca = l._coordZona
+        ? casNaZona.find(c => c._coordZona === l._coordZona) || casNaZona[0]
+        : casNaZona[0]; // sem _coordZona → primeiro CA da zona
+    }
+    if (!ca) return;
+    const caId = ca._fireId || String(ca.id);
+    if (!caLidsMap.has(caId)) caLidsMap.set(caId, []);
+    caLidsMap.get(caId).push(l);
+    assignedLids.add(lKey);
+  });
+
   // Nó de cada Coordenador
   coords.forEach((ca, ci) => {
     const nomeCA = ca.nome || '';
+    const caId = ca._fireId || String(ca.id);
+    const lidsCA = caLidsMap.get(caId) || [];
+
     if (q && !norm(nomeCA).includes(q)) {
-      // Verifica se alguma liderança/mob bate
-      const lidsCa = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
-      const mobsCa = mobilizadores.filter(m => lidsCa.some(l => l._fireId === m.lider_id || String(l.id) === m.lider_id));
-      const algumBate = [...lidsCa, ...mobsCa].some(d =>
-        norm(d.nome || '').includes(q)
-      );
+      const mobsCa = mobilizadores.filter(m => lidsCA.some(l => l._fireId === m.lider_id || String(l.id) === m.lider_id));
+      const algumBate = [...lidsCA, ...mobsCa].some(d => norm(d.nome || '').includes(q));
       if (!algumBate) return;
     }
 
-    const lidsCA = liderancas.filter(l => l.coord_area_id === (ca._fireId || String(ca.id)));
     const totalMobs = mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id)).length;
     const totalApoiosCA = [...lidsCA, ...mobilizadores.filter(m => lidsCA.some(l => (l._fireId||String(l.id)) === m.lider_id))].reduce((s,d)=>s+(d.votos||0),0);
 
@@ -1781,8 +1816,8 @@ function renderArvore() {
     html += `</div></div>`;
   });
 
-  // Sem vínculo — Lideranças sem coordenação
-  const lidersSemCA = liderancas.filter(l => !l.coord_area_id || l.coord_area_id === '');
+  // Sem vínculo — lideranças não atribuídas a nenhum CA (nem por link nem por zona)
+  const lidersSemCA = liderancas.filter(l => !assignedLids.has(l._fireId || String(l.id)));
   const mobsSemL = mobilizadores.filter(m => !m.lider_id || m.lider_id === '');
 
   if (lidersSemCA.length > 0 || mobsSemL.length > 0) {
