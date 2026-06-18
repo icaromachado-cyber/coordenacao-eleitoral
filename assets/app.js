@@ -1645,6 +1645,156 @@ function renderDashboard() {
 
 // ===================== ÁRVORE HIERÁRQUICA =====================
 let treeView = false;
+let relatorioView = false;
+
+function _fecharRelatorio() {
+  if (!relatorioView) return;
+  relatorioView = false;
+  document.getElementById('btnRelatorioToggle').classList.remove('active');
+  document.getElementById('btnRelatorioToggle').textContent = '📊 Relatório';
+  document.getElementById('relatorioArea').classList.remove('active');
+  document.querySelector('.table-area').classList.remove('hidden');
+  document.getElementById('pag').style.display = '';
+  document.querySelector('.controls-bar').style.display = '';
+}
+
+function toggleRelatorioView() {
+  if (mapView) {
+    mapView = false;
+    document.getElementById('btnMapToggle').classList.remove('active');
+    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
+    document.getElementById('mapArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+    document.body.classList.remove('map-fullscreen');
+  }
+  if (treeView) {
+    treeView = false;
+    document.getElementById('btnTreeToggle').classList.remove('active');
+    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('treeArea').classList.remove('active');
+    document.querySelector('.table-area').classList.remove('hidden');
+    document.getElementById('pag').style.display = '';
+    document.querySelector('.controls-bar').style.display = '';
+  }
+  closeDashboardView();
+
+  relatorioView = !relatorioView;
+  const btn = document.getElementById('btnRelatorioToggle');
+  const tableArea = document.querySelector('.table-area');
+  const pag = document.getElementById('pag');
+  const ctrlBar = document.querySelector('.controls-bar');
+  const relatorioArea = document.getElementById('relatorioArea');
+
+  if (relatorioView) {
+    btn.classList.add('active');
+    btn.textContent = '📋 Tabela';
+    tableArea.classList.add('hidden');
+    pag.style.display = 'none';
+    ctrlBar.style.display = 'none';
+    relatorioArea.classList.add('active');
+    renderRelatorioFinanceiro();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '📊 Relatório';
+    tableArea.classList.remove('hidden');
+    pag.style.display = '';
+    ctrlBar.style.display = '';
+    relatorioArea.classList.remove('active');
+    reopenDashboardView();
+  }
+}
+
+function renderRelatorioFinanceiro() {
+  const dados = getDados();
+  const fmtR = v => v ? 'R$ ' + Number(v).toLocaleString('pt-BR') : '<span style="color:var(--muted)">—</span>';
+  const RCAP  = { norte:'Norte', leste:'Leste', sul:'Sul', sudeste:'Sudeste', rural:'Rural' };
+  const RCOR  = { norte:'#ef4444', leste:'#3b82f6', sul:'#22c55e', sudeste:'#a855f7', rural:'#f59e0b' };
+
+  // Agrupa por coordenador (zona+coordZona)
+  const grupos = new Map();
+
+  dados.forEach(d => {
+    const key = `${d._zona}||${d._coordZona || ''}||${d._coordNome || ''}`;
+    if (!grupos.has(key)) {
+      grupos.set(key, {
+        zona: d._zona, coordZona: d._coordZona || '', coordNome: d._coordNome || '',
+        total_reg: 0, apoios: 0, jul: 0, ago: 0, set: 0, out: 0, total: 0
+      });
+    }
+    const g = grupos.get(key);
+    g.total_reg++;
+    g.apoios += d.votos   || 0;
+    g.jul    += d.custo_jul || 0;
+    g.ago    += d.custo_ago || 0;
+    g.set    += d.custo_set || 0;
+    g.out    += d.custo_out || 0;
+    g.total  += d.total   || 0;
+  });
+
+  const rows = [...grupos.values()].sort((a, b) => {
+    if (a.zona !== b.zona) return a.zona.localeCompare(b.zona);
+    return a.coordZona.localeCompare(b.coordZona);
+  });
+
+  const tot = rows.reduce((t, r) => ({
+    total_reg: t.total_reg + r.total_reg, apoios: t.apoios + r.apoios,
+    jul: t.jul + r.jul, ago: t.ago + r.ago,
+    set: t.set + r.set, out: t.out + r.out, total: t.total + r.total
+  }), { total_reg: 0, apoios: 0, jul: 0, ago: 0, set: 0, out: 0, total: 0 });
+
+  document.getElementById('relatorioStats').textContent =
+    `${rows.length} coordenadores · ${tot.total_reg} registros · Total: R$ ${tot.total.toLocaleString('pt-BR')}`;
+
+  let html = `<div style="overflow-x:auto;padding:0 20px 40px">
+  <table class="fin-table">
+    <thead><tr>
+      <th>Coordenador</th>
+      <th style="text-align:center">Reg.</th>
+      <th style="text-align:right">Apoios</th>
+      <th style="text-align:right">Julho</th>
+      <th style="text-align:right">Agosto</th>
+      <th style="text-align:right">Setembro</th>
+      <th style="text-align:right">Outubro</th>
+      <th style="text-align:right">Total</th>
+    </tr></thead>
+    <tbody>`;
+
+  rows.forEach(r => {
+    const cor   = RCOR[r.zona] || '#888';
+    const reg   = RCAP[r.zona] || r.zona;
+    const nome  = r.coordNome || 'Sem coordenador';
+    const sub   = r.coordZona ? `${reg} · Zona ${r.coordZona}` : reg;
+    html += `<tr>
+      <td>
+        <div style="font-weight:600;font-size:.85rem">${h(nome)}</div>
+        <div style="font-size:.68rem;color:${cor};margin-top:2px">${sub}</div>
+      </td>
+      <td style="text-align:center;color:var(--muted);font-size:.82rem">${r.total_reg}</td>
+      <td style="text-align:right;color:#3b82f6;font-weight:600">${r.apoios || '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:right">${fmtR(r.jul)}</td>
+      <td style="text-align:right">${fmtR(r.ago)}</td>
+      <td style="text-align:right">${fmtR(r.set)}</td>
+      <td style="text-align:right">${fmtR(r.out)}</td>
+      <td style="text-align:right;font-weight:700;color:${r.total > 0 ? '#22c55e' : 'var(--muted)'}">${fmtR(r.total)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody>
+    <tfoot><tr>
+      <td style="font-weight:700">TOTAL GERAL</td>
+      <td style="text-align:center;font-weight:700">${tot.total_reg}</td>
+      <td style="text-align:right;font-weight:700;color:#3b82f6">${tot.apoios.toLocaleString('pt-BR')}</td>
+      <td style="text-align:right;font-weight:700">${fmtR(tot.jul)}</td>
+      <td style="text-align:right;font-weight:700">${fmtR(tot.ago)}</td>
+      <td style="text-align:right;font-weight:700">${fmtR(tot.set)}</td>
+      <td style="text-align:right;font-weight:700">${fmtR(tot.out)}</td>
+      <td style="text-align:right;font-weight:800;font-size:1rem;color:#22c55e">R$ ${tot.total.toLocaleString('pt-BR')}</td>
+    </tr></tfoot>
+  </table></div>`;
+
+  document.getElementById('relatorioContent').innerHTML = html;
+}
 
 function toggleTreeView() {
   // Fecha mapa se estiver aberto
@@ -1657,6 +1807,7 @@ function toggleTreeView() {
     document.getElementById('pag').style.display = '';
     document.body.classList.remove('map-fullscreen');
   }
+  _fecharRelatorio();
   closeDashboardView();
 
   treeView = !treeView;
@@ -2491,6 +2642,7 @@ function bindStaticEvents() {
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
   on('btnDashboardClose', 'click', closeDashboardView);
+  on('btnRelatorioToggle', 'click', toggleRelatorioView);
   on('btnTreeToggle', 'click', toggleTreeView);
   on('btnMapToggle', 'click', toggleMapView);
   on('btnLogout', 'click', fazerLogout);
@@ -2809,6 +2961,7 @@ function toggleMapView() {
     document.getElementById('pag').style.display = '';
     document.querySelector('.controls-bar').style.display = '';
   }
+  _fecharRelatorio();
   closeDashboardView();
   mapView = !mapView;
   const btn = document.getElementById('btnMapToggle');

@@ -143,6 +143,7 @@
         <summary>Ferramentas</summary>
         <div class="tools-menu-list">
           <button class="btn btn-import" id="btnFinanceiro">💰 Financeiro</button>
+          <button class="btn btn-import" id="btnRelatorioToggle">📊 Relatório</button>
           <button class="btn btn-import" id="btnTreeToggle">🌳 Árvore</button>
           <button class="btn btn-import" id="btnMapToggle">🗺️ Mapa</button>
           <label class="btn btn-import" title="Importar planilha desta região">
@@ -316,6 +317,15 @@
         Clique no pin para detalhes
       </div>
     </div>
+  </div>
+
+  <!-- RELATORIO FINANCEIRO VIEW -->
+  <div class="relatorio-area" id="relatorioArea">
+    <div class="tree-header">
+      <h3>📊 Relatório Financeiro</h3>
+      <div id="relatorioStats" style="font-size:.78rem;color:var(--muted)"></div>
+    </div>
+    <div id="relatorioContent"></div>
   </div>
 
   <!-- TREE VIEW -->
