@@ -1659,6 +1659,9 @@ function _fecharRelatorio() {
 }
 
 function toggleRelatorioView() {
+  try { _toggleRelatorioViewInner(); } catch(err) { console.error('[Relatório]', err); toast('Erro no Relatório: ' + err.message, 'erro'); }
+}
+function _toggleRelatorioViewInner() {
   if (mapView) {
     mapView = false;
     document.getElementById('btnMapToggle').classList.remove('active');
