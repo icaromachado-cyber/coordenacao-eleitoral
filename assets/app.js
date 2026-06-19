@@ -3125,8 +3125,9 @@ function calcFinTotal() {
 }
 
 async function loadFinanceiro() {
-  const role = await getCurrentUserRole();
-  if (!role) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const u = firebase.auth().currentUser;
+  if (!u) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const role = currentUserRole || {};
   const region = role.region || 'todas';
   const ciclo = campanhaAtual || '2024';
   document.getElementById('fin-ciclo').textContent = ciclo;
@@ -3144,8 +3145,9 @@ async function loadFinanceiro() {
 }
 
 async function saveFinanceiro() {
-  const role = await getCurrentUserRole();
-  if (!role) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const u = firebase.auth().currentUser;
+  if (!u) { document.getElementById('financeiroMsg').textContent = 'Permissão negada'; return; }
+  const role = currentUserRole || {};
   const region = role.region || 'todas';
   const ciclo = campanhaAtual || '2024';
   const id = `${ciclo}_${region}`;
