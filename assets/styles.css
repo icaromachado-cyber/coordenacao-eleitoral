@@ -45,23 +45,33 @@ body {
 }
 
 .sidebar-logo {
-  padding: 22px 20px 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   background: #1a1c24;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sice-logo-sm {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .sidebar-logo h1 {
   font-family: 'DM Sans', sans-serif;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
-  line-height: 1.3;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
 }
 
 .sidebar-logo p {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--muted);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .sidebar-nav {
@@ -1596,17 +1606,19 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
   margin-bottom: 28px;
 }
 
-.login-logo .ico {
-  font-size: 2.5rem;
+.sice-logo-lg {
+  width: 72px;
+  height: 72px;
   display: block;
-  margin-bottom: 10px;
+  margin: 0 auto 12px;
 }
 
 .login-logo h1 {
   font-family: 'DM Sans', sans-serif;
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 800;
   color: #fff;
+  letter-spacing: 0.08em;
 }
 
 .login-logo p {
