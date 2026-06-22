@@ -2156,11 +2156,13 @@ function exportarDados() {
     'Telefone': d.telefone || '',
     'Bairro': d.bairro || '',
     'Endereço': d.endereco || '',
+    'Lotação': d.lotacao || '',
     'Região': ZONAS_CFG[d._zona]?.label || d._zona || '',
+    'Zona': d._coordZona || '',
     'Ponto de referência': d.colegio || '',
     'Seção': d.secao || '',
     'Código regional': d.zona_eleitoral || '',
-    'Coordenador de Área': d.coord_area_nome || '',
+    'Coordenador de Área': d.coord_area_nome || d._coordNome || '',
     'Liderança': d.lider_nome || '',
     'Apoios': d.votos || 0,
     'V. Entrada': d.v_entrada || 0,
@@ -2176,8 +2178,8 @@ function exportarDados() {
   // Largura das colunas
   ws['!cols'] = [
     {wch:6},{wch:8},{wch:40},{wch:18},{wch:20},{wch:40},
-    {wch:16},{wch:30},{wch:10},{wch:14},{wch:30},{wch:30},
-    {wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}
+    {wch:25},{wch:16},{wch:8},{wch:30},{wch:10},{wch:14},
+    {wch:30},{wch:30},{wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}
   ];
 
   const wb = XLSX.utils.book_new();
