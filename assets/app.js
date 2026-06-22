@@ -802,14 +802,26 @@ function doSort() {
 }
 
 // ===================== RENDER CARDS =====================
+function normalizeTel(tel) {
+  const d = (tel || '').replace(/\D/g, '');
+  if (!d) return tel;
+  const n = d.startsWith('55') ? d.slice(2) : d;
+  if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+  if (n.length === 9)  return `${n.slice(0,5)}-${n.slice(5)}`;
+  if (n.length === 8)  return `${n.slice(0,4)}-${n.slice(4)}`;
+  return tel;
+}
+
 function fmtWhats(tel) {
   if (!tel || tel.trim().length < 8) return '—';
   const num = tel.replace(/\D/g, '');
   if (num.length < 8) return h(tel);
   const wa = num.startsWith('55') ? num : '55' + num;
+  const display = normalizeTel(tel);
   return `<a href="https://wa.me/${wa}" target="_blank" style="color:#25d366;text-decoration:none;display:inline-flex;align-items:center;gap:4px" title="Abrir WhatsApp">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.527 5.855L.057 23.882l6.19-1.622A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.724.977.995-3.635-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
-    ${h(tel)}</a>`;
+    ${h(display)}</a>`;
 }
 
 
@@ -1211,8 +1223,24 @@ function salvar() {
     _fireId: fireId,
     // Preserva quem criou o registro — evita sobrescrever _criadoPor ao editar como admin
     _criadoPor: regOriginal?._criadoPor || null,
-    _coordZona: regOriginal?._coordZona || '',
-    _coordNome: regOriginal?._coordNome || '',
+    _coordZona: (() => {
+      const id = document.getElementById('f-coord-area').value;
+      if (id) {
+        const allRecs = [...(DB.norte||[]),...(DB.leste||[]),...(DB.sul||[]),...(DB.sudeste||[]),...(DB.rural||[])];
+        const ca = allRecs.find(d => d.tipo==='CA' && (d._fireId||d.id)===id);
+        if (ca?._coordZona) return ca._coordZona;
+      }
+      return regOriginal?._coordZona || '';
+    })(),
+    _coordNome: (() => {
+      const id = document.getElementById('f-coord-area').value;
+      if (id) {
+        const allRecs = [...(DB.norte||[]),...(DB.leste||[]),...(DB.sul||[]),...(DB.sudeste||[]),...(DB.rural||[])];
+        const ca = allRecs.find(d => d.tipo==='CA' && (d._fireId||d.id)===id);
+        if (ca?.nome) return ca.nome.split(' ')[0];
+      }
+      return regOriginal?._coordNome || '';
+    })(),
     tipo: raw.tipo,
     nome: raw.nome.toUpperCase(),
     telefone: raw.telefone,
@@ -1233,9 +1261,9 @@ function salvar() {
     reuniao_feita: raw.reuniao_feita,
     reuniao_data: raw.reuniao_data,
     coord_area_id: document.getElementById('f-coord-area').value || '',
-    coord_area_nome: document.getElementById('f-coord-area').options[document.getElementById('f-coord-area').selectedIndex]?.text || '',
+    coord_area_nome: (() => { const id = document.getElementById('f-coord-area').value; return getDados().find(d => (d._fireId||d.id) === id)?.nome || ''; })(),
     lider_id: document.getElementById('f-lider').value || '',
-    lider_nome: document.getElementById('f-lider').options[document.getElementById('f-lider').selectedIndex]?.text || '',
+    lider_nome: (() => { const id = document.getElementById('f-lider').value; return getDados().find(d => (d._fireId||d.id) === id)?.nome || ''; })(),
   };
 
   const zonaChanged = editId !== null && zonaDestino !== zonaOrigem;
