@@ -1001,6 +1001,7 @@ function verDrawer(id, zona) {
     <div class="d-row"><span class="d-lbl">📞 Telefone</span><span class="d-val">${fmtWhats(d.telefone)}</span></div>
     <div class="d-row"><span class="d-lbl">📍 Bairro</span><span class="d-val">${h(d.bairro || '—')}</span></div>
     <div class="d-row"><span class="d-lbl">🏠 Endereço</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${fmtMaps(d.endereco)}</span></div>
+    ${d.lotacao ? `<div class="d-row"><span class="d-lbl">🏢 Local</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${h(d.lotacao)}</span></div>` : ''}
     <div class="d-row"><span class="d-lbl">🏫 Colégio</span><span class="d-val" style="font-size:.75rem;text-align:right">${h(d.colegio || '—')}</span></div>
     <div class="d-row"><span class="d-lbl">📋 Seção</span><span class="d-val">${h(d.secao || '—')}</span></div>
     <div class="d-row"><span class="d-lbl">🗂️ Código</span><span class="d-val">${h(d.zona_eleitoral || '—')}</span></div>
@@ -3229,6 +3230,7 @@ function popupHTML(d, zona) {
       <div class="popup-row"><span class="popup-lbl">Bairro</span><span class="popup-val">${h(d.bairro || '—')}</span></div>
       <div class="popup-row"><span class="popup-lbl">📞</span><span class="popup-val">${waLink}</span></div>
       <div class="popup-row"><span class="popup-lbl">Apoios</span><span class="popup-val" style="color:var(--accent,#e8433a);font-weight:700">${d.votos||'—'}</span></div>
+      ${d.lotacao ? `<div class="popup-row"><span class="popup-lbl">🏢 Local</span><span class="popup-val" style="font-size:.7rem">${h(d.lotacao)}</span></div>` : ''}
       ${d.colegio ? `<div class="popup-row"><span class="popup-lbl">Colégio</span><span class="popup-val" style="font-size:.7rem">${h(d.colegio)}</span></div>` : ''}
       ${d.secao ? `<div class="popup-row"><span class="popup-lbl">Seção</span><span class="popup-val">${h(d.secao)}</span></div>` : ''}
       <div style="margin-top:8px">
