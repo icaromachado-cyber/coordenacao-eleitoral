@@ -1138,6 +1138,7 @@ function abrirModal(id, zona) {
     setIf('f-tel', d.telefone||'');
     setIf('f-bairro', d.bairro||'');
     setIf('f-end', d.endereco||'');
+    setIf('f-lotacao', d.lotacao||'');
     setIf('f-votos', d.votos||'');
     setIf('f-jul', d.custo_jul||'');
     setIf('f-ago', d.custo_ago||'');
@@ -1224,6 +1225,7 @@ function salvar() {
     custo_set: numeric.custo_set.value,
     custo_out: numeric.custo_out.value,
     total: numeric.total.value,
+    lotacao: document.getElementById('f-lotacao').value.trim(),
     colegio: document.getElementById('f-colegio').value.trim().toUpperCase(),
     secao: document.getElementById('f-secao').value.trim(),
     zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
