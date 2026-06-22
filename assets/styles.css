@@ -1539,7 +1539,7 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
 
 .leaflet-popup-tip { background: var(--surface2) !important; }
 
-.popup-nome { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #fff; }
+.popup-nome { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #1e2235; }
 .popup-row { display: flex; justify-content: space-between; gap: 10px; font-size: .75rem; padding: 3px 0; border-bottom: 1px solid rgba(37,42,64,.6); }
 .popup-row:last-child { border: none; }
 .popup-lbl { color: var(--muted); }
