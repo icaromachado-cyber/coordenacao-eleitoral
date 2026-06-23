@@ -574,6 +574,7 @@ async function carregarDoFirebase() {
     }
 
     mostrarLoading(false);
+    setSyncStatus('✅ Sincronizado', '#22c55e');
     atualizarNavCounts();
     configurarNavPorRole();
     await renderNavCoord();
@@ -589,6 +590,7 @@ async function carregarDoFirebase() {
     }
     dbCarregado = true;
     mostrarLoading(false);
+    setSyncStatus('⚠️ Modo offline', '#f59e0b');
     atualizarNavCounts();
     configurarNavPorRole();
     await renderNavCoord();
@@ -3456,8 +3458,9 @@ function editarUsuario(uid, dataStr) {
       <div id="edit-msg" style="color:var(--danger);font-size:.82rem;margin-top:4px"></div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn btn-outline" style="flex:1" onclick="carregarListaUsuarios()">Cancelar</button>
-        <button class="btn btn-primary" style="flex:1" onclick="salvarEdicaoUsuario('${a(uid)}')">Salvar</button>
+        <button class="btn btn-primary" style="flex:2" onclick="salvarEdicaoUsuario('${a(uid)}','${a(d.email)}')">Salvar</button>
       </div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;font-size:.8rem" onclick="enviarResetSenha('${a(d.email)}')">🔑 Enviar e-mail de redefinição de senha</button>
     </div>`;
 }
 
@@ -3482,6 +3485,15 @@ async function salvarEdicaoUsuario(uid) {
   } catch(e) {
     msg.textContent = 'Erro ao salvar: ' + e.message;
     btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+async function enviarResetSenha(email) {
+  try {
+    await firebase.auth().sendPasswordResetEmail(email);
+    toast('📧 E-mail de redefinição enviado para ' + email);
+  } catch(e) {
+    toast('❌ Erro ao enviar: ' + e.message);
   }
 }
 

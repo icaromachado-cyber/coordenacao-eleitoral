@@ -552,7 +552,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
-<script src="assets/app.js?v=20260622d"></script>
+<script src="assets/app.js?v=20260622f"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
@@ -583,7 +583,7 @@
     <!-- Cabeçalho fixo -->
     <div class="nu-modal-header">
       <h2 style="font-size:1.05rem;font-weight:600">👥 Gerenciar Coordenadores</h2>
-      <button class="btn-ico" id="btnFecharUsuarios" style="font-size:1rem">✕</button>
+      <button class="btn-ico" id="btnFecharUsuarios" onclick="fecharGerenciarUsuarios()" style="font-size:1rem">✕</button>
     </div>
 
     <!-- Corpo com scroll slim -->
