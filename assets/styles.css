@@ -1,11 +1,11 @@
 :root {
-  --bg: #1c1e24;
-  --surface: #22252e00;
-  --surface-solid: #22252e;
-  --surface2: #2a2d38;
-  --border: #383c4a;
-  --text: #e4e6f0;
-  --muted: #8890aa;
+  --bg: #131520;
+  --surface: #1a1d2b00;
+  --surface-solid: #1a1d2b;
+  --surface2: #22253a;
+  --border: rgba(255,255,255,0.08);
+  --text: #e8eaf0;
+  --muted: #6b7280;
   --accent: #3b82f6;
   --accent2: #60a5fa;
   --z-norte: #ef4444;
@@ -37,7 +37,7 @@ body {
   position: fixed;
   left: 0; top: 0; bottom: 0;
   width: 220px;
-  background: #22252e;
+  background: #1a1d2b;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -47,7 +47,7 @@ body {
 .sidebar-logo {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  background: #1a1c24;
+  background: #131520;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -151,7 +151,7 @@ body {
 /* TOPBAR */
 .topbar {
   flex-shrink: 0;
-  background: #2a2d38;
+  background: #22253a;
   border-bottom: 1px solid var(--border);
   padding: 0 24px;
   height: 64px;
@@ -529,7 +529,7 @@ select:focus { border-color: var(--accent, #e8433a); }
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
-  background: #1c1e24;
+  background: #131520;
 }
 
 /* Custom scrollbar */
@@ -565,7 +565,7 @@ thead {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #2a2d38;
+  background: #22253a;
 }
 
 th {
@@ -719,7 +719,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 .overlay.on { display: flex; }
 
 .modal {
-  background: #2a2d38;
+  background: #22253a;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 26px 28px;
@@ -786,7 +786,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
   position: fixed;
   top: 0; right: 0; bottom: 0;
   width: 320px;
-  background: #2a2d38;
+  background: #22253a;
   border-left: 1px solid var(--border);
   z-index: 400;
   padding: 24px 22px;
@@ -824,7 +824,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 /* TOAST */
 .toast {
   position: fixed; bottom: 22px; right: 22px;
-  background: #2a2d38; border: 1px solid var(--green);
+  background: #22253a; border: 1px solid var(--green);
   color: var(--green); padding: 10px 18px; border-radius: 10px;
   font-size: 0.82rem; font-weight: 500; z-index: 9999;
   transform: translateY(60px); opacity: 0;
@@ -1036,7 +1036,7 @@ body.theme-light .fin-mem-table tbody tr:hover td { background:rgba(0,0,0,.015);
 
 /* CA node */
 .tree-ca {
-  background: #2a2d38;
+  background: #22253a;
   border: 1px solid rgba(59,130,246,.25);
   border-left: 4px solid #3b82f6;
   border-radius: 12px;
@@ -1172,7 +1172,7 @@ body.theme-light .fin-mem-table tbody tr:hover td { background:rgba(0,0,0,.015);
 /* Sem vínculo */
 .tree-orphans {
   margin-top: 24px;
-  background: #2a2d38;
+  background: #22253a;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -1581,7 +1581,7 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
 .login-screen {
   position: fixed;
   inset: 0;
-  background: #1c1e24;
+  background: #131520;
   z-index: 10000;
   display: flex;
   align-items: center;
