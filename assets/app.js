@@ -1654,9 +1654,9 @@ function renderDashboard() {
   const coordenacao = dados.filter(d => d.tipo === 'CA').length;
   const apoios = dados.reduce((sum, d) => sum + (d.votos || 0), 0);
   const recursos = dados.reduce((sum, d) => sum + (d.total || 0), 0);
-  const pendentes = dados.filter(d => d.status === 'pendente').length;
-  const semContato = dados.filter(d => !(d.telefone || '').replace(/\D/g, '')).length;
-  const semBairro = dados.filter(d => !d.bairro).length;
+  const pendentes = dados.filter(d =>
+    !(d.telefone || '').replace(/\D/g, '') || !d.endereco
+  ).length;
   const cicloNome = nomeCiclo(campanhaAtual, campanhas[campanhaAtual]);
 
   document.getElementById('dashboardTitle').textContent = cicloNome;
@@ -1666,8 +1666,7 @@ function renderDashboard() {
     ['Mobilizadores', equipe.toLocaleString('pt-BR'), 'campo operacional'],
     ['Coordenadores', coordenacao.toLocaleString('pt-BR'), 'regionais'],
     ['Apoios', apoios.toLocaleString('pt-BR'), 'previstos'],
-    ['Pendentes', pendentes.toLocaleString('pt-BR'), 'precisam de revisão'],
-    ['Sem contato', semContato.toLocaleString('pt-BR'), `${semBairro} sem bairro`]
+    ['Pendentes', pendentes.toLocaleString('pt-BR'), 'sem telefone ou endereço']
   ].map(([label, value, sub]) => `
     <div class="dashboard-card">
       <div class="dashboard-card-label">${h(label)}</div>
