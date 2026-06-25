@@ -3085,8 +3085,9 @@ function toggleSidebar() {
 // ===================== MAPA =====================
 let mapView = false;
 let leafletMap = null;
-let markers = [];
-let geocodeCache = {};  // endereço -> {lat, lng} | null
+let markers = [];          // [{marker, tipo}]
+let geocodeCache = {};     // endereço -> {lat, lng} | null
+let mapTipoFiltro = new Set(['CA','L','LE','M','ME']);
 
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
 
@@ -3313,9 +3314,38 @@ async function geocodificar(endereco, bairro, tentativa) {
   return null;
 }
 
+function toggleMapFiltro(tipo) {
+  if (mapTipoFiltro.has(tipo)) mapTipoFiltro.delete(tipo);
+  else mapTipoFiltro.add(tipo);
+
+  document.querySelectorAll('.mfb-btn').forEach(btn => {
+    const t = btn.dataset.tipo;
+    btn.classList.toggle('active', mapTipoFiltro.has(t));
+  });
+
+  markers.forEach(({ marker, tipo: t }) => {
+    if (mapTipoFiltro.has(t)) { if (!leafletMap.hasLayer(marker)) leafletMap.addLayer(marker); }
+    else                       { if (leafletMap.hasLayer(marker))  leafletMap.removeLayer(marker); }
+  });
+}
+
+function toggleTodosMapa() {
+  const todos = mapTipoFiltro.size === 5;
+  if (todos) mapTipoFiltro.clear();
+  else ['CA','L','LE','M','ME'].forEach(t => mapTipoFiltro.add(t));
+
+  document.querySelectorAll('.mfb-btn').forEach(btn => {
+    btn.classList.toggle('active', mapTipoFiltro.has(btn.dataset.tipo));
+  });
+  markers.forEach(({ marker, tipo }) => {
+    if (mapTipoFiltro.has(tipo)) { if (!leafletMap.hasLayer(marker)) leafletMap.addLayer(marker); }
+    else                          { if (leafletMap.hasLayer(marker))  leafletMap.removeLayer(marker); }
+  });
+}
+
 async function renderMapa() {
   // Limpa marcadores antigos
-  markers.forEach(m => leafletMap.removeLayer(m));
+  markers.forEach(({ marker }) => leafletMap.removeLayer(marker));
   markers = [];
 
   const dados = getDados();
@@ -3350,9 +3380,9 @@ async function renderMapa() {
       const lat = coord.lat + jitter();
       const lng = coord.lng + jitter();
       const marker = L.marker([lat, lng], { icon: criarIcone(d.tipo) })
-        .bindPopup(popupHTML(d, d._zona), { maxWidth: 280 })
-        .addTo(leafletMap);
-      markers.push(marker);
+        .bindPopup(popupHTML(d, d._zona), { maxWidth: 280 });
+      if (mapTipoFiltro.has(d.tipo)) marker.addTo(leafletMap);
+      markers.push({ marker, tipo: d.tipo });
       bounds.push([lat, lng]);
       ok++;
     } else {

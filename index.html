@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=20260623b">
+<link rel="stylesheet" href="assets/styles.css?v=20260624a">
 <!-- Firebase SDK (compat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -348,6 +348,15 @@
   <!-- MAP VIEW -->
   <div class="map-area" id="mapArea">
     <div id="map"></div>
+    <div class="map-filter-bar" id="mapFilterBar">
+      <span class="mfb-label">Filtrar:</span>
+      <button class="mfb-btn active" data-tipo="CA"  onclick="toggleMapFiltro('CA')" ><span class="mfb-dot" style="background:#fb923c"></span>CA</button>
+      <button class="mfb-btn active" data-tipo="L"   onclick="toggleMapFiltro('L')"  ><span class="mfb-dot" style="background:#3b82f6"></span>L</button>
+      <button class="mfb-btn active" data-tipo="LE"  onclick="toggleMapFiltro('LE')" ><span class="mfb-dot" style="background:#a855f7"></span>LE</button>
+      <button class="mfb-btn active" data-tipo="M"   onclick="toggleMapFiltro('M')"  ><span class="mfb-dot" style="background:#22c55e"></span>M</button>
+      <button class="mfb-btn active" data-tipo="ME"  onclick="toggleMapFiltro('ME')" ><span class="mfb-dot" style="background:#eab308"></span>ME</button>
+      <button class="mfb-all" onclick="toggleTodosMapa()">Todos / Nenhum</button>
+    </div>
     <div class="map-info-bar" id="mapInfoBar">Carregando…</div>
     <div class="geocode-progress" id="gcProgress">
       <div class="gc-spinner"></div>
@@ -552,7 +561,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
-<script src="assets/app.js?v=20260623a"></script>
+<script src="assets/app.js?v=20260624a"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
