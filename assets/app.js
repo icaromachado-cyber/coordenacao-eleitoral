@@ -319,6 +319,30 @@ function isAdminUser() {
   return !currentUserRole || currentUserRole.role === 'admin';
 }
 
+function isSuperAdmin() {
+  return firebase.auth().currentUser?.email === 'icarocaio18@gmail.com';
+}
+
+async function logAuditoria(acao, registro, dadosAntes) {
+  try {
+    const u = firebase.auth().currentUser;
+    await db.collection('campanhas').doc(campanhaAtual).collection('auditoria').add({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      acao,
+      uid: u?.uid || '',
+      email: u?.email || '',
+      registroId: registro.id || '',
+      registroFireId: registro._fireId || '',
+      registroNome: registro.nome || '',
+      registroTipo: registro.tipo || '',
+      registroZona: registro._zona || '',
+      dadosAntes: dadosAntes ? JSON.stringify(dadosAntes) : null,
+    });
+  } catch(e) {
+    console.warn('[auditoria]', e.message);
+  }
+}
+
 function getZonasVisiveis() {
   if (isAdminUser()) return ['norte', 'leste', 'sul', 'sudeste', 'rural'];
   return [currentUserRole.region].filter(Boolean);
@@ -381,6 +405,9 @@ function configurarNavPorRole() {
   if (btnMigrar) btnMigrar.style.display = admin ? '' : 'none';
   const btnUsuarios = document.getElementById('btnGerenciarUsuarios');
   if (btnUsuarios) btnUsuarios.style.display = admin ? '' : 'none';
+
+  const btnAudit = document.getElementById('btnAuditoriaToggle');
+  if (btnAudit) btnAudit.style.display = isSuperAdmin() ? '' : 'none';
 }
 
 // ===================== NAV POR COORDENADOR =====================
@@ -1299,12 +1326,14 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
     }
 
     if (editIdOrig !== null && fireId) {
+      const dadosAntes = DB[zonaOrigem]?.find(r => r._fireId === fireId) || null;
       if (zonaChanged) {
         await colecao().doc(fireId).delete();
         await colecao().add(docData);
       } else {
         await colecao().doc(fireId).set(docData);
       }
+      await logAuditoria('edicao', {...reg, _fireId: fireId, _zona: zonaOrigem}, dadosAntes);
     } else {
       await colecao().add(docData);
     }
@@ -1354,6 +1383,7 @@ function deletar(id, zona) {
 async function deletarNoFirebase(d, zona) {
   try {
     if (d._fireId) {
+      await logAuditoria('exclusao', d, d);
       await colecao().doc(d._fireId).delete();
     }
     await recarregarZona(zona);
@@ -3928,5 +3958,75 @@ async function executarMigracaoDados() {
   } catch(e) {
     msgEl.style.color = 'var(--danger)';
     msgEl.textContent = 'Erro: ' + e.message;
+  }
+}
+
+// ===================== AUDITORIA (SUPER ADMIN) =====================
+function abrirAuditoria() {
+  const el = document.getElementById('auditoriaArea');
+  if (el) { el.style.display = 'flex'; renderAuditoria(); }
+}
+
+function fecharAuditoria() {
+  const el = document.getElementById('auditoriaArea');
+  if (el) el.style.display = 'none';
+}
+
+async function renderAuditoria() {
+  const el = document.getElementById('auditoriaContent');
+  if (!el) return;
+  el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:32px">Carregando…</p>';
+
+  try {
+    const snap = await db.collection('campanhas').doc(campanhaAtual)
+      .collection('auditoria')
+      .orderBy('timestamp', 'desc')
+      .limit(300)
+      .get();
+
+    if (snap.empty) {
+      el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:32px">Nenhuma ação registrada ainda.<br><small>A partir de agora edições e exclusões serão registradas aqui.</small></p>';
+      return;
+    }
+
+    const rows = snap.docs.map(d => {
+      const r = d.data();
+      const ts = r.timestamp?.toDate();
+      const dtStr = ts ? ts.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      const acaoBadge = r.acao === 'exclusao'
+        ? '<span style="background:#ef444422;color:#f87171;padding:2px 10px;border-radius:20px;font-size:.7rem;white-space:nowrap">🗑 Exclusão</span>'
+        : '<span style="background:#3b82f622;color:#60a5fa;padding:2px 10px;border-radius:20px;font-size:.7rem;white-space:nowrap">✏️ Edição</span>';
+      const tipoBadge = r.registroTipo
+        ? `<span class="tipo-badge tipo-${(r.registroTipo||'').toLowerCase()}">${r.registroTipo}</span>` : '—';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 12px;white-space:nowrap;font-size:.72rem;color:var(--muted)">${dtStr}</td>
+        <td style="padding:10px 12px;font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis">${r.email || '—'}</td>
+        <td style="padding:10px 12px">${acaoBadge}</td>
+        <td style="padding:10px 12px;font-weight:500;max-width:220px">${r.registroNome || '—'}</td>
+        <td style="padding:10px 12px">${tipoBadge}</td>
+        <td style="padding:10px 12px;font-size:.75rem;color:var(--muted);text-transform:capitalize">${r.registroZona || '—'}</td>
+      </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead>
+            <tr style="color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Data/Hora</th>
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Ação</th>
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Nome</th>
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Tipo</th>
+              <th style="text-align:left;padding:8px 12px;font-weight:500">Zona</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:.72rem;margin-top:12px">Exibindo até 300 registros mais recentes</p>`;
+  } catch(e) {
+    el.innerHTML = `<p style="color:#f87171;padding:20px">Erro ao carregar auditoria: ${e.message}</p>`;
+    console.error(e);
   }
 }
