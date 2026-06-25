@@ -437,7 +437,7 @@ body {
   align-items: center;
   gap: 11px;
   padding: 10px 18px;
-  background: #1e2028;
+  background: var(--surface-solid);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -450,7 +450,7 @@ body {
 
 .search-wrap input {
   width: 100%;
-  background: #1e2028;
+  background: var(--surface-solid);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -474,7 +474,7 @@ body {
 }
 
 select {
-  background: #1e2028;
+  background: var(--surface-solid);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -2594,7 +2594,7 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
   /* Drawer ocupa tela toda no mobile */
   .drawer { width: 100%; border-left: none; border-top: 1px solid var(--border); }
 
-  /* Mapa ocupa tela toda */
+  /* Mapa mobile */
   .map-legend {
     bottom: 10px; left: 10px;
     padding: 8px 12px;
@@ -2602,6 +2602,19 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
   }
 
   .map-info-bar { font-size: .7rem; padding: 5px 12px; top: 8px; }
+
+  .map-filter-bar {
+    top: 8px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: 12px;
+    padding: 5px 10px;
+  }
+  .map-filter-bar::-webkit-scrollbar { display: none; }
+  .mfb-all { display: none; }
 
   /* Árvore mobile */
   .tree-area { padding: 12px; }
@@ -2621,6 +2634,32 @@ body.theme-light .drawer-tab-content { color: #1e2235; }
 
   /* Loading mobile */
   #loading-overlay div:first-child { width: 32px; height: 32px; }
+}
+
+/* ── Phones pequenos (< 480px) ── */
+@media (max-width: 480px) {
+  /* Tabela mais compacta — esconde bairro também */
+  table { min-width: 360px; font-size: .72rem; }
+  th, td { padding: 8px 8px; }
+  th:nth-child(5), td:nth-child(5) { display: none; } /* Bairro */
+  .nome-td { max-width: 120px; }
+
+  /* Controls bar empilha busca acima dos filtros */
+  .controls-bar { flex-direction: column; align-items: stretch; gap: 7px; padding: 8px 10px; }
+  .search-wrap { min-width: unset; width: 100%; }
+  .controls-bar select { width: 100%; }
+
+  /* Strip cards menores */
+  .strip-card { min-width: 90px; padding: 8px 10px; }
+  .strip-value { font-size: 1.4rem; }
+
+  /* Topbar ainda mais compacta */
+  .topbar { height: 48px; padding: 0 8px; }
+  .zone-title h2 { font-size: .78rem; }
+  .btn-tree-toggle, .btn-map-toggle { font-size: .7rem; padding: 5px 8px; }
+
+  /* Modal tela cheia */
+  .modal { border-radius: 0; max-height: 100vh; padding: 16px 14px; }
 }
 
 /* Hamburguer só aparece no mobile */
