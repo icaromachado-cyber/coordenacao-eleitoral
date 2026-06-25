@@ -954,10 +954,10 @@ function renderTable() {
       <td class="num-td ${custoClass(d.custo_out)}">${d.custo_out?'R$'+d.custo_out.toLocaleString('pt-BR'):'—'}</td>
       <td class="total-td" style="${totalStyle(d.total)}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}</td>
       <td style="text-align:center">
-        <div style="display:flex;gap:4px;justify-content:center;align-items:center">
+        <div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;align-items:center">
           <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">👁</button>
           <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
-          ${d.tipo !== 'CA' ? `<button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>` : ''}
+          ${d.tipo !== 'CA' ? `<button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>` : '<span></span>'}
         </div>
       </td>
     </tr>`;
