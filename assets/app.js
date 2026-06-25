@@ -541,20 +541,31 @@ async function carregarDoFirebase() {
       }
     }
 
-    // Coordenadores carregam TODAS as zonas filtradas por _criadoPor (podem ter registros em qualquer zona)
     const todasZonas = ['norte', 'leste', 'sul', 'sudeste', 'rural'];
     const uid = firebase.auth().currentUser?.uid;
-    const snaps = await Promise.all(
-      todasZonas.map(z => {
-        let q = colecao().where('_zona', '==', z);
-        if (!isAdminUser() && uid) q = q.where('_criadoPor', '==', uid);
-        return q.get();
-      })
-    );
-    todasZonas.forEach((zona, i) => {
-      DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
-      BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
-    });
+
+    if (!isAdminUser()) {
+      // Coordenador regional: carrega apenas sua região, filtrando por _coordZona no cliente
+      const region = currentUserRole?.region;
+      const coordZona = currentUserRole?.zona || '';
+      const zonasCarregar = region ? [region] : todasZonas;
+      const snaps = await Promise.all(zonasCarregar.map(z => colecao().where('_zona', '==', z).get()));
+      todasZonas.forEach(z => { DB[z] = []; BAIRROS[z] = []; });
+      zonasCarregar.forEach((z, i) => {
+        let registros = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+        // Filtra por _coordZona se o coordenador tem zona definida
+        if (coordZona) registros = registros.filter(d => !d._coordZona || d._coordZona === coordZona);
+        DB[z] = registros;
+        BAIRROS[z] = [...new Set(registros.map(d => d.bairro).filter(Boolean))].sort();
+      });
+    } else {
+      // Admin: carrega tudo
+      const snaps = await Promise.all(todasZonas.map(z => colecao().where('_zona', '==', z).get()));
+      todasZonas.forEach((zona, i) => {
+        DB[zona] = snaps[i].docs.map(d => ({...d.data(), _fireId: d.id}));
+        BAIRROS[zona] = [...new Set(DB[zona].map(d => d.bairro).filter(Boolean))].sort();
+      });
+    }
 
     dbCarregado = true;
 
