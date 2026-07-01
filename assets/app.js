@@ -881,6 +881,12 @@ function reuniaoBadge(r, data) {
 }
 
 function fmtR(v) { return v ? 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:0}) : '—'; }
+function fmtAniversario(s) {
+  if (!s) return '—';
+  const [y, m, d] = s.split('-');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d}/${meses[parseInt(m,10)-1]}${y && y !== '0000' ? ' de '+y : ''}`;
+}
 
 function fmtMaps(end) {
   if (!end || end.trim().length < 5) return '—';
@@ -1050,6 +1056,7 @@ function verDrawer(id, zona) {
     </div>
     <div class="d-name">${h(d.nome)}</div>
     <div class="d-row"><span class="d-lbl">📞 Telefone</span><span class="d-val">${fmtWhats(d.telefone)}</span></div>
+    ${d.aniversario ? `<div class="d-row"><span class="d-lbl">🎂 Aniversário</span><span class="d-val">${fmtAniversario(d.aniversario)}</span></div>` : ''}
     <div class="d-row"><span class="d-lbl">📍 Bairro</span><span class="d-val">${h(d.bairro || '—')}</span></div>
     <div class="d-row"><span class="d-lbl">🏠 Endereço</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${fmtMaps(d.endereco)}</span></div>
     ${d.lotacao ? `<div class="d-row"><span class="d-lbl">🏢 Local</span><span class="d-val" style="font-size:.75rem;max-width:180px;text-align:right">${h(d.lotacao)}</span></div>` : ''}
@@ -1151,7 +1158,7 @@ function abrirModal(id, zona) {
   if (_editZona === 'todas') _editZona = 'norte';
 
   document.getElementById('modal-title').textContent = id===null ? '📋 Novo Registro' : '✏️ Editar Registro';
-  const flds = ['f-tipo','f-zona','f-nome','f-tel','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
+  const flds = ['f-tipo','f-zona','f-nome','f-tel','f-aniversario','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
 
   const zonaFieldEl = document.getElementById('f-zona');
   if (!isAdminUser() && currentUserRole?.region) {
@@ -1187,6 +1194,7 @@ function abrirModal(id, zona) {
     setIf('f-zona', _editZona);
     setIf('f-nome', d.nome||'');
     setIf('f-tel', d.telefone||'');
+    setIf('f-aniversario', d.aniversario||'');
     setIf('f-bairro', d.bairro||'');
     setIf('f-end', d.endereco||'');
     setIf('f-lotacao', d.lotacao||'');
@@ -1232,6 +1240,7 @@ function salvar() {
     zona: zonaDestino,
     nome: document.getElementById('f-nome').value.trim(),
     telefone: document.getElementById('f-tel').value.trim(),
+    aniversario: document.getElementById('f-aniversario').value || '',
     reuniao_feita: document.getElementById('f-reuniao').value || 'nao',
     reuniao_data: document.getElementById('f-reuniao-data').value || ''
   };
@@ -2226,6 +2235,7 @@ function exportarDados() {
     'Tipo': d.tipo,
     'Nome': d.nome,
     'Telefone': d.telefone || '',
+    'Aniversário': d.aniversario || '',
     'Bairro': d.bairro || '',
     'Endereço': d.endereco || '',
     'Lotação': d.lotacao || '',
