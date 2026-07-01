@@ -4002,38 +4002,36 @@ async function renderAuditoria() {
     const rows = snap.docs.map(d => {
       const r = d.data();
       const ts = r.timestamp?.toDate();
-      const dtStr = ts ? ts.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      const data = ts ? ts.toLocaleDateString('pt-BR') : '—';
+      const hora = ts ? ts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
       const acaoBadge = r.acao === 'exclusao'
-        ? '<span style="background:#ef444422;color:#f87171;padding:2px 10px;border-radius:20px;font-size:.7rem;white-space:nowrap">🗑 Exclusão</span>'
-        : '<span style="background:#3b82f622;color:#60a5fa;padding:2px 10px;border-radius:20px;font-size:.7rem;white-space:nowrap">✏️ Edição</span>';
+        ? '<span style="background:#ef444422;color:#f87171;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">🗑 Exclusão</span>'
+        : '<span style="background:#3b82f622;color:#60a5fa;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">✏️ Edição</span>';
       const tipoBadge = r.registroTipo
         ? `<span class="tipo-badge tipo-${(r.registroTipo||'').toLowerCase()}">${r.registroTipo}</span>` : '—';
+      const usuario = (r.email || '—').replace('@gmail.com','').replace('@','@');
       return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 12px;white-space:nowrap;font-size:.72rem;color:var(--muted)">${dtStr}</td>
-        <td style="padding:10px 12px;font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis">${r.email || '—'}</td>
+        <td style="padding:10px 12px;white-space:nowrap;font-size:.78rem;font-weight:600">${data}<br><span style="font-size:.68rem;color:var(--muted);font-weight:400">${hora}</span></td>
+        <td style="padding:10px 12px;font-size:.72rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${usuario}</td>
         <td style="padding:10px 12px">${acaoBadge}</td>
-        <td style="padding:10px 12px;font-weight:500;max-width:220px">${r.registroNome || '—'}</td>
+        <td style="padding:10px 12px;font-weight:500;font-size:.8rem">${r.registroNome || '—'}</td>
         <td style="padding:10px 12px">${tipoBadge}</td>
-        <td style="padding:10px 12px;font-size:.75rem;color:var(--muted);text-transform:capitalize">${r.registroZona || '—'}</td>
       </tr>`;
     }).join('');
 
     el.innerHTML = `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-          <thead>
-            <tr style="color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Data/Hora</th>
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Ação</th>
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Nome</th>
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Tipo</th>
-              <th style="text-align:left;padding:8px 12px;font-weight:500">Zona</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+        <thead>
+          <tr style="color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:8px 12px;font-weight:500;white-space:nowrap">Data / Hora</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Ação</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Nome</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Tipo</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
       <p style="text-align:center;color:var(--muted);font-size:.72rem;margin-top:12px">Exibindo até 300 registros mais recentes</p>`;
   } catch(e) {
     el.innerHTML = `<p style="color:#f87171;padding:20px">Erro ao carregar auditoria: ${e.message}</p>`;
