@@ -4002,20 +4002,20 @@ async function renderAuditoria() {
     const rows = snap.docs.map(d => {
       const r = d.data();
       const ts = r.timestamp?.toDate();
-      const data = ts ? ts.toLocaleDateString('pt-BR') : '—';
-      const hora = ts ? ts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+      const dataHora = ts
+        ? `<div style="font-size:.68rem;color:var(--muted);margin-top:3px">📅 ${ts.toLocaleDateString('pt-BR')} às ${ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>`
+        : '';
       const acaoBadge = r.acao === 'exclusao'
         ? '<span style="background:#ef444422;color:#f87171;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">🗑 Exclusão</span>'
         : '<span style="background:#3b82f622;color:#60a5fa;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">✏️ Edição</span>';
       const tipoBadge = r.registroTipo
         ? `<span class="tipo-badge tipo-${(r.registroTipo||'').toLowerCase()}">${r.registroTipo}</span>` : '—';
-      const usuario = (r.email || '—').replace('@gmail.com','').replace('@','@');
+      const usuario = (r.email || '—').replace('@gmail.com','');
       return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 12px;white-space:nowrap;font-size:.78rem;font-weight:600">${data}<br><span style="font-size:.68rem;color:var(--muted);font-weight:400">${hora}</span></td>
-        <td style="padding:10px 12px;font-size:.72rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${usuario}</td>
+        <td style="padding:10px 12px;font-weight:500;font-size:.8rem">${r.registroNome || '—'}${dataHora}</td>
         <td style="padding:10px 12px">${acaoBadge}</td>
-        <td style="padding:10px 12px;font-weight:500;font-size:.8rem">${r.registroNome || '—'}</td>
         <td style="padding:10px 12px">${tipoBadge}</td>
+        <td style="padding:10px 12px;font-size:.72rem;color:var(--muted);white-space:nowrap">${usuario}</td>
       </tr>`;
     }).join('');
 
@@ -4023,11 +4023,10 @@ async function renderAuditoria() {
       <table style="width:100%;border-collapse:collapse;font-size:.82rem">
         <thead>
           <tr style="color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">
-            <th style="text-align:left;padding:8px 12px;font-weight:500;white-space:nowrap">Data / Hora</th>
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Nome / Data</th>
             <th style="text-align:left;padding:8px 12px;font-weight:500">Ação</th>
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Nome</th>
             <th style="text-align:left;padding:8px 12px;font-weight:500">Tipo</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
