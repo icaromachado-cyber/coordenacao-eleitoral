@@ -4003,35 +4003,29 @@ async function renderAuditoria() {
       const r = d.data();
       const ts = r.timestamp?.toDate();
       const dataHora = ts
-        ? `<div style="font-size:.68rem;color:var(--muted);margin-top:3px">📅 ${ts.toLocaleDateString('pt-BR')} às ${ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>`
-        : '';
+        ? `${ts.toLocaleDateString('pt-BR')} às ${ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`
+        : '—';
       const acaoBadge = r.acao === 'exclusao'
-        ? '<span style="background:#ef444422;color:#f87171;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">🗑 Exclusão</span>'
-        : '<span style="background:#3b82f622;color:#60a5fa;padding:2px 8px;border-radius:20px;font-size:.7rem;white-space:nowrap">✏️ Edição</span>';
+        ? '<span style="background:#fde8e8;color:#c0392b;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap">🗑 Exclusão</span>'
+        : '<span style="background:#e8f0fe;color:#1a56db;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap">✏️ Edição</span>';
       const tipoBadge = r.registroTipo
-        ? `<span class="tipo-badge tipo-${(r.registroTipo||'').toLowerCase()}">${r.registroTipo}</span>` : '—';
-      const usuario = (r.email || '—').replace('@gmail.com','');
-      return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 12px;font-weight:500;font-size:.8rem">${r.registroNome || '—'}${dataHora}</td>
-        <td style="padding:10px 12px">${acaoBadge}</td>
-        <td style="padding:10px 12px">${tipoBadge}</td>
-        <td style="padding:10px 12px;font-size:.72rem;color:var(--muted);white-space:nowrap">${usuario}</td>
-      </tr>`;
+        ? `<span class="tipo-badge tipo-${(r.registroTipo||'').toLowerCase()}" style="font-size:.72rem">${r.registroTipo}</span>` : '';
+      const usuario = (r.email || '').replace('@gmail.com','');
+      return `<div style="padding:10px 0;border-bottom:1px solid #e8eaed;display:flex;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.82rem;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.registroNome || '—'}</div>
+          <div style="font-size:.7rem;color:#6b7280;margin-top:2px">📅 ${dataHora} · ${usuario}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">${acaoBadge}${tipoBadge}</div>
+      </div>`;
     }).join('');
 
     el.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-        <thead>
-          <tr style="color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Nome / Data</th>
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Ação</th>
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Tipo</th>
-            <th style="text-align:left;padding:8px 12px;font-weight:500">Usuário</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <p style="text-align:center;color:var(--muted);font-size:.72rem;margin-top:12px">Exibindo até 300 registros mais recentes</p>`;
+      <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:0 0 8px;border-bottom:2px solid #e8eaed;display:flex;justify-content:space-between">
+        <span>Nome / Data / Usuário</span><span>Ação / Tipo</span>
+      </div>
+      <div style="margin-top:4px">${rows}</div>
+      <p style="text-align:center;color:#9ca3af;font-size:.7rem;margin-top:14px">Exibindo até 300 registros mais recentes</p>`;
   } catch(e) {
     el.innerHTML = `<p style="color:#f87171;padding:20px">Erro ao carregar auditoria: ${e.message}</p>`;
     console.error(e);
