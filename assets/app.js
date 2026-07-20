@@ -3972,6 +3972,67 @@ async function executarMigracaoDados() {
 }
 
 // ===================== AUDITORIA (SUPER ADMIN) =====================
+function abrirAniversariantes() {
+  const el = document.getElementById('aniversariantesArea');
+  if (!el) return;
+  el.style.display = 'flex';
+
+  const agora = new Date();
+  const mesAtual = agora.getMonth() + 1;
+  const diaAtual = agora.getDate();
+  const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  document.getElementById('aniversariantesSubtitle').textContent =
+    `${nomesMes[mesAtual - 1]} — lideranças com aniversário neste mês`;
+
+  // Coleta todos os registros de todas as zonas
+  const todos = Object.values(DB).flat();
+
+  const aniversariantes = todos
+    .filter(d => {
+      if (!d.aniversario) return false;
+      const partes = d.aniversario.split('-');
+      const m = parseInt(partes[1], 10);
+      return m === mesAtual;
+    })
+    .map(d => {
+      const partes = d.aniversario.split('-');
+      return { ...d, _diaAniv: parseInt(partes[2], 10), _anoAniv: parseInt(partes[0], 10) };
+    })
+    .sort((a, b) => a._diaAniv - b._diaAniv);
+
+  const el2 = document.getElementById('aniversariantesContent');
+  if (!el2) return;
+
+  if (!aniversariantes.length) {
+    el2.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted)">Nenhum aniversariante cadastrado para este mês.</p>';
+    return;
+  }
+
+  const rows = aniversariantes.map(d => {
+    const ehHoje = d._diaAniv === diaAtual;
+    const idade = d._anoAniv > 1900 ? ` · ${agora.getFullYear() - d._anoAniv} anos` : '';
+    const tipoBadge = d.tipo ? `<span class="tipo-badge tipo-${(d.tipo||'').toLowerCase()}" style="font-size:.7rem">${d.tipo}</span>` : '';
+    const zona = d._zona ? `<span style="font-size:.68rem;color:var(--muted)">${d._zona}</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${ehHoje ? 'background:linear-gradient(90deg,#fef9c3 0%,transparent 100%);border-radius:8px;padding:10px 8px;' : ''}">
+      <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;${ehHoje ? 'background:#fbbf24;color:#1a1200;' : 'background:var(--surface);color:var(--muted);border:1px solid var(--border);'}">${d._diaAniv}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.85rem;${ehHoje ? 'color:#b45309;' : ''}">${ehHoje ? '🎉 ' : ''}${d.nome}${ehHoje ? ' — HOJE!' : ''}</div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${d.telefone || ''}${idade}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">${tipoBadge}${zona}</div>
+    </div>`;
+  }).join('');
+
+  el2.innerHTML = `<div style="margin-top:4px">${rows}</div>
+    <p style="text-align:center;color:var(--muted);font-size:.7rem;margin-top:14px">${aniversariantes.length} aniversariante(s) este mês</p>`;
+}
+
+function fecharAniversariantes() {
+  const el = document.getElementById('aniversariantesArea');
+  if (el) el.style.display = 'none';
+}
+
 function abrirAuditoria() {
   const el = document.getElementById('auditoriaArea');
   if (el) { el.style.display = 'flex'; renderAuditoria(); }
