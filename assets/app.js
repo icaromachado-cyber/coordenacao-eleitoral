@@ -3976,12 +3976,32 @@ let _anivMesAtivo = new Date().getMonth() + 1;
 
 const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
+let _anivCache = null; // cache dos registros buscados do Firebase
+
 function abrirAniversariantes() {
   const el = document.getElementById('aniversariantesArea');
   if (!el) return;
   _anivMesAtivo = new Date().getMonth() + 1;
+  _anivCache = null;
   el.style.display = 'flex';
-  renderAniversariantesMes();
+  const el2 = document.getElementById('aniversariantesContent');
+  if (el2) el2.innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">Carregando...</p>';
+  const label = document.getElementById('aniversariantesMesLabel');
+  if (label) label.textContent = NOMES_MES[_anivMesAtivo - 1];
+  _carregarAniversariantesFirebase();
+}
+
+async function _carregarAniversariantesFirebase() {
+  try {
+    const snap = await colecao().get();
+    _anivCache = snap.docs
+      .map(d => ({ ...d.data(), _fireId: d.id }))
+      .filter(d => d.aniversario);
+    renderAniversariantesMes();
+  } catch(e) {
+    const el2 = document.getElementById('aniversariantesContent');
+    if (el2) el2.innerHTML = `<p style="color:#f87171;padding:20px">Erro ao carregar: ${e.message}</p>`;
+  }
 }
 
 function navAniversarioMes(delta) {
@@ -4000,12 +4020,14 @@ function renderAniversariantesMes() {
   const label = document.getElementById('aniversariantesMesLabel');
   if (label) label.textContent = NOMES_MES[mes - 1];
 
-  const todos = Object.values(DB).flat();
+  const el2 = document.getElementById('aniversariantesContent');
+  if (!el2) return;
 
-  const aniversariantes = todos
+  if (!_anivCache) return;
+
+  const aniversariantes = _anivCache
     .filter(d => {
-      if (!d.aniversario) return false;
-      const partes = d.aniversario.split('-');
+      const partes = (d.aniversario || '').split('-');
       return parseInt(partes[1], 10) === mes;
     })
     .map(d => {
@@ -4013,9 +4035,6 @@ function renderAniversariantesMes() {
       return { ...d, _diaAniv: parseInt(partes[2], 10), _anoAniv: parseInt(partes[0], 10) };
     })
     .sort((a, b) => a._diaAniv - b._diaAniv);
-
-  const el2 = document.getElementById('aniversariantesContent');
-  if (!el2) return;
 
   if (!aniversariantes.length) {
     el2.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted)">Nenhum aniversariante cadastrado para este mês.</p>';
