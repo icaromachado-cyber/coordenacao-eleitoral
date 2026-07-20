@@ -3972,28 +3972,41 @@ async function executarMigracaoDados() {
 }
 
 // ===================== AUDITORIA (SUPER ADMIN) =====================
+let _anivMesAtivo = new Date().getMonth() + 1;
+
+const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
 function abrirAniversariantes() {
   const el = document.getElementById('aniversariantesArea');
   if (!el) return;
+  _anivMesAtivo = new Date().getMonth() + 1;
   el.style.display = 'flex';
+  renderAniversariantesMes();
+}
 
+function navAniversarioMes(delta) {
+  _anivMesAtivo += delta;
+  if (_anivMesAtivo > 12) _anivMesAtivo = 1;
+  if (_anivMesAtivo < 1)  _anivMesAtivo = 12;
+  renderAniversariantesMes();
+}
+
+function renderAniversariantesMes() {
   const agora = new Date();
   const mesAtual = agora.getMonth() + 1;
   const diaAtual = agora.getDate();
-  const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mes = _anivMesAtivo;
 
-  document.getElementById('aniversariantesSubtitle').textContent =
-    `${nomesMes[mesAtual - 1]} — lideranças com aniversário neste mês`;
+  const label = document.getElementById('aniversariantesMesLabel');
+  if (label) label.textContent = NOMES_MES[mes - 1];
 
-  // Coleta todos os registros de todas as zonas
   const todos = Object.values(DB).flat();
 
   const aniversariantes = todos
     .filter(d => {
       if (!d.aniversario) return false;
       const partes = d.aniversario.split('-');
-      const m = parseInt(partes[1], 10);
-      return m === mesAtual;
+      return parseInt(partes[1], 10) === mes;
     })
     .map(d => {
       const partes = d.aniversario.split('-');
@@ -4010,12 +4023,12 @@ function abrirAniversariantes() {
   }
 
   const rows = aniversariantes.map(d => {
-    const ehHoje = d._diaAniv === diaAtual;
+    const ehHoje = mes === mesAtual && d._diaAniv === diaAtual;
     const idade = d._anoAniv > 1900 ? ` · ${agora.getFullYear() - d._anoAniv} anos` : '';
     const tipoBadge = d.tipo ? `<span class="tipo-badge tipo-${(d.tipo||'').toLowerCase()}" style="font-size:.7rem">${d.tipo}</span>` : '';
     const zona = d._zona ? `<span style="font-size:.68rem;color:var(--muted)">${d._zona}</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${ehHoje ? 'background:linear-gradient(90deg,#fef9c3 0%,transparent 100%);border-radius:8px;padding:10px 8px;' : ''}">
-      <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;${ehHoje ? 'background:#fbbf24;color:#1a1200;' : 'background:var(--surface);color:var(--muted);border:1px solid var(--border);'}">${d._diaAniv}</div>
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${ehHoje ? 'background:linear-gradient(90deg,#fef9c322 0%,transparent 100%);border-radius:8px;padding:10px 8px;' : ''}">
+      <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;flex-shrink:0;${ehHoje ? 'background:#fbbf24;color:#1a1200;' : 'background:var(--surface);color:var(--muted);border:1px solid var(--border);'}">${d._diaAniv}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.85rem;${ehHoje ? 'color:#b45309;' : ''}">${ehHoje ? '🎉 ' : ''}${d.nome}${ehHoje ? ' — HOJE!' : ''}</div>
         <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${d.telefone || ''}${idade}</div>
@@ -4024,8 +4037,8 @@ function abrirAniversariantes() {
     </div>`;
   }).join('');
 
-  el2.innerHTML = `<div style="margin-top:4px">${rows}</div>
-    <p style="text-align:center;color:var(--muted);font-size:.7rem;margin-top:14px">${aniversariantes.length} aniversariante(s) este mês</p>`;
+  el2.innerHTML = `<div>${rows}</div>
+    <p style="text-align:center;color:var(--muted);font-size:.7rem;margin-top:14px">${aniversariantes.length} aniversariante(s)</p>`;
 }
 
 function fecharAniversariantes() {
