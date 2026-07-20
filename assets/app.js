@@ -1306,6 +1306,7 @@ function salvar() {
     secao: document.getElementById('f-secao').value.trim(),
     zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
     status: document.getElementById('f-status').value || 'ativo',
+    aniversario: raw.aniversario,
     reuniao_feita: raw.reuniao_feita,
     reuniao_data: raw.reuniao_data,
     coord_area_id: document.getElementById('f-coord-area').value || '',
