@@ -1915,7 +1915,7 @@ function renderRelatorioFinanceiro() {
         const cel = (campo, val) => `<td style="text-align:right;font-size:.78rem;cursor:pointer" title="Clique para editar" onclick="editarCustoInline(this,'${fid}','${campo}',${val||0},'${zona}')">${val?R(val):'<span style="color:var(--muted)">—</span>'}</td>`;
         return `<tr>
           <td><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></td>
-          <td style="font-weight:500;font-size:.83rem">${h(m.nome||'—')}</td>
+          <td style="font-weight:500;font-size:.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${h(m.nome||'')}">${h(m.nome||'—')}</td>
           <td style="text-align:center;color:#3b82f6;font-size:.8rem">${m.votos||'—'}</td>
           ${cel('custo_jul',m.custo_jul)}
           ${cel('custo_ago',m.custo_ago)}
@@ -1949,16 +1949,16 @@ function renderRelatorioFinanceiro() {
         </div>
       </div>
       <div class="fin-acc-body" id="${key}">
-        <table class="fin-mem-table">
+        <table class="fin-mem-table" style="width:100%;table-layout:fixed">
           <thead><tr>
-            <th>Tipo</th>
+            <th style="width:54px">Tipo</th>
             <th>Nome</th>
-            <th style="text-align:center">Apoios</th>
-            <th style="text-align:right">Jul</th>
-            <th style="text-align:right">Ago</th>
-            <th style="text-align:right">Set</th>
-            <th style="text-align:right">Out</th>
-            <th style="text-align:right">Total</th>
+            <th style="width:76px;text-align:center">Apoios</th>
+            <th style="width:82px;text-align:right">Jul</th>
+            <th style="width:82px;text-align:right">Ago</th>
+            <th style="width:82px;text-align:right">Set</th>
+            <th style="width:82px;text-align:right">Out</th>
+            <th style="width:92px;text-align:right">Total</th>
           </tr></thead>
           <tbody>${memRows}</tbody>
         </table>
