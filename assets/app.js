@@ -2854,6 +2854,16 @@ function bindStaticEvents() {
     });
   });
   on('f-tipo', 'change', atualizarCamposHierarquia);
+
+  // Auto-calcula total de ajuda de custo ao digitar
+  ['f-jul','f-ago','f-set','f-out'].forEach(id => {
+    on(id, 'input', () => {
+      const soma = ['f-jul','f-ago','f-set','f-out']
+        .reduce((s, i) => s + (parseFloat(document.getElementById(i)?.value) || 0), 0);
+      const ft = document.getElementById('f-total');
+      if (ft) ft.value = soma % 1 === 0 ? soma : soma.toFixed(2);
+    });
+  });
   on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 
   on('overlay', 'click', fecharModal);
