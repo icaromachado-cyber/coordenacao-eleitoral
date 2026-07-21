@@ -1909,17 +1909,22 @@ function renderRelatorioFinanceiro() {
     const TORD = {CA:0,L:1,LE:2,M:3,ME:4};
     const memRows = r.membros
       .sort((a,b)=>(TORD[a.tipo]??9)-(TORD[b.tipo]??9))
-      .map(m=>`<tr>
-        <td><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></td>
-        <td style="font-weight:500;font-size:.83rem">${h(m.nome||'—')}</td>
-        <td style="text-align:center;color:#3b82f6;font-size:.8rem">${m.votos||'—'}</td>
-        <td style="text-align:right;font-size:.78rem">${m.custo_jul?R(m.custo_jul):'<span style="color:var(--muted)">—</span>'}</td>
-        <td style="text-align:right;font-size:.78rem">${m.custo_ago?R(m.custo_ago):'<span style="color:var(--muted)">—</span>'}</td>
-        <td style="text-align:right;font-size:.78rem">${m.custo_set?R(m.custo_set):'<span style="color:var(--muted)">—</span>'}</td>
-        <td style="text-align:right;font-size:.78rem">${m.custo_out?R(m.custo_out):'<span style="color:var(--muted)">—</span>'}</td>
-        <td style="text-align:right;font-size:.8rem;font-weight:${m.total?700:400};color:${m.total>0?'#22c55e':'var(--muted)'}">
-          ${m.total?R(m.total):'—'}</td>
-      </tr>`).join('');
+      .map(m=>{
+        const fid = m._fireId||'';
+        const zona = m._zona||'';
+        const cel = (campo, val) => `<td style="text-align:right;font-size:.78rem;cursor:pointer" title="Clique para editar" onclick="editarCustoInline(this,'${fid}','${campo}',${val||0},'${zona}')">${val?R(val):'<span style="color:var(--muted)">—</span>'}</td>`;
+        return `<tr>
+          <td><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></td>
+          <td style="font-weight:500;font-size:.83rem">${h(m.nome||'—')}</td>
+          <td style="text-align:center;color:#3b82f6;font-size:.8rem">${m.votos||'—'}</td>
+          ${cel('custo_jul',m.custo_jul)}
+          ${cel('custo_ago',m.custo_ago)}
+          ${cel('custo_set',m.custo_set)}
+          ${cel('custo_out',m.custo_out)}
+          <td style="text-align:right;font-size:.8rem;font-weight:${m.total?700:400};color:${m.total>0?'#22c55e':'var(--muted)'}" id="fin-total-${fid}">
+            ${m.total?R(m.total):'—'}</td>
+        </tr>`;
+      }).join('');
 
     html += `
     <div class="fin-acc-item">
@@ -1967,6 +1972,49 @@ function toggleFinCoord(key) {
   if (!body) return;
   const open = body.classList.toggle('open');
   if (arrow) arrow.textContent = open ? '▼' : '▶';
+}
+
+function editarCustoInline(td, fireId, campo, valorAtual, zona) {
+  if (td.querySelector('input')) return;
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.min = '0';
+  input.step = '0.01';
+  input.value = valorAtual || '';
+  input.placeholder = '0';
+  input.style.cssText = 'width:72px;padding:2px 4px;border:1px solid #3b82f6;border-radius:4px;font-size:.78rem;text-align:right;outline:none';
+  td.innerHTML = '';
+  td.appendChild(input);
+  input.focus();
+  input.select();
+
+  const salvar = async () => {
+    const novo = parseFloat(input.value) || 0;
+    td.innerHTML = '<span style="color:var(--muted)">...</span>';
+    try {
+      const rec = DB[zona]?.find(r => r._fireId === fireId);
+      const outros = {
+        custo_jul: rec?.custo_jul||0, custo_ago: rec?.custo_ago||0,
+        custo_set: rec?.custo_set||0, custo_out: rec?.custo_out||0,
+      };
+      outros[campo] = novo;
+      const total = outros.custo_jul + outros.custo_ago + outros.custo_set + outros.custo_out;
+      await colecao().doc(fireId).update({ [campo]: novo, total });
+      if (rec) { rec[campo] = novo; rec.total = total; }
+      const R = v => v ? 'R$ '+Number(v).toLocaleString('pt-BR') : '—';
+      td.innerHTML = novo ? R(novo) : '<span style="color:var(--muted)">—</span>';
+      td.onclick = () => editarCustoInline(td, fireId, campo, novo, zona);
+      const totEl = document.getElementById('fin-total-'+fireId);
+      if (totEl) totEl.innerHTML = total ? `<span style="font-weight:700;color:#22c55e">${R(total)}</span>` : '—';
+      toast('✅ Salvo');
+    } catch(e) {
+      td.innerHTML = '<span style="color:#f87171">Erro</span>';
+      console.error(e);
+    }
+  };
+
+  input.addEventListener('blur', salvar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { td.innerHTML = valorAtual ? 'R$ '+Number(valorAtual).toLocaleString('pt-BR') : '<span style="color:var(--muted)">—</span>'; td.onclick = () => editarCustoInline(td,fireId,campo,valorAtual,zona); } });
 }
 
 
