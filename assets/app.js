@@ -2012,8 +2012,14 @@ function editarCustoInline(td, fireId, campo, valorAtual, zona) {
       const R = v => v ? 'R$ '+Number(v).toLocaleString('pt-BR') : '—';
       td.innerHTML = novo ? R(novo) : '<span style="color:var(--muted)">—</span>';
       td.onclick = () => editarCustoInline(td, fireId, campo, novo, zona);
-      const totEl = document.getElementById('fin-total-'+fireId);
-      if (totEl) totEl.innerHTML = total ? `<span style="font-weight:700;color:#22c55e">${R(total)}</span>` : '—';
+      // re-renderiza o relatório mantendo o accordion aberto
+      const openKeys = [...document.querySelectorAll('.fin-acc-body.open')].map(el => el.id);
+      renderRelatorioFinanceiro();
+      openKeys.forEach(k => {
+        const el = document.getElementById(k);
+        const arr = document.getElementById(k+'-arr');
+        if (el) { el.classList.add('open'); if (arr) arr.textContent = '▼'; }
+      });
       toast('✅ Salvo');
     } catch(e) {
       td.innerHTML = '<span style="color:#f87171">Erro</span>';
