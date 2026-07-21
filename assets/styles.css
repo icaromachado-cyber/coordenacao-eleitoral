@@ -968,7 +968,7 @@ body.theme-light .rel-search { background: #fff; }
 .fin-bv { font-size:.72rem; font-weight:600; color:var(--text); text-align:center; }
 
 .fin-accordion { display:flex; flex-direction:column; gap:8px; }
-.fin-acc-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:clip; }
+.fin-acc-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; }
 .fin-acc-hd {
   display:flex; align-items:center; justify-content:space-between;
   padding:14px 18px; cursor:pointer; gap:12px; user-select:none;
@@ -987,7 +987,7 @@ body.theme-light .rel-search { background: #fff; }
 .fin-acc-body { display:none; border-top:1px solid var(--border); overflow-x:auto; }
 .fin-acc-body.open { display:block; }
 
-.fin-mem-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.fin-mem-table { width:100%; min-width:700px; border-collapse:collapse; font-size:.82rem; }
 .fin-mem-table th {
   padding:8px 14px; font-size:.62rem; text-transform:uppercase; letter-spacing:.05em;
   color:var(--muted); background:rgba(255,255,255,.02); border-bottom:1px solid var(--border);
