@@ -987,7 +987,7 @@ body.theme-light .rel-search { background: #fff; }
 .fin-acc-body { display:none; border-top:1px solid var(--border); overflow-x:auto; }
 .fin-acc-body.open { display:block; }
 
-.fin-mem-table { width:100%; min-width:700px; border-collapse:collapse; font-size:.82rem; }
+.fin-mem-table { width:100%; border-collapse:collapse; font-size:.82rem; table-layout:fixed; }
 .fin-mem-table th {
   padding:8px 14px; font-size:.62rem; text-transform:uppercase; letter-spacing:.05em;
   color:var(--muted); background:rgba(255,255,255,.02); border-bottom:1px solid var(--border);

@@ -1956,6 +1956,16 @@ function renderRelatorioFinanceiro() {
             <th style="text-align:right">Set</th><th style="text-align:right">Out</th>
             <th style="text-align:right">Total</th>
           </tr></thead>
+          <colgroup>
+            <col style="width:52px">
+            <col>
+            <col style="width:80px">
+            <col style="width:82px">
+            <col style="width:82px">
+            <col style="width:82px">
+            <col style="width:82px">
+            <col style="width:90px">
+          </colgroup>
           <tbody>${memRows}</tbody>
         </table>
       </div>
