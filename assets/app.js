@@ -1907,23 +1907,29 @@ function renderRelatorioFinanceiro() {
     const key  = `fac${idx}`;
 
     const TORD = {CA:0,L:1,LE:2,M:3,ME:4};
+    const C0='width:54px;flex-shrink:0';
+    const C2='width:76px;flex-shrink:0;text-align:center';
+    const CM='width:82px;flex-shrink:0;text-align:right;font-size:.78rem';
+    const CT='width:92px;flex-shrink:0;text-align:right;font-size:.8rem';
+    const ROW='display:flex;align-items:center;gap:0;padding:9px 14px;border-bottom:1px solid rgba(128,128,128,.1)';
+    const HDR='display:flex;align-items:center;gap:0;padding:7px 14px;font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:rgba(128,128,128,.05);border-bottom:1px solid var(--border)';
+
     const memRows = r.membros
       .sort((a,b)=>(TORD[a.tipo]??9)-(TORD[b.tipo]??9))
       .map(m=>{
         const fid = m._fireId||'';
         const zona = m._zona||'';
-        const cel = (campo, val) => `<td style="text-align:right;font-size:.78rem;cursor:pointer" title="Clique para editar" onclick="editarCustoInline(this,'${fid}','${campo}',${val||0},'${zona}')">${val?R(val):'<span style="color:var(--muted)">—</span>'}</td>`;
-        return `<tr>
-          <td><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></td>
-          <td style="font-weight:500;font-size:.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${h(m.nome||'')}">${h(m.nome||'—')}</td>
-          <td style="text-align:center;color:#3b82f6;font-size:.8rem">${m.votos||'—'}</td>
+        const cel = (campo, val) => `<div style="${CM};cursor:pointer" title="Clique para editar" onclick="editarCustoInline(this,'${fid}','${campo}',${val||0},'${zona}')">${val?R(val):'<span style="color:var(--muted)">—</span>'}</div>`;
+        return `<div style="${ROW}">
+          <div style="${C0}"><span class="fin-badge" style="background:${TCOR[m.tipo]||'#888'}22;color:${TCOR[m.tipo]||'#888'}">${m.tipo}</span></div>
+          <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-size:.83rem;padding-right:8px" title="${h(m.nome||'')}">${h(m.nome||'—')}</div>
+          <div style="${C2};color:#3b82f6">${m.votos||'—'}</div>
           ${cel('custo_jul',m.custo_jul)}
           ${cel('custo_ago',m.custo_ago)}
           ${cel('custo_set',m.custo_set)}
           ${cel('custo_out',m.custo_out)}
-          <td style="text-align:right;font-size:.8rem;font-weight:${m.total?700:400};color:${m.total>0?'#22c55e':'var(--muted)'}" id="fin-total-${fid}">
-            ${m.total?R(m.total):'—'}</td>
-        </tr>`;
+          <div style="${CT};font-weight:${m.total?700:400};color:${m.total>0?'#22c55e':'var(--muted)'}" id="fin-total-${fid}">${m.total?R(m.total):'—'}</div>
+        </div>`;
       }).join('');
 
     html += `
@@ -1949,19 +1955,17 @@ function renderRelatorioFinanceiro() {
         </div>
       </div>
       <div class="fin-acc-body" id="${key}">
-        <table class="fin-mem-table" style="width:100%;table-layout:fixed">
-          <thead><tr>
-            <th style="width:54px">Tipo</th>
-            <th>Nome</th>
-            <th style="width:76px;text-align:center">Apoios</th>
-            <th style="width:82px;text-align:right">Jul</th>
-            <th style="width:82px;text-align:right">Ago</th>
-            <th style="width:82px;text-align:right">Set</th>
-            <th style="width:82px;text-align:right">Out</th>
-            <th style="width:92px;text-align:right">Total</th>
-          </tr></thead>
-          <tbody>${memRows}</tbody>
-        </table>
+        <div style="${HDR}">
+          <div style="${C0}">Tipo</div>
+          <div style="flex:1">Nome</div>
+          <div style="${C2}">Apoios</div>
+          <div style="${CM}">Jul</div>
+          <div style="${CM}">Ago</div>
+          <div style="${CM}">Set</div>
+          <div style="${CM}">Out</div>
+          <div style="${CT}">Total</div>
+        </div>
+        ${memRows}
       </div>
     </div>`;
   });
