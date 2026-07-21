@@ -1950,12 +1950,6 @@ function renderRelatorioFinanceiro() {
       </div>
       <div class="fin-acc-body" id="${key}">
         <table class="fin-mem-table">
-          <thead><tr>
-            <th>Tipo</th><th>Nome</th><th style="text-align:center">Apoios</th>
-            <th style="text-align:right">Jul</th><th style="text-align:right">Ago</th>
-            <th style="text-align:right">Set</th><th style="text-align:right">Out</th>
-            <th style="text-align:right">Total</th>
-          </tr></thead>
           <colgroup>
             <col style="width:52px">
             <col>
@@ -1966,6 +1960,12 @@ function renderRelatorioFinanceiro() {
             <col style="width:82px">
             <col style="width:90px">
           </colgroup>
+          <thead><tr>
+            <th>Tipo</th><th>Nome</th><th style="text-align:center">Apoios</th>
+            <th style="text-align:right">Jul</th><th style="text-align:right">Ago</th>
+            <th style="text-align:right">Set</th><th style="text-align:right">Out</th>
+            <th style="text-align:right">Total</th>
+          </tr></thead>
           <tbody>${memRows}</tbody>
         </table>
       </div>
