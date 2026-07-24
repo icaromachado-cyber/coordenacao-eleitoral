@@ -1713,12 +1713,13 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
 .zon-legend-row.off { opacity: .4; }
 .zon-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 .zon-legend-nome { flex: 1; color: var(--text); }
+.zon-legend-pessoas { color: var(--accent2, var(--muted)); font-family: 'DM Mono', monospace; font-size: .7rem; }
 .zon-legend-pct { color: var(--muted); font-family: 'DM Mono', monospace; }
 
 .zon-list-panel {
   position: absolute;
   top: 60px; right: 16px; bottom: 20px;
-  width: 220px;
+  width: 250px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -1739,15 +1740,22 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
 .zon-list-body::-webkit-scrollbar { width: 6px; }
 .zon-list-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .zon-list-row {
-  display: flex; align-items: center; gap: 7px;
-  padding: 5px 6px; border-radius: 6px; cursor: pointer;
-  font-size: .74rem;
+  display: flex; align-items: flex-start; gap: 7px;
+  padding: 6px; border-radius: 6px; cursor: pointer;
 }
 .zon-list-row:hover { background: rgba(255,255,255,.05); }
 .zon-list-row.selected { background: rgba(59,130,246,.16); }
-.zon-list-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-.zon-list-sigla { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--text); flex: 1; }
-.zon-list-area { color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; }
+.zon-list-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; margin-top: 4px; }
+.zon-list-main { flex: 1; min-width: 0; }
+.zon-list-top { display: flex; align-items: baseline; gap: 6px; font-size: .74rem; }
+.zon-list-sigla { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--text); }
+.zon-list-area { color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; margin-left: auto; }
+.zon-list-bottom { display: flex; align-items: baseline; gap: 6px; margin-top: 1px; }
+.zon-list-nome {
+  color: var(--muted); font-size: .66rem; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.zon-list-pessoas { color: var(--accent2, var(--muted)); font-size: .66rem; font-family: 'DM Mono', monospace; flex-shrink: 0; }
 
 .zon-info-bar {
   position: absolute;
@@ -1763,6 +1771,14 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
   white-space: nowrap;
 }
 .zon-info-bar strong { color: var(--text); }
+.zon-info-bar { display: flex; align-items: center; gap: 8px; }
+.zon-calc-status { color: var(--accent2, var(--accent)); }
+.zon-calc-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 14px;
+  padding: 3px 10px; font-size: .68rem; font-weight: 600; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.zon-calc-btn:hover { filter: brightness(1.1); }
 
 body.theme-light .zon-search-bar,
 body.theme-light .zon-legend,
