@@ -185,6 +185,7 @@
       <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" title="Relatório Financeiro">📊</button>
       <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" title="Árvore de equipe">🌳</button>
       <button class="btn btn-import topbar-view-btn" id="btnMapToggle" title="Mapa">🗺️</button>
+      <button class="btn btn-import topbar-view-btn" id="btnZoneamentoToggle" title="Zoneamento (Lei 5.807/2022)">📐</button>
       <button class="btn btn-import topbar-view-btn" id="btnAniversariantesToggle" title="Aniversariantes do mês" onclick="abrirAniversariantes()">🎂</button>
       <button class="btn btn-import topbar-view-btn" id="btnAuditoriaToggle" title="Histórico de ações" style="display:none" onclick="abrirAuditoria()">📋 Logs</button>
       <div class="user-info">
@@ -376,6 +377,25 @@
         Clique no pin para detalhes
       </div>
     </div>
+  </div>
+
+  <!-- ZONEAMENTO VIEW (Lei municipal 5.807/2022) -->
+  <div class="zoneamento-area" id="zoneamentoArea">
+    <div id="zoneMap"></div>
+    <div class="zon-search-bar">
+      <span>🔍</span>
+      <input type="text" id="zonSearch" placeholder="Buscar sigla ou nome da zona…" autocomplete="off">
+      <span class="zon-search-count" id="zonSearchCount"></span>
+    </div>
+    <div class="zon-legend">
+      <h4>Macrozonas</h4>
+      <div id="zonLegendList"></div>
+    </div>
+    <div class="zon-list-panel">
+      <h4>Zonas por área</h4>
+      <div class="zon-list-body" id="zonListBody"></div>
+    </div>
+    <div class="zon-info-bar" id="zonInfoBar">Carregando…</div>
   </div>
 
   <!-- RELATORIO FINANCEIRO VIEW -->
@@ -572,11 +592,14 @@
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
 <script src="assets/app.js?v=20260721k"></script>
+<script src="assets/dados-zoneamento.js"></script>
+<script src="assets/zoneamento.js"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
   document.getElementById('btnTreeToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleTreeView(); });
   document.getElementById('btnMapToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleMapView(); });
+  document.getElementById('btnZoneamentoToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleZoneamentoView(); });
 </script>
 <!-- MODAL SELEÇÃO DE CAMPANHAS -->
 <div class="modal-camps-sel" id="modalCampsSel">

@@ -1641,6 +1641,7 @@ function reopenDashboardView() {
 
 function toggleDashboardView() {
   // Mantido para compatibilidade com mapa/árvore; dashboard não alterna mais
+  if (typeof zoneamentoView !== 'undefined' && zoneamentoView) toggleZoneamentoView();
   if (mapView) {
     mapView = false;
     document.getElementById('btnMapToggle').classList.remove('active');
@@ -1759,6 +1760,7 @@ function toggleRelatorioView() {
   try { _toggleRelatorioViewInner(); } catch(err) { console.error('[Relatório]', err); toast('Erro no Relatório: ' + err.message, 'erro'); }
 }
 function _toggleRelatorioViewInner() {
+  if (typeof zoneamentoView !== 'undefined' && zoneamentoView) toggleZoneamentoView();
   if (mapView) {
     mapView = false;
     document.getElementById('btnMapToggle').classList.remove('active');
@@ -2033,6 +2035,7 @@ function editarCustoInline(td, fireId, campo, valorAtual, zona) {
 
 
 function toggleTreeView() {
+  if (typeof zoneamentoView !== 'undefined' && zoneamentoView) toggleZoneamentoView();
   // Fecha mapa se estiver aberto
   if (mapView) {
     mapView = false;
@@ -3212,6 +3215,7 @@ let mapTipoFiltro = new Set(['CA','L','LE','M','ME']);
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
 
 function toggleMapView() {
+  if (typeof zoneamentoView !== 'undefined' && zoneamentoView) toggleZoneamentoView();
   // Fecha árvore se estiver aberta
   if (treeView) {
     treeView = false;
