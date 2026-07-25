@@ -139,6 +139,7 @@ function iniciarBairrosMap() {
     brrRenderLegend();
     brrRenderList();
     brrRenderInfoBar();
+    brrCalcularPessoasPorBairro();
   }
 }
 
