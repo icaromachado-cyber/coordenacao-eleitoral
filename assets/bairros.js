@@ -47,18 +47,14 @@ function brrFeatures() {
 function brrTotalAreaKm2() {
   return brrFeatures().reduce((s, f) => s + (f.properties.areaKm2 || 0), 0);
 }
-function brrTotalQuadras() {
-  return brrFeatures().reduce((s, f) => s + (f.properties.nQuadras || 0), 0);
-}
 function brrZonaTotais() {
   const totais = {};
-  for (const z of BRR_ZONA_ORDEM) totais[z] = { area: 0, bairros: 0, quadras: 0 };
+  for (const z of BRR_ZONA_ORDEM) totais[z] = { area: 0, bairros: 0 };
   for (const f of brrFeatures()) {
     const z = f.properties.zona;
     if (!totais[z]) continue;
     totais[z].area += f.properties.areaKm2 || 0;
     totais[z].bairros += 1;
-    totais[z].quadras += f.properties.nQuadras || 0;
   }
   return totais;
 }
@@ -105,6 +101,7 @@ function _toggleBairrosViewInner() {
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
     bairrosArea.classList.add('active');
+    document.body.classList.add('map-fullscreen');
     setTimeout(() => {
       iniciarBairrosMap();
       if (bairroMap) bairroMap.invalidateSize();
@@ -116,6 +113,7 @@ function _toggleBairrosViewInner() {
     pag.style.display = '';
     ctrlBar.style.display = '';
     bairrosArea.classList.remove('active');
+    document.body.classList.remove('map-fullscreen');
     if (typeof reopenDashboardView === 'function') reopenDashboardView();
   }
 }
@@ -186,7 +184,6 @@ function brrPopupHTML(p) {
       <div class="zon-popup-sigla" style="color:${cor}">${brrEsc(p.nome)}</div>
       <div class="popup-row"><span class="popup-lbl">Zona</span><span class="popup-val">${brrEsc(BRR_ZONA_META[p.zona]?.nome || p.zona)}</span></div>
       <div class="popup-row"><span class="popup-lbl">Área</span><span class="popup-val">${p.areaKm2.toFixed(2)} km²</span></div>
-      <div class="popup-row"><span class="popup-lbl">Quadras</span><span class="popup-val">${p.nQuadras}</span></div>
       ${pessoasHTML}
     </div>`;
 }
@@ -226,12 +223,12 @@ function brrRenderLegend() {
   }
 
   const itens = BRR_ZONA_ORDEM.map(z => ({ z, ...totais[z] })).sort((a, b) => b.area - a.area);
-  el.innerHTML = itens.map(({ z, area, bairros, quadras }) => {
+  el.innerHTML = itens.map(({ z, area, bairros }) => {
     const pct = totalGeral ? (area / totalGeral * 100) : 0;
     const cor = brrZonaCor(z);
     const nPessoas = pessoasPorZona ? (pessoasPorZona[z] || 0) : null;
     const pctPessoas = (nPessoas !== null && totalPessoasGeral) ? ` (${(nPessoas / totalPessoasGeral * 100).toFixed(0)}%)` : '';
-    const subLabel = nPessoas !== null ? `${nPessoas} pessoas${pctPessoas}` : `${quadras} quadras`;
+    const subLabel = nPessoas !== null ? `${nPessoas} pessoas${pctPessoas}` : `${area.toFixed(1)} km²`;
     return `<div class="zon-legend-row" data-zona="${z}">
       <span class="zon-legend-dot" style="background:${cor}"></span>
       <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${subLabel}</span></span>
@@ -269,7 +266,6 @@ function brrRenderList() {
         <div class="zon-list-top">
           ${rank ? `<span class="zon-list-rank">#${rank}</span>` : ''}
           <span class="zon-list-sigla">${brrEsc(p.nome)}</span>
-          <span class="zon-list-area">${p.nQuadras} quadras</span>
         </div>
         <div class="zon-list-bottom">
           <span class="zon-list-nome">${brrEsc(BRR_ZONA_META[p.zona]?.nome || p.zona)} · ${p.areaKm2.toFixed(1)} km²</span>
@@ -303,7 +299,7 @@ function brrGoToGid(gid) {
 function brrRenderInfoBar() {
   const el = document.getElementById('brrInfoBar');
   if (!el) return;
-  const base = `<strong>${brrFeatures().length}</strong> bairros · <strong>${brrTotalQuadras().toLocaleString('pt-BR')}</strong> quadras · <strong>${brrTotalAreaKm2().toFixed(1)}</strong> km² mapeados`;
+  const base = `<strong>${brrFeatures().length}</strong> bairros · <strong>${brrTotalAreaKm2().toFixed(1)}</strong> km² mapeados`;
 
   if (bairroPessoasCalculando) {
     el.innerHTML = `${base} · <span class="zon-calc-status">calculando pessoas por bairro…</span>`;

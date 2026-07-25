@@ -3212,7 +3212,11 @@ let markers = [];          // [{marker, tipo}]
 function carregarGeocodeCache() {
   try {
     const raw = localStorage.getItem('geocodeCache');
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const cache = JSON.parse(raw);
+    // Remove falhas gravadas por versões antigas (persistiam null p/ sempre) — deixa reprocessar
+    for (const chave in cache) if (cache[chave] === null) delete cache[chave];
+    return cache;
   } catch (e) { return {}; }
 }
 function salvarGeocodeCache() {
@@ -3444,8 +3448,9 @@ async function geocodificar(endereco, bairro, tentativa) {
     await new Promise(res => setTimeout(res, 1100));
   }
 
+  // Não persiste falha no localStorage: pode ser bloqueio temporário do Nominatim,
+  // e um endereço válido não deve ficar marcado como "sem coordenada" para sempre.
   geocodeCache[chave] = null;
-  salvarGeocodeCache();
   return null;
 }
 

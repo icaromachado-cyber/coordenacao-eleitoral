@@ -1301,6 +1301,12 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
   z-index: 999;
 }
 .map-fullscreen #map { width: 100% !important; height: 100% !important; }
+.map-fullscreen .bairros-area {
+  position: fixed !important;
+  top: 54px; left: 0; right: 0; bottom: 0;
+  z-index: 999;
+}
+.map-fullscreen #bairroMap { width: 100% !important; height: 100% !important; }
 
 /* MAP VIEW */
 .map-area {
@@ -1749,7 +1755,6 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
 .zon-list-main { flex: 1; min-width: 0; }
 .zon-list-top { display: flex; align-items: baseline; gap: 6px; font-size: .74rem; }
 .zon-list-sigla { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--text); }
-.zon-list-area { color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; margin-left: auto; white-space: nowrap; }
 .zon-list-bottom { display: flex; align-items: baseline; gap: 6px; margin-top: 1px; }
 .zon-list-nome {
   color: var(--muted); font-size: .66rem; flex: 1; min-width: 0;
