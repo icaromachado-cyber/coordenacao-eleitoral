@@ -418,8 +418,6 @@ async function brrCalcularPessoasPorBairro() {
       if ((i + 1) % 5 === 0 || i === comEndereco.length - 1) {
         const el = document.getElementById('brrInfoBar');
         if (el) el.innerHTML = `Calculando pessoas por bairro… <strong>${i + 1}/${comEndereco.length}</strong>`;
-      }
-      if ((i + 1) % 15 === 0) {
         bairroPessoasPorGid = porGid;
         brrRenderLegend();
         brrRenderList();
