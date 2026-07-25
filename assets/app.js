@@ -3223,6 +3223,7 @@ function salvarGeocodeCache() {
   try { localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache)); } catch (e) {}
 }
 let geocodeCache = carregarGeocodeCache();     // endereço -> {lat, lng} | null — persistido no localStorage p/ não regeocodificar tudo a cada visita
+let geocodeRateLimited = false;  // true quando o Nominatim responde 429 — para de bater na API até a próxima carga da página
 let mapTipoFiltro = new Set(['CA','L','LE','M','ME']);
 
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
@@ -3421,6 +3422,7 @@ async function geocodificar(endereco, bairro, tentativa) {
   const chave = endereco || bairro;
   if (!chave) return null;
   if (geocodeCache[chave] !== undefined) return geocodeCache[chave];
+  if (geocodeRateLimited) return null;
 
   // Monta query progressivamente
   const queries = [];
@@ -3436,6 +3438,10 @@ async function geocodificar(endereco, bairro, tentativa) {
     try {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=br`;
       const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      if (r.status === 429) {
+        geocodeRateLimited = true;
+        return null;
+      }
       const data = await r.json();
       if (data && data[0]) {
         const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
@@ -3532,6 +3538,8 @@ async function renderMapa() {
     // Atualiza info bar
     infoBar.innerHTML = `<strong>${ok}</strong> no mapa · <strong>${fail}</strong> sem coordenada · processando ${i+1}/${comEndereco.length}`;
 
+    if (geocodeRateLimited) { fail += comEndereco.length - (i + 1); break; }
+
     // Pausa entre requests para respeitar Nominatim (1 req/seg)
     if (i < comEndereco.length - 1) {
       await new Promise(res => setTimeout(res, 1100));
@@ -3542,7 +3550,9 @@ async function renderMapa() {
 
   if (bounds.length) {
     leafletMap.fitBounds(bounds, { padding: [40, 40] });
-    infoBar.innerHTML = `✅ <strong>${ok}</strong> referências no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}`;
+    infoBar.innerHTML = `✅ <strong>${ok}</strong> referências no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}${geocodeRateLimited ? ' · <span style="color:var(--z-norte)">⚠️ serviço de geocodificação limitado no momento, tente de novo em alguns minutos</span>' : ''}`;
+  } else if (geocodeRateLimited) {
+    infoBar.innerHTML = '⚠️ Serviço de geocodificação temporariamente limitado (muitas requisições). Tente novamente em alguns minutos.';
   } else {
     infoBar.innerHTML = '⚠️ Nenhum endereço pôde ser localizado. Verifique os endereços cadastrados.';
   }

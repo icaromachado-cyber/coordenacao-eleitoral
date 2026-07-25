@@ -311,7 +311,10 @@ function brrRenderInfoBar() {
       ? Object.entries(r.porTipo).sort((a, b) => b[1] - a[1])
           .map(([t, n]) => `${(typeof tipoLabel === 'function' ? tipoLabel(t) : t)} ${n}`).join(' · ')
       : '';
-    el.innerHTML = `${base} · <strong>${r.ok}</strong> pessoas localizadas${porTipoStr ? ` (${porTipoStr})` : ''}${r.fail ? ` · <span style="color:var(--z-norte)">${r.fail} sem coordenada</span>` : ''} <button id="brrCalcPessoasBtn" class="zon-calc-btn">🔄 Recalcular</button>`;
+    const avisoLimite = r.rateLimited
+      ? ` · <span style="color:var(--z-norte)">⚠️ serviço de geocodificação limitado no momento, tente de novo em alguns minutos</span>`
+      : '';
+    el.innerHTML = `${base} · <strong>${r.ok}</strong> pessoas localizadas${porTipoStr ? ` (${porTipoStr})` : ''}${r.fail ? ` · <span style="color:var(--z-norte)">${r.fail} sem coordenada</span>` : ''}${avisoLimite} <button id="brrCalcPessoasBtn" class="zon-calc-btn">🔄 Recalcular</button>`;
   } else {
     el.innerHTML = `${base} <button id="brrCalcPessoasBtn" class="zon-calc-btn">👥 Calcular pessoas por bairro</button>`;
   }
@@ -422,10 +425,18 @@ async function brrCalcularPessoasPorBairro() {
         brrRenderLegend();
         brrRenderList();
       }
+
+      if (typeof geocodeRateLimited !== 'undefined' && geocodeRateLimited) {
+        fail += comEndereco.length - (i + 1);
+        break;
+      }
     }
 
     bairroPessoasPorGid = porGid;
-    bairroPessoasResumo = { ok, fail, total: comEndereco.length, porTipo: porTipoGeral };
+    bairroPessoasResumo = {
+      ok, fail, total: comEndereco.length, porTipo: porTipoGeral,
+      rateLimited: (typeof geocodeRateLimited !== 'undefined' && geocodeRateLimited)
+    };
   } catch (err) {
     console.error('[Bairros] erro ao calcular pessoas por bairro', err);
     if (typeof toast === 'function') toast('Erro ao calcular pessoas por bairro: ' + err.message, 'erro');
