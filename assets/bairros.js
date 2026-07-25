@@ -13,7 +13,11 @@ let bairroSearchQ = '';
 
 let bairroPessoasPorGid = null;  // gid -> { total, porTipo: {} }
 let bairroPessoasCalculando = false;
-let bairroPessoasResumo = null;  // { ok, fail, total }
+let bairroPessoasResumo = null;  // { ok, fail, total, porTipo }
+let bairroPessoasPontos = null;  // [{ d, lat, lng, gid }] — para os pinos individuais no mapa
+let bairroPinsLayer = null;
+let bairroMostrarPinos = false;
+let bairroPinsTipoFiltro = new Set(['CA', 'L', 'LE', 'M', 'ME']);
 
 const BRR_ZONA_META = {
   NORTE:   { nome: 'Norte',   varCor: '--brr-norte' },
@@ -208,11 +212,15 @@ function brrRenderLegend() {
   const totalGeral = brrTotalAreaKm2();
 
   let pessoasPorZona = null;
+  let totalPessoasGeral = 0;
   if (bairroPessoasPorGid) {
     pessoasPorZona = {};
     for (const f of brrFeatures()) {
       const r = bairroPessoasPorGid[f.properties.gid];
-      if (r) pessoasPorZona[f.properties.zona] = (pessoasPorZona[f.properties.zona] || 0) + r.total;
+      if (r) {
+        pessoasPorZona[f.properties.zona] = (pessoasPorZona[f.properties.zona] || 0) + r.total;
+        totalPessoasGeral += r.total;
+      }
     }
   }
 
@@ -221,10 +229,11 @@ function brrRenderLegend() {
     const pct = totalGeral ? (area / totalGeral * 100) : 0;
     const cor = brrZonaCor(z);
     const nPessoas = pessoasPorZona ? (pessoasPorZona[z] || 0) : null;
+    const pctPessoas = (nPessoas !== null && totalPessoasGeral) ? ` (${(nPessoas / totalPessoasGeral * 100).toFixed(0)}%)` : '';
     return `<div class="zon-legend-row" data-zona="${z}">
       <span class="zon-legend-dot" style="background:${cor}"></span>
       <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${quadras} quadras</span></span>
-      ${nPessoas !== null ? `<span class="zon-legend-pessoas">👥 ${nPessoas}</span>` : ''}
+      ${nPessoas !== null ? `<span class="zon-legend-pessoas">👥 ${nPessoas}${pctPessoas}</span>` : ''}
       <span class="zon-legend-pct">${pct.toFixed(1)}%</span>
     </div>`;
   }).join('');
@@ -248,14 +257,16 @@ function brrRenderList() {
     if (pa && pb && pa.total !== pb.total) return pb.total - pa.total;
     return b.properties.nQuadras - a.properties.nQuadras;
   });
-  el.innerHTML = rows.map(f => {
+  el.innerHTML = rows.map((f, idx) => {
     const p = f.properties;
     const cor = brrZonaCor(p.zona);
     const pessoas = brrPessoasResumoBairro(p.gid);
+    const rank = (bairroPessoasPorGid && pessoas && pessoas.total > 0) ? idx + 1 : null;
     return `<div class="zon-list-row" data-gid="${p.gid}">
       <span class="zon-list-dot" style="background:${cor}"></span>
       <div class="zon-list-main">
         <div class="zon-list-top">
+          ${rank ? `<span class="zon-list-rank">#${rank}</span>` : ''}
           <span class="zon-list-sigla">${brrEsc(p.nome)}</span>
           <span class="zon-list-area">${p.nQuadras} quadras</span>
         </div>
@@ -299,7 +310,11 @@ function brrRenderInfoBar() {
   }
   if (bairroPessoasResumo) {
     const r = bairroPessoasResumo;
-    el.innerHTML = `${base} · <strong>${r.ok}</strong> pessoas localizadas${r.fail ? ` · <span style="color:var(--z-norte)">${r.fail} sem coordenada</span>` : ''} <button id="brrCalcPessoasBtn" class="zon-calc-btn">🔄 Recalcular</button>`;
+    const porTipoStr = r.porTipo
+      ? Object.entries(r.porTipo).sort((a, b) => b[1] - a[1])
+          .map(([t, n]) => `${(typeof tipoLabel === 'function' ? tipoLabel(t) : t)} ${n}`).join(' · ')
+      : '';
+    el.innerHTML = `${base} · <strong>${r.ok}</strong> pessoas localizadas${porTipoStr ? ` (${porTipoStr})` : ''}${r.fail ? ` · <span style="color:var(--z-norte)">${r.fail} sem coordenada</span>` : ''} <button id="brrCalcPessoasBtn" class="zon-calc-btn">🔄 Recalcular</button>`;
   } else {
     el.innerHTML = `${base} <button id="brrCalcPessoasBtn" class="zon-calc-btn">👥 Calcular pessoas por bairro</button>`;
   }
@@ -362,6 +377,8 @@ async function brrCalcularPessoasPorBairro() {
     const dados = getDados();
     const comEndereco = dados.filter(d => d.endereco || d.bairro);
     const porGid = {};
+    const porTipoGeral = {};
+    const pontos = [];
     let ok = 0, fail = 0;
 
     for (let i = 0; i < comEndereco.length; i++) {
@@ -384,6 +401,8 @@ async function brrCalcularPessoasPorBairro() {
           bucket.total++;
           bucket.porTipo[d.tipo] = (bucket.porTipo[d.tipo] || 0) + 1;
         }
+        porTipoGeral[d.tipo] = (porTipoGeral[d.tipo] || 0) + 1;
+        pontos.push({ d, lat: coord.lat, lng: coord.lng, gid });
         ok++;
       } else {
         fail++;
@@ -396,7 +415,9 @@ async function brrCalcularPessoasPorBairro() {
     }
 
     bairroPessoasPorGid = porGid;
-    bairroPessoasResumo = { ok, fail, total: comEndereco.length };
+    bairroPessoasResumo = { ok, fail, total: comEndereco.length, porTipo: porTipoGeral };
+    bairroPessoasPontos = pontos;
+    bairroMostrarPinos = true;
   } catch (err) {
     console.error('[Bairros] erro ao calcular pessoas por bairro', err);
     if (typeof toast === 'function') toast('Erro ao calcular pessoas por bairro: ' + err.message, 'erro');
@@ -405,7 +426,58 @@ async function brrCalcularPessoasPorBairro() {
     brrRenderLegend();
     brrRenderList();
     brrRenderInfoBar();
+    brrRenderPinsBar();
+    brrRenderPessoasMarkers();
   }
+}
+
+// ===================== pinos individuais de pessoas no mapa =====================
+function brrRenderPessoasMarkers() {
+  if (!bairroMap) return;
+  if (bairroPinsLayer) { bairroMap.removeLayer(bairroPinsLayer); bairroPinsLayer = null; }
+  if (!bairroMostrarPinos || !bairroPessoasPontos) return;
+
+  const layers = [];
+  for (const p of bairroPessoasPontos) {
+    if (!bairroPinsTipoFiltro.has(p.d.tipo)) continue;
+    const icon = (typeof criarIcone === 'function') ? criarIcone(p.d.tipo) : undefined;
+    const marker = L.marker([p.lat, p.lng], icon ? { icon } : undefined);
+    if (typeof popupHTML === 'function') marker.bindPopup(popupHTML(p.d, p.d._zona), { maxWidth: 280 });
+    layers.push(marker);
+  }
+  bairroPinsLayer = L.layerGroup(layers).addTo(bairroMap);
+}
+
+function brrRenderPinsBar() {
+  const bar = document.getElementById('brrPinsBar');
+  if (!bar) return;
+  if (!bairroPessoasPontos) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const tiposHTML = ['CA', 'L', 'LE', 'M', 'ME'].map(t => {
+    const cor = (typeof TIPO_COLORS !== 'undefined' && TIPO_COLORS[t]) || '#888';
+    const ativo = bairroPinsTipoFiltro.has(t);
+    return `<button class="zon-pins-tipo-btn${ativo ? ' active' : ''}" data-tipo="${t}"><span class="zon-pins-dot" style="background:${cor}"></span>${t}</button>`;
+  }).join('');
+
+  bar.innerHTML = `
+    <button id="brrPinsToggle" class="zon-pins-toggle${bairroMostrarPinos ? '' : ' off'}">${bairroMostrarPinos ? '📍 Pessoas no mapa' : '🙈 Pessoas ocultas'}</button>
+    ${tiposHTML}
+  `;
+
+  document.getElementById('brrPinsToggle').addEventListener('click', () => {
+    bairroMostrarPinos = !bairroMostrarPinos;
+    brrRenderPinsBar();
+    brrRenderPessoasMarkers();
+  });
+  bar.querySelectorAll('.zon-pins-tipo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.tipo;
+      if (bairroPinsTipoFiltro.has(t)) bairroPinsTipoFiltro.delete(t); else bairroPinsTipoFiltro.add(t);
+      brrRenderPinsBar();
+      brrRenderPessoasMarkers();
+    });
+  });
 }
 
 // ===================== boot =====================
