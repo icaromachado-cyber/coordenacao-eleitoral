@@ -383,7 +383,9 @@ async function brrCalcularPessoasPorBairro() {
       const chave = d.endereco || d.bairro;
 
       let coord;
-      if (typeof geocodeCache !== 'undefined' && geocodeCache[chave] !== undefined) {
+      if (typeof d.lat === 'number' && typeof d.lng === 'number') {
+        coord = { lat: d.lat, lng: d.lng };
+      } else if (typeof geocodeCache !== 'undefined' && geocodeCache[chave] !== undefined) {
         coord = geocodeCache[chave];
       } else if (typeof geocodificar === 'function') {
         coord = await geocodificar(d.endereco, d.bairro, i);
