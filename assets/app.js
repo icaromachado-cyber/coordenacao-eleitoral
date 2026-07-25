@@ -3209,7 +3209,16 @@ function toggleSidebar() {
 let mapView = false;
 let leafletMap = null;
 let markers = [];          // [{marker, tipo}]
-let geocodeCache = {};     // endereço -> {lat, lng} | null
+function carregarGeocodeCache() {
+  try {
+    const raw = localStorage.getItem('geocodeCache');
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function salvarGeocodeCache() {
+  try { localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache)); } catch (e) {}
+}
+let geocodeCache = carregarGeocodeCache();     // endereço -> {lat, lng} | null — persistido no localStorage p/ não regeocodificar tudo a cada visita
 let mapTipoFiltro = new Set(['CA','L','LE','M','ME']);
 
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
@@ -3427,6 +3436,7 @@ async function geocodificar(endereco, bairro, tentativa) {
       if (data && data[0]) {
         const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         geocodeCache[chave] = result;
+        salvarGeocodeCache();
         return result;
       }
     } catch(e) {}
@@ -3435,6 +3445,7 @@ async function geocodificar(endereco, bairro, tentativa) {
   }
 
   geocodeCache[chave] = null;
+  salvarGeocodeCache();
   return null;
 }
 

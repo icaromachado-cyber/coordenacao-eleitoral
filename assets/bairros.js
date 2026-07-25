@@ -231,10 +231,10 @@ function brrRenderLegend() {
     const cor = brrZonaCor(z);
     const nPessoas = pessoasPorZona ? (pessoasPorZona[z] || 0) : null;
     const pctPessoas = (nPessoas !== null && totalPessoasGeral) ? ` (${(nPessoas / totalPessoasGeral * 100).toFixed(0)}%)` : '';
+    const subLabel = nPessoas !== null ? `${nPessoas} pessoas${pctPessoas}` : `${quadras} quadras`;
     return `<div class="zon-legend-row" data-zona="${z}">
       <span class="zon-legend-dot" style="background:${cor}"></span>
-      <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${quadras} quadras</span></span>
-      ${nPessoas !== null ? `<span class="zon-legend-pessoas">👥 ${nPessoas}${pctPessoas}</span>` : ''}
+      <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${subLabel}</span></span>
       <span class="zon-legend-pct">${pct.toFixed(1)}%</span>
     </div>`;
   }).join('');
@@ -374,12 +374,18 @@ async function brrCalcularPessoasPorBairro() {
   bairroPessoasCalculando = true;
   brrRenderInfoBar();
 
+  // Mostra os pinos progressivamente, um a um, em vez de esperar o cálculo inteiro terminar
+  bairroMostrarPinos = true;
+  bairroPessoasPontos = [];
+  if (bairroPinsLayer) { bairroMap.removeLayer(bairroPinsLayer); }
+  bairroPinsLayer = L.layerGroup([]).addTo(bairroMap);
+  brrRenderPinsBar();
+
   try {
     const dados = getDados();
     const comEndereco = dados.filter(d => d.endereco || d.bairro);
     const porGid = {};
     const porTipoGeral = {};
-    const pontos = [];
     let ok = 0, fail = 0;
 
     for (let i = 0; i < comEndereco.length; i++) {
@@ -403,7 +409,11 @@ async function brrCalcularPessoasPorBairro() {
           bucket.porTipo[d.tipo] = (bucket.porTipo[d.tipo] || 0) + 1;
         }
         porTipoGeral[d.tipo] = (porTipoGeral[d.tipo] || 0) + 1;
-        pontos.push({ d, lat: coord.lat, lng: coord.lng, gid });
+        const ponto = { d, lat: coord.lat, lng: coord.lng, gid };
+        bairroPessoasPontos.push(ponto);
+        if (bairroPinsTipoFiltro.has(d.tipo)) {
+          bairroPinsLayer.addLayer(brrCreateMarkerParaPessoa(ponto));
+        }
         ok++;
       } else {
         fail++;
@@ -413,12 +423,15 @@ async function brrCalcularPessoasPorBairro() {
         const el = document.getElementById('brrInfoBar');
         if (el) el.innerHTML = `Calculando pessoas por bairro… <strong>${i + 1}/${comEndereco.length}</strong>`;
       }
+      if ((i + 1) % 15 === 0) {
+        bairroPessoasPorGid = porGid;
+        brrRenderLegend();
+        brrRenderList();
+      }
     }
 
     bairroPessoasPorGid = porGid;
     bairroPessoasResumo = { ok, fail, total: comEndereco.length, porTipo: porTipoGeral };
-    bairroPessoasPontos = pontos;
-    bairroMostrarPinos = true;
   } catch (err) {
     console.error('[Bairros] erro ao calcular pessoas por bairro', err);
     if (typeof toast === 'function') toast('Erro ao calcular pessoas por bairro: ' + err.message, 'erro');
@@ -433,19 +446,21 @@ async function brrCalcularPessoasPorBairro() {
 }
 
 // ===================== pinos individuais de pessoas no mapa =====================
+function brrCreateMarkerParaPessoa(p) {
+  const icon = (typeof criarIcone === 'function') ? criarIcone(p.d.tipo) : undefined;
+  const marker = L.marker([p.lat, p.lng], icon ? { icon } : undefined);
+  if (typeof popupHTML === 'function') marker.bindPopup(popupHTML(p.d, p.d._zona), { maxWidth: 280 });
+  return marker;
+}
+
 function brrRenderPessoasMarkers() {
   if (!bairroMap) return;
   if (bairroPinsLayer) { bairroMap.removeLayer(bairroPinsLayer); bairroPinsLayer = null; }
   if (!bairroMostrarPinos || !bairroPessoasPontos) return;
 
-  const layers = [];
-  for (const p of bairroPessoasPontos) {
-    if (!bairroPinsTipoFiltro.has(p.d.tipo)) continue;
-    const icon = (typeof criarIcone === 'function') ? criarIcone(p.d.tipo) : undefined;
-    const marker = L.marker([p.lat, p.lng], icon ? { icon } : undefined);
-    if (typeof popupHTML === 'function') marker.bindPopup(popupHTML(p.d, p.d._zona), { maxWidth: 280 });
-    layers.push(marker);
-  }
+  const layers = bairroPessoasPontos
+    .filter(p => bairroPinsTipoFiltro.has(p.d.tipo))
+    .map(brrCreateMarkerParaPessoa);
   bairroPinsLayer = L.layerGroup(layers).addTo(bairroMap);
 }
 
