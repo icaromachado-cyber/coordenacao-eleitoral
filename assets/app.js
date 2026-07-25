@@ -1642,13 +1642,6 @@ function reopenDashboardView() {
 function toggleDashboardView() {
   // Mantido para compatibilidade com mapa/árvore; dashboard não alterna mais
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
-  if (mapView) {
-    mapView = false;
-    document.getElementById('btnMapToggle').classList.remove('active');
-    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
-    document.getElementById('mapArea').classList.remove('active');
-    document.body.classList.remove('map-fullscreen');
-  }
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
@@ -1761,15 +1754,6 @@ function toggleRelatorioView() {
 }
 function _toggleRelatorioViewInner() {
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
-  if (mapView) {
-    mapView = false;
-    document.getElementById('btnMapToggle').classList.remove('active');
-    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
-    document.getElementById('mapArea').classList.remove('active');
-    document.querySelector('.table-area').classList.remove('hidden');
-    document.getElementById('pag').style.display = '';
-    document.body.classList.remove('map-fullscreen');
-  }
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
@@ -2036,16 +2020,6 @@ function editarCustoInline(td, fireId, campo, valorAtual, zona) {
 
 function toggleTreeView() {
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
-  // Fecha mapa se estiver aberto
-  if (mapView) {
-    mapView = false;
-    document.getElementById('btnMapToggle').classList.remove('active');
-    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
-    document.getElementById('mapArea').classList.remove('active');
-    document.querySelector('.table-area').classList.remove('hidden');
-    document.getElementById('pag').style.display = '';
-    document.body.classList.remove('map-fullscreen');
-  }
   _fecharRelatorio();
   closeDashboardView();
 
@@ -2888,7 +2862,7 @@ function bindStaticEvents() {
   on('mobMenuBtn', 'click', toggleSidebar);
   on('btnTheme', 'click', toggleTheme);
   on('btnDashboardClose', 'click', closeDashboardView);
-  // btnRelatorioToggle, btnTreeToggle, btnMapToggle são bindados inline no HTML
+  // btnRelatorioToggle, btnTreeToggle, btnBairrosToggle são bindados inline no HTML
   on('btnLogout', 'click', fazerLogout);
   on('importFile', 'change', importarArquivo);
   on('btnExport', 'click', exportarDados);
@@ -3033,9 +3007,6 @@ function handleActionClick(event) {
       break;
     case 'toggle-tree':
       toggleTreeView();
-      break;
-    case 'toggle-map':
-      toggleMapView();
       break;
     default:
       return;
@@ -3205,10 +3176,7 @@ function toggleSidebar() {
 // ===================== START =====================
 // init() é chamado pelo onAuthStateChanged após login.
 
-// ===================== MAPA =====================
-let mapView = false;
-let leafletMap = null;
-let markers = [];          // [{marker, tipo}]
+// ===================== MAPA (Bairros) =====================
 function carregarGeocodeCache() {
   try {
     const raw = localStorage.getItem('geocodeCache');
@@ -3224,51 +3192,8 @@ function salvarGeocodeCache() {
 }
 let geocodeCache = carregarGeocodeCache();     // endereço -> {lat, lng} | null — persistido no localStorage p/ não regeocodificar tudo a cada visita
 let geocodeRateLimited = false;  // true quando o Nominatim responde 429 — para de bater na API até a próxima carga da página
-let mapTipoFiltro = new Set(['CA','L','LE','M','ME']);
 
 const TIPO_COLORS = { CA: '#fb923c', L: '#3b82f6', M: '#22c55e', LE: '#a855f7', ME: '#eab308' };
-
-function toggleMapView() {
-  if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
-  // Fecha árvore se estiver aberta
-  if (treeView) {
-    treeView = false;
-    document.getElementById('btnTreeToggle').classList.remove('active');
-    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
-    document.getElementById('treeArea').classList.remove('active');
-    document.querySelector('.table-area').classList.remove('hidden');
-    document.getElementById('pag').style.display = '';
-    document.querySelector('.controls-bar').style.display = '';
-  }
-  _fecharRelatorio();
-  closeDashboardView();
-  mapView = !mapView;
-  const btn = document.getElementById('btnMapToggle');
-  const tableArea = document.querySelector('.table-area');
-  const pag = document.getElementById('pag');
-  const mapArea = document.getElementById('mapArea');
-
-  if (mapView) {
-    btn.classList.add('active');
-    btn.textContent = '📋 Tabela';
-    tableArea.classList.add('hidden');
-    pag.style.display = 'none';
-    mapArea.classList.add('active');
-    document.body.classList.add('map-fullscreen');
-    setTimeout(() => {
-      if (leafletMap) leafletMap.invalidateSize();
-      iniciarMapa();
-    }, 100);
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '🗺️ Mapa';
-    tableArea.classList.remove('hidden');
-    pag.style.display = '';
-    mapArea.classList.remove('active');
-    document.body.classList.remove('map-fullscreen');
-    reopenDashboardView();
-  }
-}
 
 // ===================== FINANCEIRO =====================
 async function getCurrentUserRole() {
@@ -3363,17 +3288,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 });
 
-function iniciarMapa() {
-  if (!leafletMap) {
-    leafletMap = L.map('map', { zoomControl: true }).setView([-5.0892, -42.8019], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19
-    }).addTo(leafletMap);
-  }
-  renderMapa();
-}
-
 function criarIcone(tipo) {
   const cor = TIPO_COLORS[tipo] || '#888';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
@@ -3415,7 +3329,7 @@ function popupHTML(d, zona) {
 }
 
 function fecharMapPopup() {
-  if (leafletMap) leafletMap.closePopup();
+  if (typeof bairroMap !== 'undefined' && bairroMap) bairroMap.closePopup();
 }
 
 async function geocodificar(endereco, bairro, tentativa) {
@@ -3458,106 +3372,6 @@ async function geocodificar(endereco, bairro, tentativa) {
   // e um endereço válido não deve ficar marcado como "sem coordenada" para sempre.
   geocodeCache[chave] = null;
   return null;
-}
-
-function toggleMapFiltro(tipo) {
-  if (mapTipoFiltro.has(tipo)) mapTipoFiltro.delete(tipo);
-  else mapTipoFiltro.add(tipo);
-
-  document.querySelectorAll('.mfb-btn').forEach(btn => {
-    const t = btn.dataset.tipo;
-    btn.classList.toggle('active', mapTipoFiltro.has(t));
-  });
-
-  markers.forEach(({ marker, tipo: t }) => {
-    if (mapTipoFiltro.has(t)) { if (!leafletMap.hasLayer(marker)) leafletMap.addLayer(marker); }
-    else                       { if (leafletMap.hasLayer(marker))  leafletMap.removeLayer(marker); }
-  });
-}
-
-function toggleTodosMapa() {
-  const todos = mapTipoFiltro.size === 5;
-  if (todos) mapTipoFiltro.clear();
-  else ['CA','L','LE','M','ME'].forEach(t => mapTipoFiltro.add(t));
-
-  document.querySelectorAll('.mfb-btn').forEach(btn => {
-    btn.classList.toggle('active', mapTipoFiltro.has(btn.dataset.tipo));
-  });
-  markers.forEach(({ marker, tipo }) => {
-    if (mapTipoFiltro.has(tipo)) { if (!leafletMap.hasLayer(marker)) leafletMap.addLayer(marker); }
-    else                          { if (leafletMap.hasLayer(marker))  leafletMap.removeLayer(marker); }
-  });
-}
-
-async function renderMapa() {
-  // Limpa marcadores antigos
-  markers.forEach(({ marker }) => leafletMap.removeLayer(marker));
-  markers = [];
-
-  const dados = getDados();
-  const comEndereco = dados.filter(d => d.endereco || d.bairro);
-
-  const infoBar = document.getElementById('mapInfoBar');
-  const gc = document.getElementById('gcProgress');
-  const gcSub = document.getElementById('gcSub');
-
-  if (!comEndereco.length) {
-    infoBar.innerHTML = '⚠️ Nenhum registro com endereço ou bairro para mapear';
-    return;
-  }
-
-  // Mostra spinner
-  gc.classList.add('active');
-  infoBar.innerHTML = 'Geocodificando endereços…';
-
-  let ok = 0, fail = 0;
-  const bounds = [];
-
-  for (let i = 0; i < comEndereco.length; i++) {
-    const d = comEndereco[i];
-    gcSub.textContent = `${i+1} / ${comEndereco.length}`;
-
-    // Pequena variação aleatória para não sobrepor pins do mesmo bairro
-    const jitter = () => (Math.random() - 0.5) * 0.003;
-
-    let coord = await geocodificar(d.endereco, d.bairro, i);
-
-    if (coord) {
-      const lat = coord.lat + jitter();
-      const lng = coord.lng + jitter();
-      const marker = L.marker([lat, lng], { icon: criarIcone(d.tipo) })
-        .bindPopup(popupHTML(d, d._zona), { maxWidth: 280 });
-      if (mapTipoFiltro.has(d.tipo)) marker.addTo(leafletMap);
-      markers.push({ marker, tipo: d.tipo });
-      bounds.push([lat, lng]);
-      ok++;
-    } else {
-      fail++;
-    }
-
-    // Atualiza info bar
-    infoBar.innerHTML = `<strong>${ok}</strong> no mapa · <strong>${fail}</strong> sem coordenada · processando ${i+1}/${comEndereco.length}`;
-
-    if (geocodeRateLimited) { fail += comEndereco.length - (i + 1); break; }
-
-    // Pausa entre requests para respeitar Nominatim (1 req/seg)
-    if (i < comEndereco.length - 1) {
-      await new Promise(res => setTimeout(res, 1100));
-    }
-  }
-
-  gc.classList.remove('active');
-
-  if (bounds.length) {
-    leafletMap.fitBounds(bounds, { padding: [40, 40] });
-    infoBar.innerHTML = `✅ <strong>${ok}</strong> referências no mapa · ${fail ? `<span style="color:var(--z-norte)">${fail} sem endereço encontrado</span>` : ''}${geocodeRateLimited ? ' · <span style="color:var(--z-norte)">⚠️ serviço de geocodificação limitado no momento, tente de novo em alguns minutos</span>' : ''}`;
-  } else if (geocodeRateLimited) {
-    infoBar.innerHTML = '⚠️ Serviço de geocodificação temporariamente limitado (muitas requisições). Tente novamente em alguns minutos.';
-  } else {
-    infoBar.innerHTML = '⚠️ Nenhum endereço pôde ser localizado. Verifique os endereços cadastrados.';
-  }
-
-  setTimeout(() => leafletMap.invalidateSize(), 200);
 }
 
 // ===================== GERENCIAR USUÁRIOS (ADMIN) =====================

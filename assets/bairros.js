@@ -66,15 +66,6 @@ function toggleBairrosView() {
 }
 
 function _toggleBairrosViewInner() {
-  if (typeof mapView !== 'undefined' && mapView) {
-    mapView = false;
-    document.getElementById('btnMapToggle').classList.remove('active');
-    document.getElementById('btnMapToggle').textContent = '🗺️ Mapa';
-    document.getElementById('mapArea').classList.remove('active');
-    document.querySelector('.table-area').classList.remove('hidden');
-    document.getElementById('pag').style.display = '';
-    document.body.classList.remove('map-fullscreen');
-  }
   if (typeof treeView !== 'undefined' && treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
@@ -108,7 +99,7 @@ function _toggleBairrosViewInner() {
     }, 100);
   } else {
     btn.classList.remove('active');
-    btn.textContent = '🏘️ Bairros';
+    btn.textContent = '🗺️ Mapa';
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     ctrlBar.style.display = '';
