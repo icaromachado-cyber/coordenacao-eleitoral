@@ -185,6 +185,7 @@
       <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" title="Relatório Financeiro">📊</button>
       <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" title="Árvore de equipe">🌳</button>
       <button class="btn btn-import topbar-view-btn" id="btnMapToggle" title="Mapa">🗺️</button>
+      <button class="btn btn-import topbar-view-btn" id="btnBairrosToggle" title="Bairros">🏘️</button>
       <button class="btn btn-import topbar-view-btn" id="btnAniversariantesToggle" title="Aniversariantes do mês" onclick="abrirAniversariantes()">🎂</button>
       <button class="btn btn-import topbar-view-btn" id="btnAuditoriaToggle" title="Histórico de ações" style="display:none" onclick="abrirAuditoria()">📋 Logs</button>
       <div class="user-info">
@@ -376,6 +377,25 @@
         Clique no pin para detalhes
       </div>
     </div>
+  </div>
+
+  <!-- BAIRROS VIEW (BAIRROS_2013 + cruzamento com QUADRAS) -->
+  <div class="bairros-area" id="bairrosArea">
+    <div id="bairroMap"></div>
+    <div class="zon-search-bar">
+      <span>🔍</span>
+      <input type="text" id="brrSearch" placeholder="Buscar bairro…" autocomplete="off">
+      <span class="zon-search-count" id="brrSearchCount"></span>
+    </div>
+    <div class="zon-legend">
+      <h4>Zonas</h4>
+      <div id="brrLegendList"></div>
+    </div>
+    <div class="zon-list-panel">
+      <h4>Bairros</h4>
+      <div class="zon-list-body" id="brrListBody"></div>
+    </div>
+    <div class="zon-info-bar" id="brrInfoBar">Carregando…</div>
   </div>
 
   <!-- RELATORIO FINANCEIRO VIEW -->
@@ -572,11 +592,14 @@
 <script src="assets/dados-norte.js"></script>
 <script src="assets/app-utils.js"></script>
 <script src="assets/app.js?v=20260721k"></script>
+<script src="assets/dados-bairros.js"></script>
+<script src="assets/bairros.js"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
   document.getElementById('btnTreeToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleTreeView(); });
   document.getElementById('btnMapToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleMapView(); });
+  document.getElementById('btnBairrosToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleBairrosView(); });
 </script>
 <!-- MODAL SELEÇÃO DE CAMPANHAS -->
 <div class="modal-camps-sel" id="modalCampsSel">
