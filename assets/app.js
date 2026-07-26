@@ -1652,6 +1652,7 @@ function reopenDashboardView() {
 function toggleDashboardView() {
   // Mantido para compatibilidade com mapa/árvore; dashboard não alterna mais
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
+  if (typeof orgView !== 'undefined' && orgView) toggleOrganogramaView();
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
@@ -1764,6 +1765,7 @@ function toggleRelatorioView() {
 }
 function _toggleRelatorioViewInner() {
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
+  if (typeof orgView !== 'undefined' && orgView) toggleOrganogramaView();
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
@@ -2030,6 +2032,7 @@ function editarCustoInline(td, fireId, campo, valorAtual, zona) {
 
 function toggleTreeView() {
   if (typeof bairrosView !== 'undefined' && bairrosView) toggleBairrosView();
+  if (typeof orgView !== 'undefined' && orgView) toggleOrganogramaView();
   _fecharRelatorio();
   closeDashboardView();
 

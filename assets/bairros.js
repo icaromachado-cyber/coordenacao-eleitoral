@@ -66,6 +66,7 @@ function toggleBairrosView() {
 }
 
 function _toggleBairrosViewInner() {
+  if (typeof orgView !== 'undefined' && orgView) toggleOrganogramaView();
   if (typeof treeView !== 'undefined' && treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');

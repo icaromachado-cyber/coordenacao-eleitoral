@@ -1240,6 +1240,115 @@ body.theme-light .fin-mem-table tbody tr:hover td { background:rgba(0,0,0,.015);
 .orphan-name { flex: 1; color: var(--text); }
 .orphan-bairro { color: var(--muted); font-size: .72rem; }
 
+/* ===================== ORGANOGRAMA ===================== */
+.org-area {
+  flex: 1;
+  overflow-y: auto;
+  display: none;
+  padding: 20px 24px;
+  background: var(--bg);
+}
+.org-area.active { display: block; }
+.org-area::-webkit-scrollbar { width: 6px; }
+.org-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.org-ca-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+.org-ca-strip::-webkit-scrollbar { height: 6px; }
+.org-ca-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.org-ca-pill {
+  display: flex; align-items: baseline; gap: 7px;
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid #fb923c;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: .8rem;
+  color: var(--muted);
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
+}
+.org-ca-pill:hover { background: rgba(251,146,60,.08); color: var(--text); }
+.org-ca-pill.active { background: rgba(251,146,60,.16); border-color: #fb923c; color: var(--text); }
+.org-ca-pill strong { color: var(--text); font-weight: 600; }
+.org-ca-pill .n { color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; }
+
+.org-canvas { overflow-x: auto; padding: 26px 12px 50px; }
+.org-canvas::-webkit-scrollbar { height: 8px; }
+.org-canvas::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.org-empty {
+  text-align: center; color: var(--muted); padding: 70px 20px; font-size: .85rem;
+}
+
+/* Diagrama em CSS puro: cada nível é um <ul>/<li>, linhas via pseudo-elementos */
+.org-tree, .org-tree ul {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; justify-content: center;
+}
+.org-tree ul { position: relative; padding-top: 28px; }
+.org-tree li { position: relative; flex: 0 0 auto; padding: 28px 14px 0; }
+.org-tree > li { padding-top: 0; }
+
+.org-tree li::before,
+.org-tree li::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 50%;
+  width: 50%; height: 28px;
+  border-top: 1px solid var(--border);
+}
+.org-tree li::after { right: auto; left: 50%; border-left: 1px solid var(--border); }
+.org-tree li:only-child { padding-top: 0; }
+.org-tree li:only-child::before, .org-tree li:only-child::after { display: none; }
+.org-tree li:first-child::before { border: 0 none; }
+.org-tree li:last-child::after { border: 0 none; }
+.org-tree li:last-child::before { border-right: 1px solid var(--border); }
+.org-tree ul ul::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  width: 0; height: 28px;
+  border-left: 1px solid var(--border);
+}
+
+.org-node {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 150px;
+  max-width: 190px;
+  text-align: left;
+}
+.org-node-ca { border-top: 3px solid #fb923c; }
+.org-node-l { border-top: 3px solid #3b82f6; cursor: pointer; }
+.org-node-l:hover { background: rgba(59,130,246,.08); }
+.org-node-l.expanded { background: rgba(59,130,246,.1); border-color: #3b82f6; }
+.org-node-m { border-top: 3px solid #22c55e; min-width: 130px; }
+
+.org-node-nome { font-size: .8rem; font-weight: 600; color: var(--text); line-height: 1.25; }
+.org-node-sub { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+.org-node-counts { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+.org-node-pill {
+  font-size: .64rem; color: var(--muted); background: rgba(255,255,255,.05);
+  border-radius: 8px; padding: 1px 6px; font-family: 'DM Mono', monospace;
+}
+.org-node-l.expanded .org-node-pill.eq { background: rgba(59,130,246,.22); color: #93c5fd; }
+.org-node.highlight { outline: 2px solid var(--accent, #e8433a); outline-offset: 2px; }
+
+body.theme-light .org-ca-pill { background: #ffffff; border-color: #dde1ee; }
+body.theme-light .org-node { background: #ffffff; border-color: #dde1ee; }
+
 .topbar-view-btn {
   background: rgba(255,255,255,.06) !important;
   border: 1px solid var(--border) !important;

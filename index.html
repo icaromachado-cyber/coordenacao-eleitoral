@@ -184,6 +184,7 @@
       <button class="btn-tree-toggle" id="btnTheme" title="Alternar tema">☀️</button>
       <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" title="Relatório Financeiro">📊</button>
       <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" title="Árvore de equipe">🌳</button>
+      <button class="btn btn-import topbar-view-btn" id="btnOrganogramaToggle" title="Organograma">🏢</button>
       <button class="btn btn-import topbar-view-btn" id="btnBairrosToggle" title="Mapa">🗺️</button>
       <button class="btn btn-import topbar-view-btn" id="btnAniversariantesToggle" title="Aniversariantes do mês" onclick="abrirAniversariantes()">🎂</button>
       <button class="btn btn-import topbar-view-btn" id="btnAuditoriaToggle" title="Histórico de ações" style="display:none" onclick="abrirAuditoria()">📋 Logs</button>
@@ -396,6 +397,16 @@
     <div class="tree-stats" id="treeStats"></div>
     <div id="treeContent"></div>
   </div>
+
+  <!-- ORGANOGRAMA VIEW -->
+  <div class="org-area" id="orgArea">
+    <div class="tree-header">
+      <h3>🏢 Organograma</h3>
+      <input class="tree-search" type="text" id="orgSearch" placeholder="Buscar nome…">
+    </div>
+    <div class="org-ca-strip" id="orgCaStrip"></div>
+    <div class="org-canvas" id="orgCanvas"></div>
+  </div>
 </div>
 
 <!-- MODAL CAMPANHA -->
@@ -564,10 +575,12 @@
 <script src="assets/app.js?v=20260721k"></script>
 <script src="assets/dados-bairros.js"></script>
 <script src="assets/bairros.js"></script>
+<script src="assets/organograma.js"></script>
 <script>
   // Bind direto — independente de DOMContentLoaded ou data-action
   document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
   document.getElementById('btnTreeToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleTreeView(); });
+  document.getElementById('btnOrganogramaToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleOrganogramaView(); });
   document.getElementById('btnBairrosToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleBairrosView(); });
 </script>
 <!-- MODAL SELEÇÃO DE CAMPANHAS -->
