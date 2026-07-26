@@ -754,6 +754,15 @@ function norm(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
+const CONECTIVOS_MINUSCULOS = new Set(['de','da','do','das','dos','e','di','du']);
+function capitalizarNomeProprio(s) {
+  if (!s) return '';
+  return s.trim().toLowerCase().split(/\s+/).map((palavra, i) => {
+    if (i > 0 && CONECTIVOS_MINUSCULOS.has(palavra)) return palavra;
+    return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+  }).join(' ');
+}
+
 async function carregarCoordFiltro() {
   if (!isAdminUser()) return;
   const sel = document.getElementById('filtro-coord');
@@ -1291,10 +1300,10 @@ function salvar() {
       return regOriginal?._coordNome || '';
     })(),
     tipo: raw.tipo,
-    nome: raw.nome.toUpperCase(),
+    nome: capitalizarNomeProprio(raw.nome),
     telefone: raw.telefone,
-    bairro: document.getElementById('f-bairro').value.trim().toUpperCase(),
-    endereco: document.getElementById('f-end').value.trim().toUpperCase(),
+    bairro: capitalizarNomeProprio(document.getElementById('f-bairro').value),
+    endereco: capitalizarNomeProprio(document.getElementById('f-end').value),
     votos: numeric.votos.value,
     v_entrada: 0,
     custo_jul: numeric.custo_jul.value,
@@ -1303,7 +1312,7 @@ function salvar() {
     custo_out: numeric.custo_out.value,
     total: numeric.total.value,
     lotacao: document.getElementById('f-lotacao').value.trim(),
-    colegio: document.getElementById('f-colegio').value.trim().toUpperCase(),
+    colegio: capitalizarNomeProprio(document.getElementById('f-colegio').value),
     secao: document.getElementById('f-secao').value.trim(),
     zona_eleitoral: document.getElementById('f-zona-el').value.trim(),
     status: document.getElementById('f-status').value || 'ativo',
@@ -2072,17 +2081,6 @@ function renderArvore() {
     }).filter(Boolean);
   }
 
-  // Stats
-  const totalApoios = dados.reduce((s,d) => s+(d.votos||0), 0);
-  const semVinculo = 0; // calculado depois com assignedLids
-  document.getElementById('treeStats').innerHTML = `
-    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
-    <div class="tree-stat">Lideranças: <strong>${liderancas.length}</strong></div>
-    <div class="tree-stat">Mobilizadores: <strong>${mobilizadores.length}</strong></div>
-    <div class="tree-stat">Total de apoios: <strong>${totalApoios.toLocaleString('pt-BR')}</strong></div>
-    ${semVinculo > 0 ? `<div class="tree-stat" style="border-color:rgba(234,179,8,.3)">⚠️ Sem vínculo: <strong style="color:#f59e0b">${semVinculo}</strong></div>` : ''}
-  `;
-
   let html = '';
 
   // Sem coordenador e sem vínculos — mostra aviso
@@ -2131,6 +2129,17 @@ function renderArvore() {
     caLidsMap.get(caKey).push(l);
     assignedIds.add(lKey);
   });
+
+  // Stats — escopado ao(s) coordenador(es) atualmente visível(is) (respeita o filtro de coordenador selecionado)
+  const liderancasEscopo = coords.flatMap(ca => caLidsMap.get(ca._fireId || String(ca.id)) || []);
+  const mobilizadoresEscopo = mobilizadores.filter(m => liderancasEscopo.some(l => (l._fireId || String(l.id)) === m.lider_id));
+  const totalApoiosEscopo = [...liderancasEscopo, ...mobilizadoresEscopo].reduce((s, d) => s + (d.votos || 0), 0);
+  document.getElementById('treeStats').innerHTML = `
+    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Lideranças: <strong>${liderancasEscopo.length}</strong></div>
+    <div class="tree-stat">Mobilizadores: <strong>${mobilizadoresEscopo.length}</strong></div>
+    <div class="tree-stat">Total de apoios: <strong>${totalApoiosEscopo.toLocaleString('pt-BR')}</strong></div>
+  `;
 
   // Nó de cada Coordenador
   coords.forEach((ca, ci) => {
@@ -2478,6 +2487,9 @@ async function carregarCampanhas() {
 function renderCampanhaTabs() {
   const select = document.getElementById('campanhaSelect');
   if (!select) return;
+
+  const campanhaBar = document.getElementById('campanhaBar');
+  if (campanhaBar) campanhaBar.style.display = Object.keys(campanhas).length > 1 ? '' : 'none';
 
   select.innerHTML = Object.entries(campanhas).map(([id, camp]) =>
     `<option value="${a(id)}">${h(nomeCiclo(id, camp))}</option>`
@@ -3536,7 +3548,7 @@ async function criarNovoUsuario() {
         const primeiroNome = nome.split(' ')[0];
         await colecao().add({
           id: novoId,
-          nome: nome.toUpperCase(),
+          nome: capitalizarNomeProprio(nome),
           tipo: 'CA',
           _zona: region,
           _criadoPor: uid,
