@@ -2092,12 +2092,10 @@ function renderArvore() {
     </div>`;
   }
 
-  // Se um coordenador específico está selecionado, mostra só o CA dele
-  if (_coordZonaFiltro && zonaAtual !== 'todas') {
-    coords = coords.filter(ca => !ca._coordZona || ca._coordZona === _coordZonaFiltro);
-  }
-
-  // Ordena CAs por _coordZona para que o fallback atribua ao menor (primeiro) da zona
+  // Ordena CAs por _coordZona para que o fallback atribua ao menor (primeiro) da zona.
+  // Importante: os "passes" de atribuição abaixo usam TODOS os CAs da zona (coords),
+  // não só o selecionado — senão o fallback por zona jogaria todas as lideranças
+  // não vinculadas da zona inteira em cima do único coordenador visível.
   coords.sort((a, b) => (a._coordZona||'').localeCompare(b._coordZona||''));
 
   const caLidsMap = new Map();
@@ -2130,19 +2128,27 @@ function renderArvore() {
     assignedIds.add(lKey);
   });
 
+  // Se um coordenador específico está selecionado, mostra só o CA dele — a partir daqui
+  // (stats e renderização) usamos coordsVisiveis, já com as lideranças corretamente
+  // atribuídas pelos passes acima (que rodaram com a zona inteira).
+  let coordsVisiveis = coords;
+  if (_coordZonaFiltro && zonaAtual !== 'todas') {
+    coordsVisiveis = coords.filter(ca => !ca._coordZona || ca._coordZona === _coordZonaFiltro);
+  }
+
   // Stats — escopado ao(s) coordenador(es) atualmente visível(is) (respeita o filtro de coordenador selecionado)
-  const liderancasEscopo = coords.flatMap(ca => caLidsMap.get(ca._fireId || String(ca.id)) || []);
+  const liderancasEscopo = coordsVisiveis.flatMap(ca => caLidsMap.get(ca._fireId || String(ca.id)) || []);
   const mobilizadoresEscopo = mobilizadores.filter(m => liderancasEscopo.some(l => (l._fireId || String(l.id)) === m.lider_id));
   const totalApoiosEscopo = [...liderancasEscopo, ...mobilizadoresEscopo].reduce((s, d) => s + (d.votos || 0), 0);
   document.getElementById('treeStats').innerHTML = `
-    <div class="tree-stat">Coordenadores: <strong>${coords.length}</strong></div>
+    <div class="tree-stat">Coordenadores: <strong>${coordsVisiveis.length}</strong></div>
     <div class="tree-stat">Lideranças: <strong>${liderancasEscopo.length}</strong></div>
     <div class="tree-stat">Mobilizadores: <strong>${mobilizadoresEscopo.length}</strong></div>
     <div class="tree-stat">Total de apoios: <strong>${totalApoiosEscopo.toLocaleString('pt-BR')}</strong></div>
   `;
 
   // Nó de cada Coordenador
-  coords.forEach((ca, ci) => {
+  coordsVisiveis.forEach((ca, ci) => {
     const nomeCA = ca.nome || '';
     const caId = ca._fireId || String(ca.id);
     const lidsCA = caLidsMap.get(caId) || [];
