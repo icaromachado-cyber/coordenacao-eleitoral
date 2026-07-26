@@ -494,6 +494,14 @@ function brrRenderPinsBar() {
   });
 }
 
+// ===================== autocomplete de bairro no formulário de cadastro =====================
+function brrPreencherDatalist() {
+  const dl = document.getElementById('bairrosDatalist');
+  if (!dl) return;
+  const nomes = [...new Set(brrFeatures().map(f => f.properties.nome))].sort();
+  dl.innerHTML = nomes.map(n => `<option value="${brrEsc(n)}">`).join('');
+}
+
 // ===================== boot =====================
 document.addEventListener('DOMContentLoaded', () => {
   const search = document.getElementById('brrSearch');
@@ -501,4 +509,5 @@ document.addEventListener('DOMContentLoaded', () => {
     search.addEventListener('input', e => brrOnSearchInput(e.target.value));
     search.addEventListener('keydown', e => { if (e.key === 'Enter') brrOnSearchEnter(); });
   }
+  brrPreencherDatalist();
 });
