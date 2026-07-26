@@ -502,6 +502,15 @@ function brrPreencherDatalist() {
   dl.innerHTML = nomes.map(n => `<option value="${brrEsc(n)}">`).join('');
 }
 
+// ===================== minimizar painéis (legenda / lista) =====================
+function brrToggleCollapse(panelId, btnId) {
+  const panel = document.getElementById(panelId);
+  const btn = document.getElementById(btnId);
+  if (!panel) return;
+  panel.classList.toggle('collapsed');
+  if (btn) btn.textContent = panel.classList.contains('collapsed') ? '▸' : '▾';
+}
+
 // ===================== boot =====================
 document.addEventListener('DOMContentLoaded', () => {
   const search = document.getElementById('brrSearch');
@@ -510,4 +519,13 @@ document.addEventListener('DOMContentLoaded', () => {
     search.addEventListener('keydown', e => { if (e.key === 'Enter') brrOnSearchEnter(); });
   }
   brrPreencherDatalist();
+
+  document.getElementById('brrLegendCollapseBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    brrToggleCollapse('brrLegendPanel', 'brrLegendCollapseBtn');
+  });
+  document.getElementById('brrListCollapseBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    brrToggleCollapse('brrListPanel', 'brrListCollapseBtn');
+  });
 });

@@ -1550,7 +1550,15 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
   letter-spacing: .08em;
   color: var(--muted);
   margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+.zon-collapse-btn {
+  background: transparent; border: none; color: var(--muted); cursor: pointer;
+  font-size: .7rem; padding: 0 2px; line-height: 1;
+}
+.zon-collapse-btn:hover { color: var(--text); }
+.zon-legend.collapsed #brrLegendList { display: none; }
+.zon-legend.collapsed h4 { margin-bottom: 0; }
 .zon-legend-row {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 2px; border-radius: 6px; cursor: pointer;
@@ -1582,7 +1590,11 @@ body.theme-light .topbar-view-btn.active { background: rgba(59,130,246,.1) !impo
   letter-spacing: .08em;
   color: var(--muted);
   padding: 10px 12px 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+.zon-list-panel.collapsed { bottom: auto; }
+.zon-list-panel.collapsed .zon-list-body { display: none; }
+.zon-list-panel.collapsed h4 { padding-bottom: 10px; }
 .zon-list-body { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
 .zon-list-body::-webkit-scrollbar { width: 6px; }
 .zon-list-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
