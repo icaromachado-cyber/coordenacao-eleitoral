@@ -1282,7 +1282,7 @@ body.theme-light .fin-mem-table tbody tr:hover td { background:rgba(0,0,0,.015);
 .org-ca-pill strong { color: var(--text); font-weight: 600; }
 .org-ca-pill .n { color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; }
 
-.org-canvas { overflow-x: auto; padding: 26px 12px 50px; }
+.org-canvas { overflow-x: auto; padding: 26px 12px 50px; text-align: center; }
 .org-canvas::-webkit-scrollbar { height: 8px; }
 .org-canvas::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
@@ -1295,8 +1295,15 @@ body.theme-light .fin-mem-table tbody tr:hover td { background:rgba(0,0,0,.015);
   list-style: none; margin: 0; padding: 0;
   display: flex; justify-content: center;
 }
+/* A raiz precisa ter largura ajustada ao próprio conteúdo (não a do canvas) — senão,
+   com muitos filhos, o diagrama "vaza" pros dois lados de um container fixo e o
+   scroll não consegue alcançar a parte que vazou pra esquerda. */
+.org-tree { display: inline-flex; }
 .org-tree ul { position: relative; padding-top: 28px; }
-.org-tree li { position: relative; flex: 0 0 auto; padding: 28px 14px 0; }
+.org-tree li {
+  position: relative; flex: 0 0 auto; padding: 28px 14px 0;
+  display: flex; flex-direction: column; align-items: center;
+}
 .org-tree > li { padding-top: 0; }
 
 .org-tree li::before,

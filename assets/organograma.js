@@ -192,6 +192,12 @@ function renderOrganograma() {
   html += '</li></ul>';
   canvasEl.innerHTML = html;
 
+  // Com muitas lideranças o diagrama fica mais largo que a tela; como fica centralizado,
+  // sem isso o coordenador (raiz) fica fora da área visível ao abrir.
+  requestAnimationFrame(() => {
+    canvasEl.scrollLeft = (canvasEl.scrollWidth - canvasEl.clientWidth) / 2;
+  });
+
   canvasEl.querySelectorAll('.org-node-l').forEach(node => {
     if (node.dataset.hasMobs !== 'true') return;
     node.addEventListener('click', () => {
