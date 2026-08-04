@@ -2595,28 +2595,6 @@ async function trocarCampanha(id) {
   toast(`📁 Ciclo: ${nomeCiclo(id, campanhas[id])}`);
 }
 
-async function renomearCampanhaAtual() {
-  if (!campanhaAtual || !campanhas[campanhaAtual]) return;
-  const atual = nomeCiclo(campanhaAtual, campanhas[campanhaAtual]);
-  const novoNome = prompt('Novo nome do ciclo:', atual);
-  if (novoNome === null) return;
-  const nome = novoNome.trim();
-  if (!nome) { toast('⚠️ Informe um nome para o ciclo', true); return; }
-
-  try {
-    await db.collection('campanhas').doc(campanhaAtual).set({
-      nome,
-      atualizadoEm: new Date().toISOString()
-    }, { merge: true });
-    campanhas[campanhaAtual].nome = nome;
-    renderCampanhaTabs();
-    toast('✅ Ciclo renomeado');
-  } catch(e) {
-    console.error('Erro renomear ciclo:', e);
-    toast('❌ Erro ao renomear ciclo', true);
-  }
-}
-
 async function copiarDadosEntreCampanhas(origem, destino, modo='estrutura') {
   if (!origem || !destino || origem === destino) return 0;
   const todos = await db.collection('campanhas').doc(origem).collection('liderancas').get();
@@ -2659,64 +2637,6 @@ async function marcarCampanhaImportada(destino) {
 
 async function importarBaseParaCampanhaAtual() {
   abrirModalImportarBase();
-}
-
-function abrirModalCampanha() {
-  document.getElementById('mc-nome').value = '';
-  document.getElementById('mc-ano').value = new Date().getFullYear() + 2;
-  document.getElementById('mc-candidato').value = '';
-  document.getElementById('mc-origem').value = '';
-  document.getElementById('mc-copiar').value = 'estrutura';
-  document.getElementById('mc-migrar-opcoes').style.display = 'none';
-  document.getElementById('modalCampanha').classList.add('open');
-}
-
-function fecharModalCampanha() {
-  document.getElementById('modalCampanha').classList.remove('open');
-}
-
-
-async function criarCampanha() {
-  const nome = document.getElementById('mc-nome').value.trim();
-  const ano  = parseInt(document.getElementById('mc-ano').value) || new Date().getFullYear();
-  const cargo = document.getElementById('mc-cargo').value;
-  const origem = document.getElementById('mc-origem').value;
-  const copiar = document.getElementById('mc-copiar').value;
-
-  if (!nome) { toast('⚠️ Informe o nome do ciclo', true); return; }
-
-  let id = nome.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  if (CICLOS_PADRAO_OCULTOS.has(id)) id = `${id}-novo`;
-  if (campanhas[id]) {
-    toast('⚠️ Já existe um ciclo com esse nome', true);
-    return;
-  }
-
-  try {
-    const candidato = document.getElementById('mc-candidato').value.trim();
-    await db.collection('campanhas').doc(id).set({
-      nome, ano, cargo, candidato, criadoEm: new Date().toISOString()
-    });
-
-    campanhas[id] = { nome, ano, cargo, candidato };
-
-    // Copia dados do ciclo de origem se selecionado
-    if (origem && campanhas[origem]) {
-      toast('📋 Copiando estrutura…');
-      const totalCopiado = await copiarDadosEntreCampanhas(origem, id, copiar);
-      toast(`✅ ${totalCopiado} registros copiados de ${nomeCiclo(origem, campanhas[origem])}`);
-    }
-
-    fecharModalCampanha();
-    renderCampanhaTabs();
-    await trocarCampanha(id);
-    toast(`✅ Ciclo "${nome}" criado!`);
-  } catch(e) {
-    console.error('Erro criar campanha:', e);
-    toast('❌ Erro ao criar ciclo', true);
-  }
 }
 
 // Adiciona pessoa em outro ciclo
@@ -2942,12 +2862,8 @@ function bindStaticEvents() {
   on('btnExport', 'click', exportarDados);
   on('btnMigrarBairro', 'click', migrarPorBairro);
   on('btnNovoRegistro', 'click', () => abrirModal(null));
-  on('btnNovaCampanha', 'click', abrirModalCampanha);
-  on('btnRenomearCampanha', 'click', renomearCampanhaAtual);
   on('btnImportarBase', 'click', importarBaseParaCampanhaAtual);
   on('btnLimparFiltros', 'click', limpar);
-  on('btnCancelarCampanha', 'click', fecharModalCampanha);
-  on('btnCriarCampanha', 'click', criarCampanha);
   on('btnFecharDrawer', 'click', fecharDrawer);
   on('btnCancelarRegistro', 'click', () => fecharModal());
   on('btnSalvarRegistro', 'click', salvar);
@@ -2971,12 +2887,8 @@ function bindStaticEvents() {
   // Auto-calcula total de ajuda de custo (meses + custos extras) e custo por apoio ao digitar
   ['f-jul','f-ago','f-set','f-out','f-votos'].forEach(id => on(id, 'input', recalcularTotalCusto));
   on('btnAddCustoExtra', 'click', () => { adicionarLinhaCustoExtra(); recalcularTotalCusto(); });
-  on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 
   on('overlay', 'click', fecharModal);
-  on('mc-origem', 'change', function () {
-    document.getElementById('mc-migrar-opcoes').style.display = this.value ? 'block' : 'none';
-  });
 
   document.querySelectorAll('[data-zone-nav]').forEach(el => {
     el.addEventListener('click', () => {
@@ -3005,7 +2917,6 @@ function bindStaticEvents() {
     if (event.key === 'Escape') {
       fecharModal();
       fecharDrawer();
-      fecharModalCampanha();
       fecharModalCampsSel();
     }
     if (event.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) {
