@@ -2375,10 +2375,13 @@ function toggleNode(id) {
 
 // ===================== EXPORTAR =====================
 function exportarDados() {
-  const dados = getDados();
+  // Usa "filtrado" (o que está sendo exibido na tela) em vez de getDados() —
+  // assim o export respeita o coordenador/busca/filtros selecionados, não só a região.
+  const dados = filtrado;
   if (!dados.length) { toast('⚠️ Nenhum dado para exportar', true); return; }
 
-  const zonaNome = zonaAtual === 'todas' ? 'Todas as Regiões' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual);
+  const zonaNome = document.getElementById('zTitle')?.textContent
+    || (zonaAtual === 'todas' ? 'Todas as Regiões' : (ZONAS_CFG[zonaAtual]?.label || zonaAtual));
 
   const rows = dados.map(d => ({
     'ID': d.id,
@@ -2418,7 +2421,8 @@ function exportarDados() {
   XLSX.utils.book_append_sheet(wb, ws, zonaNome.substring(0,31));
 
   const data = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  const filename = `coordenacao_${zonaAtual}_${data}.xlsx`;
+  const sufixo = zonaNome.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase();
+  const filename = `coordenacao_${sufixo || zonaAtual}_${data}.xlsx`;
   XLSX.writeFile(wb, filename);
 
   toast(`✅ Exportado: ${filename}`);
