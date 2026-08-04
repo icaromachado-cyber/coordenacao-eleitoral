@@ -998,7 +998,7 @@ function renderTable() {
       <td class="num-td ${custoClass(d.custo_ago)}">${d.custo_ago?'R$'+d.custo_ago.toLocaleString('pt-BR'):'—'}</td>
       <td class="num-td ${custoClass(d.custo_set)}">${d.custo_set?'R$'+d.custo_set.toLocaleString('pt-BR'):'—'}</td>
       <td class="num-td ${custoClass(d.custo_out)}">${d.custo_out?'R$'+d.custo_out.toLocaleString('pt-BR'):'—'}</td>
-      <td class="total-td" style="${totalStyle(d.total)}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}</td>
+      <td class="total-td" style="${totalStyle(d.total)}" title="${(d.custos_extras||[]).length ? a((d.custos_extras||[]).map(c=>`${c.label||'Extra'}: R$${(c.valor||0).toLocaleString('pt-BR')}`).join(' · ')) : ''}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}${(d.custos_extras||[]).length?' <span style="font-size:.62rem;color:var(--accent,#e8433a);vertical-align:top">➕'+d.custos_extras.length+'</span>':''}</td>
       <td style="text-align:center">
         <div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;align-items:center">
           <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">👁</button>
@@ -1080,6 +1080,9 @@ function verDrawer(id, zona) {
     <div style="margin:14px 0 6px;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Recursos mensais</div>
     ${[['Julho',d.custo_jul],['Agosto',d.custo_ago],['Setembro',d.custo_set],['Outubro',d.custo_out]].map(([m,v])=>
       `<div class="d-row"><span class="d-lbl">${m}</span><span class="d-val">${fmtR(v)}</span></div>`
+    ).join('')}
+    ${(d.custos_extras || []).map(c =>
+      `<div class="d-row"><span class="d-lbl">➕ ${h(c.label || 'Extra')}</span><span class="d-val">${fmtR(c.valor)}</span></div>`
     ).join('')}
 
     <div class="drawer-tabs">
