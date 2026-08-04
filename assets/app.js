@@ -32,7 +32,7 @@ const BAIRRO_ZONA_MAP = {
   'AROEIRAS':'norte','AROEIRA':'norte','BOA ESPERANCA':'norte','BOA ESPERANÇA':'norte',
   'BUENOS AIRES':'norte','BUENO AIRES':'norte','CABRAL':'norte','CHAPADINHA':'norte',
   'CIDADE INDUSTRIAL':'norte','EMBRAPA':'norte','ITAPERU':'norte',
-  'JACINTA ANDRADE':'norte','JARDIM EUROPA':'norte','LEONEL BRIZOLA':'norte',
+  'JACINTA ANDRADE':'norte','LEONEL BRIZOLA':'norte',
   'LINDALMA SOARES':'norte','MAFRENSE':'norte','MAFUÁ':'norte','MAFUA':'norte',
   'MARQUES':'norte','MARQUÊS':'norte','MATADOURO':'norte','MATINHA':'norte',
   'MEMORARE':'norte','MOCAMBINHO':'norte','MOCAMBINHO 2':'norte',
@@ -86,7 +86,10 @@ const BAIRRO_ZONA_MAP = {
   'PARQUE POTY':'sudeste','REDONDA':'sudeste','RENASCENÇA':'sudeste',
   'RENASCENCA':'sudeste','SANTANA':'sudeste','SÃO RAIMUNDO':'sudeste',
   'SÃO SEBASTIÃO':'sudeste','SAO SEBASTIAO':'sudeste','TANCREDO NEVES':'sudeste',
-  'TODOS OS SANTOS':'sudeste','VERDE CAP':'sudeste',
+  'TODOS OS SANTOS':'sudeste','VERDE CAP':'sudeste','VERDECAP':'sudeste',
+  'ALEGRIA':'sudeste','HUMAITÁ':'sudeste','HUMAITA':'sudeste',
+  'TORRÕES':'sudeste','TORROES':'sudeste','CANTINHO DO SUL':'sudeste',
+  'JARDIM EUROPA':'sudeste',
   // RURAL
   'ZONA RURAL':'rural','ÁREA RURAL':'rural','CAMPO LARGO':'rural',
   'CURRALINHOS':'rural','MARACANÃ':'rural',
@@ -280,7 +283,7 @@ const DB = {
 // Flag de carregamento
 let dbCarregado = false;
 
-const BAIRROS_TERESINA = {"norte": ["ACARAPE", "AEROPORTO", "AGUA MINERAL", "ALTO ALEGRE", "AROEIRA", "AROEIRAS", "BOA ESPERANCA", "BOA ESPERANÇA", "BOM JESUS", "BUENO AIRES", "BUENOS AIRES", "CABRAL", "CENTRO NORTE", "CHAPADINHA", "CIDADE INDUSTRIAL", "CONJ. VILA NOVA CONQUISTA", "EMBRAPA", "FRANCISCA TRINDADE", "ITAPERU", "JACINTA ANDRADE", "JARDIM EUROPA", "LEONEL BRIZOLA", "LINDALMA SOARES", "MAFRENSE", "MAFUA", "MAFUÁ", "MARQUES", "MARQUÊS", "MATADOURO", "MATINHA", "MEMORARE", "MOCAMBINHO", "MOCAMBINHO 2", "MOCAMBINHO I", "MOCAMBINHO II", "MONTE ALEGRE", "MONTE VERDE", "MORRO DA ESPERANÇA", "NOVA BRASILIA", "NOVA BRASÍLIA", "OLARIAS", "PARQUE AFONSO GIL", "PARQUE ALVORADA", "PARQUE BRASIL", "PARQUE BRASIL, SANTA MARIA", "PARQUE MÃOO SANTA", "PARQUE STAEL", "PORENQUANTO", "POTI VELHO", "POTY VELHO", "PRIMAVERA", "PRIMAVERA 2", "REAL COPAGRE", "RISOLETA", "RISOLETA NEVES", "SANTA  MARIA DA CODIPI", "SANTA BARBARA", "SANTA MARIA", "SANTA MARIA DA CODIPI", "SANTA ROSA", "SANTA SOFIA", "SAO JOAQUIM", "SATELITE", "SÃO JOAQUIM", "VALE QUEM TEM", "VILA BANDEIRANTES 2", "VILA MARIA", "VILA OPERARIA", "VILA OPERÁRIA", "VILA SÃO FRANCISCO", "ÁGUA MINERAL"], "sul": ["ANGELIM", "ANGÉLICA", "AREIAS", "BELA VISTA", "BRASILAR", "CATARINA", "CENTRO SUL", "CIDADE NOVA", "CRISTO REI", "DISTRITO INDUSTRIAL", "ESPLANADA", "LOURIVAL PARENTE", "MACAUBA", "MACAÚBA", "MONTE CASTELO", "MORADA NOVA", "NOSSA SENHORA DAS GRAÇAS", "PARQUE JACINTA", "PARQUE JULIANA", "PARQUE PIAUÍ", "PARQUE SUL", "PARQUE SÃO JOÃO", "PEDRA MIÚDA", "PIO XII", "PIÇARRA", "POLO INDUSTRIAL SUL", "PORTAL DA ALEGRIA", "PROMORAR", "REDENCO", "REDENÇÃO", "SACI", "SANTA CRUZ", "SANTA LUZIA", "SANTO ANTÔNIO", "SÃO LOURENÇO", "SÃO PEDRO", "TABULETA", "TORQUARTO NETO", "TORQUATO NETO", "TRIUNFO", "TRÊS ANDARES", "VERMELHA"], "leste": ["ARVORES VERDES", "CAMPESTRE", "CIDADE JARDIM", "FATIMA", "FÁTIMA", "HORTO", "ILHOTAS", "ININGA", "JOCKEY", "JOQUEI", "JÓQUEI", "MORADA DO SOL", "MORROS", "NOIVOS", "NOVO URUGUAI", "PARQUE UNIVERSITÁRIO", "PEDRA MOLE", "PIÇARREIRA", "PLANALTO", "PORTO DO CENTRO", "RECANTO DAS PALMEIRAS", "SAMAPI", "SANTA ISABEL", "SANTA LIA", "SAO CRISTOVAO", "SAO JOAO", "SOCOPO", "SÃO CRISTÓVÃO", "SÃO JOÃO", "TABAJARAS", "URUGUAI", "VALE DO GAVIÃO", "VERDE LAR", "VILA SANTA BÁRBARA", "VILA URUGUAI", "ZOOBOTÂNICO", "ÁRVORES VERDES"], "sudeste": ["BEIRA RIO", "BOM PRINCÍPIO", "COLORADO", "COMPRIDA", "DIRCEU", "DIRCEU ARCOVERDE", "DIRCEU I", "DIRCEU II", "DIRCEU2/ ITARARÉ", "EXTREMA", "FLOR DO CAMPO", "GURUPI", "ITARARÉ", "LIVRAMENTO", "NOVO HORIZONTE", "PARQUE IDEAL", "PARQUE POTY", "REDONDA", "RENASCENCA", "RENASCENÇA", "SANTANA", "SAO SEBASTIAO", "SÃO RAIMUNDO", "SÃO SEBASTIÃO", "TANCREDO NEVES", "TODOS OS SANTOS", "VERDE CAP"], "rural": ["CAMPO LARGO", "CURRALINHOS", "DISTRITO DE BATALHA", "DISTRITO DE BRAÇO", "DISTRITO DE ÁGUA BRANCA", "GABRIEL FERREIRA", "MARACANÃ", "MOCAMBINHO RURAL", "ZONA RURAL", "ÁREA RURAL"]};
+const BAIRROS_TERESINA = {"norte": ["ACARAPE", "AEROPORTO", "AGUA MINERAL", "ALTO ALEGRE", "AROEIRA", "AROEIRAS", "BOA ESPERANCA", "BOA ESPERANÇA", "BOM JESUS", "BUENO AIRES", "BUENOS AIRES", "CABRAL", "CENTRO NORTE", "CHAPADINHA", "CIDADE INDUSTRIAL", "CONJ. VILA NOVA CONQUISTA", "EMBRAPA", "FRANCISCA TRINDADE", "ITAPERU", "JACINTA ANDRADE", "LEONEL BRIZOLA", "LINDALMA SOARES", "MAFRENSE", "MAFUA", "MAFUÁ", "MARQUES", "MARQUÊS", "MATADOURO", "MATINHA", "MEMORARE", "MOCAMBINHO", "MOCAMBINHO 2", "MOCAMBINHO I", "MOCAMBINHO II", "MONTE ALEGRE", "MONTE VERDE", "MORRO DA ESPERANÇA", "NOVA BRASILIA", "NOVA BRASÍLIA", "OLARIAS", "PARQUE AFONSO GIL", "PARQUE ALVORADA", "PARQUE BRASIL", "PARQUE BRASIL, SANTA MARIA", "PARQUE MÃOO SANTA", "PARQUE STAEL", "PORENQUANTO", "POTI VELHO", "POTY VELHO", "PRIMAVERA", "PRIMAVERA 2", "REAL COPAGRE", "RISOLETA", "RISOLETA NEVES", "SANTA  MARIA DA CODIPI", "SANTA BARBARA", "SANTA MARIA", "SANTA MARIA DA CODIPI", "SANTA ROSA", "SANTA SOFIA", "SAO JOAQUIM", "SATELITE", "SÃO JOAQUIM", "VALE QUEM TEM", "VILA BANDEIRANTES 2", "VILA MARIA", "VILA OPERARIA", "VILA OPERÁRIA", "VILA SÃO FRANCISCO", "ÁGUA MINERAL"], "sul": ["ANGELIM", "ANGÉLICA", "AREIAS", "BELA VISTA", "BRASILAR", "CATARINA", "CENTRO SUL", "CIDADE NOVA", "CRISTO REI", "DISTRITO INDUSTRIAL", "ESPLANADA", "LOURIVAL PARENTE", "MACAUBA", "MACAÚBA", "MONTE CASTELO", "MORADA NOVA", "NOSSA SENHORA DAS GRAÇAS", "PARQUE JACINTA", "PARQUE JULIANA", "PARQUE PIAUÍ", "PARQUE SUL", "PARQUE SÃO JOÃO", "PEDRA MIÚDA", "PIO XII", "PIÇARRA", "POLO INDUSTRIAL SUL", "PORTAL DA ALEGRIA", "PROMORAR", "REDENCO", "REDENÇÃO", "SACI", "SANTA CRUZ", "SANTA LUZIA", "SANTO ANTÔNIO", "SÃO LOURENÇO", "SÃO PEDRO", "TABULETA", "TORQUARTO NETO", "TORQUATO NETO", "TRIUNFO", "TRÊS ANDARES", "VERMELHA"], "leste": ["ARVORES VERDES", "CAMPESTRE", "CIDADE JARDIM", "FATIMA", "FÁTIMA", "HORTO", "ILHOTAS", "ININGA", "JOCKEY", "JOQUEI", "JÓQUEI", "MORADA DO SOL", "MORROS", "NOIVOS", "NOVO URUGUAI", "PARQUE UNIVERSITÁRIO", "PEDRA MOLE", "PIÇARREIRA", "PLANALTO", "PORTO DO CENTRO", "RECANTO DAS PALMEIRAS", "SAMAPI", "SANTA ISABEL", "SANTA LIA", "SAO CRISTOVAO", "SAO JOAO", "SOCOPO", "SÃO CRISTÓVÃO", "SÃO JOÃO", "TABAJARAS", "URUGUAI", "VALE DO GAVIÃO", "VERDE LAR", "VILA SANTA BÁRBARA", "VILA URUGUAI", "ZOOBOTÂNICO", "ÁRVORES VERDES"], "sudeste": ["BEIRA RIO", "BOM PRINCÍPIO", "COLORADO", "COMPRIDA", "DIRCEU", "DIRCEU ARCOVERDE", "DIRCEU I", "DIRCEU II", "DIRCEU2/ ITARARÉ", "EXTREMA", "FLOR DO CAMPO", "GURUPI", "ITARARÉ", "LIVRAMENTO", "NOVO HORIZONTE", "PARQUE IDEAL", "PARQUE POTY", "REDONDA", "RENASCENCA", "RENASCENÇA", "SANTANA", "SAO SEBASTIAO", "SÃO RAIMUNDO", "SÃO SEBASTIÃO", "TANCREDO NEVES", "TODOS OS SANTOS", "VERDE CAP", "VERDECAP", "ALEGRIA", "HUMAITÁ", "HUMAITA", "TORRÕES", "TORROES", "CANTINHO DO SUL", "JARDIM EUROPA"], "rural": ["CAMPO LARGO", "CURRALINHOS", "DISTRITO DE BATALHA", "DISTRITO DE BRAÇO", "DISTRITO DE ÁGUA BRANCA", "GABRIEL FERREIRA", "MARACANÃ", "MOCAMBINHO RURAL", "ZONA RURAL", "ÁREA RURAL"]};
 
 const BAIRROS_NORTE = BAIRROS_TERESINA.norte;
 
@@ -1178,6 +1181,7 @@ function abrirModal(id, zona) {
     if (zonaFieldEl) zonaFieldEl.disabled = false;
   }
 
+  limparCustosExtras();
   if (id === null) {
     flds.forEach(f => {
       const el=document.getElementById(f);
@@ -1189,6 +1193,7 @@ function abrirModal(id, zona) {
       }
     });
     if (!isAdminUser() && currentUserRole?.region && zonaFieldEl) zonaFieldEl.value = currentUserRole.region;
+    recalcularTotalCusto();
   } else {
     let d = findById(_editZona, id);
     // Se não achou na zona indicada, procura em todas as zonas (fallback para CAs com zona divergente)
@@ -1213,7 +1218,8 @@ function abrirModal(id, zona) {
     setIf('f-ago', d.custo_ago||'');
     setIf('f-set', d.custo_set||'');
     setIf('f-out', d.custo_out||'');
-    setIf('f-total', d.total||'');
+    (d.custos_extras || []).forEach(c => adicionarLinhaCustoExtra(c.label, c.valor));
+    recalcularTotalCusto();
     setIf('f-status', d.status||'ativo');
     setIf('f-reuniao', d.reuniao_feita||'nao');
     setIf('f-reuniao-data', d.reuniao_data||'');
@@ -1240,6 +1246,51 @@ function getNextId(zona) {
   const arr = DB[zona];
   const nums = arr.map(d => +d.id).filter(n => Number.isFinite(n) && n > 0);
   return nums.length ? Math.max(...nums) + 1 : 1;
+}
+
+// ===================== custos extras (ajuda de custo) =====================
+function adicionarLinhaCustoExtra(label, valor) {
+  const lista = document.getElementById('custosExtrasList');
+  if (!lista) return;
+  const row = document.createElement('div');
+  row.className = 'custo-extra-row';
+  row.innerHTML = `
+    <input type="text" class="custo-extra-label" placeholder="Descrição (ex: Transporte)" value="${h(label || '')}">
+    <input type="number" class="custo-extra-valor" placeholder="0" min="0" step="0.01" value="${valor != null ? valor : ''}">
+    <button type="button" class="custo-extra-remove" title="Remover">✕</button>
+  `;
+  row.querySelector('.custo-extra-label').addEventListener('input', recalcularTotalCusto);
+  row.querySelector('.custo-extra-valor').addEventListener('input', recalcularTotalCusto);
+  row.querySelector('.custo-extra-remove').addEventListener('click', () => { row.remove(); recalcularTotalCusto(); });
+  lista.appendChild(row);
+}
+
+function limparCustosExtras() {
+  const lista = document.getElementById('custosExtrasList');
+  if (lista) lista.innerHTML = '';
+}
+
+function coletarCustosExtras() {
+  return [...document.querySelectorAll('#custosExtrasList .custo-extra-row')]
+    .map(row => ({
+      label: row.querySelector('.custo-extra-label').value.trim(),
+      valor: parseFloat(row.querySelector('.custo-extra-valor').value) || 0,
+    }))
+    .filter(c => c.label || c.valor);
+}
+
+function recalcularTotalCusto() {
+  const somaMeses = ['f-jul', 'f-ago', 'f-set', 'f-out']
+    .reduce((s, i) => s + (parseFloat(document.getElementById(i)?.value) || 0), 0);
+  const somaExtras = coletarCustosExtras().reduce((s, c) => s + c.valor, 0);
+  const total = somaMeses + somaExtras;
+
+  const ft = document.getElementById('f-total');
+  if (ft) ft.value = total % 1 === 0 ? total : total.toFixed(2);
+
+  const apoios = parseFloat(document.getElementById('f-votos')?.value) || 0;
+  const fca = document.getElementById('f-custo-apoio');
+  if (fca) fca.value = apoios > 0 ? 'R$ ' + (total / apoios).toFixed(2) : '—';
 }
 
 function salvar() {
@@ -1310,6 +1361,7 @@ function salvar() {
     custo_ago: numeric.custo_ago.value,
     custo_set: numeric.custo_set.value,
     custo_out: numeric.custo_out.value,
+    custos_extras: coletarCustosExtras(),
     total: numeric.total.value,
     lotacao: document.getElementById('f-lotacao').value.trim(),
     colegio: capitalizarNomeProprio(document.getElementById('f-colegio').value),
@@ -2916,15 +2968,9 @@ function bindStaticEvents() {
   });
   on('f-tipo', 'change', atualizarCamposHierarquia);
 
-  // Auto-calcula total de ajuda de custo ao digitar
-  ['f-jul','f-ago','f-set','f-out'].forEach(id => {
-    on(id, 'input', () => {
-      const soma = ['f-jul','f-ago','f-set','f-out']
-        .reduce((s, i) => s + (parseFloat(document.getElementById(i)?.value) || 0), 0);
-      const ft = document.getElementById('f-total');
-      if (ft) ft.value = soma % 1 === 0 ? soma : soma.toFixed(2);
-    });
-  });
+  // Auto-calcula total de ajuda de custo (meses + custos extras) e custo por apoio ao digitar
+  ['f-jul','f-ago','f-set','f-out','f-votos'].forEach(id => on(id, 'input', recalcularTotalCusto));
+  on('btnAddCustoExtra', 'click', () => { adicionarLinhaCustoExtra(); recalcularTotalCusto(); });
   on('campanhaSelect', 'change', event => trocarCampanha(event.target.value));
 
   on('overlay', 'click', fecharModal);

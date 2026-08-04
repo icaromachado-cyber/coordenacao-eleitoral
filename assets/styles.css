@@ -788,6 +788,23 @@ tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
 .fg input:focus, .fg select:focus { border-color: var(--accent, #e8433a); }
 
+.custo-extra-row {
+  display: grid; grid-template-columns: 1fr 140px 32px;
+  gap: 8px; margin-bottom: 8px; align-items: center;
+}
+.custo-extra-row input {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+  padding: 9px 11px; outline: none; width: 100%;
+}
+.custo-extra-row input:focus { border-color: var(--accent, #e8433a); }
+.custo-extra-remove {
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+  color: #f87171; border-radius: 8px; width: 32px; height: 34px;
+  cursor: pointer; font-size: .9rem; line-height: 1;
+}
+.custo-extra-remove:hover { background: rgba(239,68,68,.2); }
+
 .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .full { grid-column: 1 / -1; }
 .fsep {
