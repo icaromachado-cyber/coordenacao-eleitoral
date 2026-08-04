@@ -140,9 +140,9 @@ function brrStyleForFeature(feature) {
   const buscando = !!bairroSearchQ;
   const combina = !buscando || brrMatch(feature);
   return {
-    color: '#0b0b0b',
-    weight: 1,
-    opacity: 0.35,
+    color: cor,
+    weight: 1.5,
+    opacity: !visivel ? 0 : (combina ? 0.9 : 0.2),
     fillColor: cor,
     fillOpacity: !visivel ? 0 : (combina ? 0.5 : 0.08),
   };
@@ -202,6 +202,7 @@ function brrRenderLegend() {
   const totalGeral = brrTotalAreaKm2();
 
   let pessoasPorZona = null;
+  let apoiosPorZona = null;
   let totalPessoasGeral = 0;
   if (bairroPessoasPorGid) {
     pessoasPorZona = {};
@@ -213,6 +214,16 @@ function brrRenderLegend() {
       }
     }
   }
+  if (bairroPessoasPontos) {
+    const gidParaZona = {};
+    brrFeatures().forEach(f => { gidParaZona[f.properties.gid] = f.properties.zona; });
+    apoiosPorZona = {};
+    bairroPessoasPontos.forEach(p => {
+      const zona = gidParaZona[p.gid];
+      if (!zona) return;
+      apoiosPorZona[zona] = (apoiosPorZona[zona] || 0) + (p.d.votos || 0);
+    });
+  }
 
   const itens = BRR_ZONA_ORDEM.map(z => ({ z, ...totais[z] })).sort((a, b) => b.area - a.area);
   el.innerHTML = itens.map(({ z, area, bairros }) => {
@@ -221,9 +232,10 @@ function brrRenderLegend() {
     const nPessoas = pessoasPorZona ? (pessoasPorZona[z] || 0) : null;
     const pctPessoas = (nPessoas !== null && totalPessoasGeral) ? ` (${(nPessoas / totalPessoasGeral * 100).toFixed(0)}%)` : '';
     const subLabel = nPessoas !== null ? `${nPessoas} pessoas${pctPessoas}` : `${area.toFixed(1)} km²`;
+    const nApoios = apoiosPorZona ? (apoiosPorZona[z] || 0) : null;
     return `<div class="zon-legend-row" data-zona="${z}">
       <span class="zon-legend-dot" style="background:${cor}"></span>
-      <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${subLabel}</span></span>
+      <span class="zon-legend-nome">${BRR_ZONA_META[z].nome}<span class="zon-legend-sub">${bairros} bairros · ${subLabel}${nApoios !== null ? ` · ✅ ${nApoios} apoios` : ''}</span></span>
       <span class="zon-legend-pct">${pct.toFixed(1)}%</span>
     </div>`;
   }).join('');
