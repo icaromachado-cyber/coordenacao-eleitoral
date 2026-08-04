@@ -433,9 +433,13 @@ async function renderNavCoord() {
       const d = doc.data();
       if (!d.region) return;
       const zona = d.zona || '';
-      // Conta registros da zona do coordenador; se zona definida, filtra por _coordZona também
+      // Conta registros vinculados especificamente a esse coordenador (por _coordZona).
+      // Registros sem _coordZona só contam pro coordenador "dono" (primeira zona da região) —
+      // mesmo critério do filtro da tabela (aplicarFiltros/_primeiraZonaDeRegiao). Antes, um
+      // registro sem _coordZona era somado em TODOS os coordenadores da zona ao mesmo tempo.
+      const primeiraZona = _primeiraZonaDeRegiao(d.region);
       const count = allRecords.filter(r =>
-        r._zona === d.region && (!zona || !r._coordZona || r._coordZona === zona)
+        r._zona === d.region && (r._coordZona ? r._coordZona === zona : zona === primeiraZona)
       ).length;
       if (!gruposPorRegiao[d.region]) gruposPorRegiao[d.region] = [];
       gruposPorRegiao[d.region].push({ uid: doc.id, name: d.name || d.email || '—', zona, count, region: d.region });
@@ -533,8 +537,9 @@ function atualizarNavCoordCounts() {
     const region = el.dataset.region || '';
     const zona   = el.dataset.zona   || '';
     if (region) {
+      const primeiraZona = _primeiraZonaDeRegiao(region);
       countEl.textContent = allRecords.filter(r =>
-        r._zona === region && (!zona || !r._coordZona || r._coordZona === zona)
+        r._zona === region && (r._coordZona ? r._coordZona === zona : zona === primeiraZona)
       ).length;
     } else {
       countEl.textContent = allRecords.filter(r => r._criadoPor === uid).length;
@@ -1409,6 +1414,12 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
         await colecao().doc(fireId).set(docData);
       }
       await logAuditoria('edicao', {...reg, _fireId: fireId, _zona: zonaOrigem}, dadosAntes);
+
+      // Se é liderança e o coordenador mudou, repassa o novo coordenador pros mobilizadores dela
+      const coordenadorMudou = (dadosAntes?.coord_area_id || '') !== (docData.coord_area_id || '');
+      if ((docData.tipo === 'L' || docData.tipo === 'LE') && coordenadorMudou) {
+        await cascatearCoordenadorParaMobilizadores(fireId, zonaDestino, docData);
+      }
     } else {
       await colecao().add(docData);
     }
@@ -1439,6 +1450,31 @@ async function salvarNoFirebase(reg, zonaOrigem, zonaDestino, zonaChanged, editI
   } catch(e) {
     console.error('Erro Firebase salvar:', e);
     toast('❌ ' + formatFirebaseError(e), true);
+  }
+}
+
+// Quando o coordenador de uma liderança muda, repassa a mudança pra todos os
+// mobilizadores dela — eles não têm campo de coordenador próprio, herdam da liderança.
+async function cascatearCoordenadorParaMobilizadores(liderancaFireId, zonaLideranca, dadosLideranca) {
+  try {
+    const snap = await db.collection('campanhas').doc(campanhaAtual)
+      .collection('liderancas').where('lider_id', '==', liderancaFireId).get();
+    if (snap.empty) return;
+
+    const batch = db.batch();
+    snap.forEach(docSnap => {
+      batch.update(docSnap.ref, {
+        _zona: zonaLideranca,
+        _coordZona: dadosLideranca._coordZona || '',
+        _coordNome: dadosLideranca._coordNome || '',
+        coord_area_id: dadosLideranca.coord_area_id || '',
+        coord_area_nome: dadosLideranca.coord_area_nome || '',
+      });
+    });
+    await batch.commit();
+    toast(`✅ ${snap.size} mobilizador(es) atualizados junto com a liderança`);
+  } catch (e) {
+    console.error('Erro ao repassar coordenador pros mobilizadores:', e);
   }
 }
 
