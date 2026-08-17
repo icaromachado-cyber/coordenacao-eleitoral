@@ -1238,7 +1238,16 @@ function abrirModal(id, zona) {
     atualizarCamposHierarquia();
     setTimeout(() => {
       const ca = document.getElementById('f-coord-area'); if (ca) ca.value = d.coord_area_id||'';
-      const fl = document.getElementById('f-lider'); if (fl) fl.value = d.lider_id||'';
+      const fl = document.getElementById('f-lider');
+      if (fl) {
+        if (d.tipo === 'M' || d.tipo === 'ME') {
+          // Pré-seleciona a coordenação a partir da liderança vinculada, pra já mostrar a lista certa
+          const lider = d.lider_id ? getDados().find(x => (x._fireId||x.id) === d.lider_id) : null;
+          const mc = document.getElementById('f-mob-coord');
+          if (mc) { mc.value = lider?.coord_area_id || ''; popularSelectLiderancas(mc.value); }
+        }
+        fl.value = d.lider_id||'';
+      }
     }, 50);
   }
   if (id === null) atualizarCamposHierarquia();
@@ -1660,11 +1669,12 @@ function atualizarCamposHierarquia() {
     campoLider.style.display = 'none';
     popularSelectCoordenadores();
   }
-  // M e ME precisam de liderança (e indiretamente coordenador)
+  // M e ME precisam de liderança — primeiro escolhe a coordenação, depois a liderança filtra por ela
   else if (tipo === 'M' || tipo === 'ME') {
     campoCord.style.display = 'none';
     campoLider.style.display = 'block';
-    popularSelectLiderancas();
+    popularSelectCoordenadoresMob();
+    popularSelectLiderancas(document.getElementById('f-mob-coord').value);
   }
   // CA não precisa de vínculo
   else {
@@ -1689,14 +1699,35 @@ function popularSelectCoordenadores() {
   sel.value = atual;
 }
 
-function popularSelectLiderancas() {
+function popularSelectCoordenadoresMob() {
+  const sel = document.getElementById('f-mob-coord');
+  if (!sel) return;
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione a coordenação —</option>';
+
+  const todas = getDados();
+  const coords = todas.filter(d => d.tipo === 'CA').sort((a,b) => a.nome.localeCompare(b.nome));
+  coords.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d._fireId || d.id;
+    opt.textContent = d.nome + (d.bairro ? ` (${d.bairro})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = atual;
+}
+
+function popularSelectLiderancas(coordFiltro) {
   const sel = document.getElementById('f-lider');
   const atual = sel.value;
-  sel.innerHTML = '<option value="">— Selecione a liderança —</option>';
+  sel.innerHTML = coordFiltro
+    ? '<option value="">— Selecione a liderança —</option>'
+    : '<option value="">— Selecione a coordenação acima primeiro (ou veja todas) —</option>';
 
-  const zona = document.getElementById('f-zona').value;
   const todas = getDados();
-  const liders = todas.filter(d => d.tipo === 'L' || d.tipo === 'LE').sort((a,b) => a.nome.localeCompare(b.nome));
+  const liders = todas
+    .filter(d => d.tipo === 'L' || d.tipo === 'LE')
+    .filter(d => !coordFiltro || d.coord_area_id === coordFiltro)
+    .sort((a,b) => a.nome.localeCompare(b.nome));
   liders.forEach(d => {
     const opt = document.createElement('option');
     opt.value = d._fireId || d.id;
@@ -2926,6 +2957,10 @@ function bindStaticEvents() {
     });
   });
   on('f-tipo', 'change', atualizarCamposHierarquia);
+  on('f-mob-coord', 'change', () => {
+    document.getElementById('f-lider').value = '';
+    popularSelectLiderancas(document.getElementById('f-mob-coord').value);
+  });
 
   // Auto-calcula total de ajuda de custo (meses + custos extras) e custo por apoio ao digitar
   ['f-jul','f-ago','f-set','f-out','f-votos'].forEach(id => on(id, 'input', recalcularTotalCusto));
