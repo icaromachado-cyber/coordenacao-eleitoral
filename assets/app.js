@@ -1179,7 +1179,12 @@ function abrirModal(id, zona) {
   if (_editZona === 'todas') _editZona = 'norte';
 
   document.getElementById('modal-title').textContent = id===null ? '📋 Novo Registro' : '✏️ Editar Registro';
-  const flds = ['f-tipo','f-zona','f-nome','f-tel','f-aniversario','f-bairro','f-end','f-votos','f-jul','f-ago','f-set','f-out','f-total'];
+  const flds = [
+    'f-tipo','f-zona','f-nome','f-tel','f-aniversario','f-bairro','f-end','f-lotacao',
+    'f-votos','f-jul','f-ago','f-set','f-out','f-total',
+    'f-colegio','f-secao','f-zona-el','f-coord-area','f-mob-coord','f-lider',
+    'f-status','f-reuniao','f-reuniao-data',
+  ];
 
   const zonaFieldEl = document.getElementById('f-zona');
   if (!isAdminUser() && currentUserRole?.region) {
@@ -1191,14 +1196,11 @@ function abrirModal(id, zona) {
 
   limparCustosExtras();
   if (id === null) {
+    const defaultSelect = { 'f-zona': _editZona==='todas'?'norte':_editZona, 'f-tipo': 'M', 'f-status': 'ativo', 'f-reuniao': 'nao' };
     flds.forEach(f => {
       const el=document.getElementById(f);
       if (!el) return;
-      if (el.tagName === 'SELECT') {
-        el.value = (f==='f-zona'?(_editZona==='todas'?'norte':_editZona):'M');
-      } else {
-        el.value = '';
-      }
+      el.value = (el.tagName === 'SELECT') ? (defaultSelect[f] ?? '') : '';
     });
     if (!isAdminUser() && currentUserRole?.region && zonaFieldEl) zonaFieldEl.value = currentUserRole.region;
     recalcularTotalCusto();
