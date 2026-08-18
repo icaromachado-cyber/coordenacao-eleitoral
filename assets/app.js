@@ -1146,6 +1146,8 @@ function verDrawer(id, zona) {
           <option value="Set">Setembro</option>
           <option value="Out">Outubro</option>
         </select>
+        <label>Data do repasse</label>
+        <input type="date" id="np-data-${d.id}" value="${new Date().toISOString().slice(0,10)}">
         <label>Valor (R$)</label>
         <input type="number" id="np-valor-${d.id}" placeholder="0" step="50">
         <label>Status</label>
@@ -2529,8 +2531,9 @@ async function carregarPagamentos(fireId, localId) {
       const p = d.data();
       const cls = p.status === 'pago' ? 'pag-pago' : 'pag-aberto';
       const ico = p.status === 'pago' ? '✅' : '⏳';
+      const dataFmt = p.data_repasse ? new Date(p.data_repasse + 'T00:00:00').toLocaleDateString('pt-BR') : '';
       return `<div class="pag-mes">
-        <span class="pag-mes-nome">${h(p.mes || '—')} ${p.obs ? '· '+h(p.obs) : ''}</span>
+        <span class="pag-mes-nome">${h(p.mes || '—')}${dataFmt ? ' · 📅 '+dataFmt : ''} ${p.obs ? '· '+h(p.obs) : ''}</span>
         <span class="pag-mes-valor">R$ ${(p.valor||0).toLocaleString('pt-BR')}</span>
         <span class="pag-mes-status ${cls}">${ico} ${h(p.status || '')}</span>
       </div>`;
@@ -2540,6 +2543,7 @@ async function carregarPagamentos(fireId, localId) {
 
 async function salvarPagamento(fireId, localId, zona) {
   const mes    = document.getElementById('np-mes-' + localId).value;
+  const dataRepasse = document.getElementById('np-data-' + localId).value || '';
   const parsedValor = parseNonNegativeNumber(document.getElementById('np-valor-' + localId).value, 'Valor');
   const status = document.getElementById('np-status-' + localId).value;
   const obs    = document.getElementById('np-obs-' + localId).value.trim();
@@ -2547,7 +2551,7 @@ async function salvarPagamento(fireId, localId, zona) {
   if (!parsedValor.value) { toast('⚠️ Informe o valor', true); return; }
   try {
     await colecao().doc(fireId)
-      .collection('pagamentos').add({ mes, valor: parsedValor.value, status, obs, criadoEm: new Date().toISOString() });
+      .collection('pagamentos').add({ mes, data_repasse: dataRepasse, valor: parsedValor.value, status, obs, criadoEm: new Date().toISOString() });
     toggleMiniModal('form-pag-' + localId);
     carregarPagamentos(fireId, localId);
     toast('✅ Pagamento registrado!');
