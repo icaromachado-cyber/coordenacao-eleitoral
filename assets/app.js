@@ -2532,13 +2532,42 @@ async function carregarPagamentos(fireId, localId) {
       const cls = p.status === 'pago' ? 'pag-pago' : 'pag-aberto';
       const ico = p.status === 'pago' ? '✅' : '⏳';
       const dataFmt = p.data_repasse ? new Date(p.data_repasse + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+      const dataLabel = dataFmt ? `📅 ${dataFmt}` : '📅 <span style="text-decoration:underline dotted">adicionar data</span>';
       return `<div class="pag-mes">
-        <span class="pag-mes-nome">${h(p.mes || '—')}${dataFmt ? ' · 📅 '+dataFmt : ''} ${p.obs ? '· '+h(p.obs) : ''}</span>
+        <span class="pag-mes-nome">${h(p.mes || '—')} ${p.obs ? '· '+h(p.obs) : ''}
+          <span class="pag-mes-data" data-action="editar-data-pagamento" data-fire-id="${a(fireId)}" data-pag-id="${a(d.id)}" data-valor="${a(p.data_repasse || '')}" title="Clique para editar a data do repasse" style="cursor:pointer;color:var(--muted);font-size:.7rem">${dataLabel}</span>
+        </span>
         <span class="pag-mes-valor">R$ ${(p.valor||0).toLocaleString('pt-BR')}</span>
         <span class="pag-mes-status ${cls}">${ico} ${h(p.status || '')}</span>
       </div>`;
     }).join('');
   } catch(e) { console.error('Erro pagamentos:', e); }
+}
+
+function editarDataPagamentoInline(spanEl, fireId, pagId, valorAtual) {
+  if (spanEl.querySelector('input')) return;
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.value = valorAtual || '';
+  input.style.cssText = 'font-size:.7rem;padding:1px 3px;border:1px solid #3b82f6;border-radius:4px;outline:none';
+  spanEl.innerHTML = '';
+  spanEl.appendChild(input);
+  input.focus();
+
+  const salvar = async () => {
+    const novo = input.value || '';
+    try {
+      await colecao().doc(fireId).collection('pagamentos').doc(pagId).update({ data_repasse: novo });
+      const localId = spanEl.closest('[id^="lista-pagamentos-"]')?.id.replace('lista-pagamentos-', '');
+      if (localId) carregarPagamentos(fireId, localId);
+      toast('✅ Data salva');
+    } catch(e) {
+      console.error('Erro ao salvar data do repasse:', e);
+      toast('❌ Erro ao salvar data', true);
+    }
+  };
+  input.addEventListener('blur', salvar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
 }
 
 async function salvarPagamento(fireId, localId, zona) {
@@ -3051,6 +3080,9 @@ function handleActionClick(event) {
       break;
     case 'salvar-pagamento':
       salvarPagamento(ds.fireId, id, ds.zona);
+      break;
+    case 'editar-data-pagamento':
+      editarDataPagamentoInline(el, ds.fireId, ds.pagId, ds.valor);
       break;
     case 'toggle-node':
       toggleNode(ds.nodeId);
