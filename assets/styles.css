@@ -2874,14 +2874,9 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
 .nu-badge-regional { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
 
 .dev-signature {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 6px;
-  font-size: .62rem;
+  margin-top: 4px;
+  font-size: .6rem;
   color: var(--text);
   opacity: .4;
-  pointer-events: none;
-  z-index: 10001;
   user-select: none;
 }
