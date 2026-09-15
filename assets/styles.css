@@ -2875,10 +2875,12 @@ body.theme-light .mz-item:hover { background: rgba(0,0,0,.04); }
 
 .dev-signature {
   position: fixed;
-  left: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 6px;
   font-size: .62rem;
-  color: rgba(148,163,184,.5);
+  color: var(--text);
+  opacity: .4;
   pointer-events: none;
   z-index: 10001;
   user-select: none;
