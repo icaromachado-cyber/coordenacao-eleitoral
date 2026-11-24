@@ -3208,3 +3208,7 @@ body.theme-light .badge-LE { background: #f1e8fb; color: #6b2fb3; border-color: 
 body.theme-light .badge-ME { background: #fbf0dc; color: #8a5a0a; border-color: #efd8a8; }
 body.theme-light .badge-CA { background: #fdeadb; color: #a4500f; border-color: #f2cfae; }
 .pbn.active { background: var(--amarelo); border-color: var(--amarelo); color: var(--noite); font-weight: 700; }
+
+body .topbar .topbar-view-btn.active, body .topbar .btn-tree-toggle.active {
+  color: var(--noite); background: var(--amarelo); border-color: var(--amarelo);
+}

@@ -10,6 +10,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const TOPBTN = {
+  relatorio: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  arvore: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M12 7.2V12M12 12H5v4.8M12 12h7v4.8"/></svg>',
+  organograma: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg>',
+  mapa: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>',
+  tabela: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>'
+};
 const ICO_VER = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICO_EDIT = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 const ICO_DEL = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>';
@@ -1804,7 +1811,7 @@ function toggleDashboardView() {
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
-    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('btnTreeToggle').innerHTML = TOPBTN.arvore;
     document.getElementById('treeArea').classList.remove('active');
   }
   document.getElementById('dashboardArea')?.classList.add('active');
@@ -1901,7 +1908,7 @@ function _fecharRelatorio() {
   if (!relatorioView) return;
   relatorioView = false;
   document.getElementById('btnRelatorioToggle').classList.remove('active');
-  document.getElementById('btnRelatorioToggle').textContent = '📊 Relatório';
+  document.getElementById('btnRelatorioToggle').innerHTML = TOPBTN.relatorio;
   document.getElementById('relatorioArea').classList.remove('active');
   document.querySelector('.table-area').classList.remove('hidden');
   document.getElementById('pag').style.display = '';
@@ -1917,7 +1924,7 @@ function _toggleRelatorioViewInner() {
   if (treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
-    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('btnTreeToggle').innerHTML = TOPBTN.arvore;
     document.getElementById('treeArea').classList.remove('active');
     document.querySelector('.table-area').classList.remove('hidden');
     document.getElementById('pag').style.display = '';
@@ -1934,7 +1941,7 @@ function _toggleRelatorioViewInner() {
 
   if (relatorioView) {
     btn.classList.add('active');
-    btn.textContent = '📋 Tabela';
+    btn.innerHTML = TOPBTN.tabela;
     tableArea.classList.add('hidden');
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
@@ -1946,7 +1953,7 @@ function _toggleRelatorioViewInner() {
     renderRelatorioFinanceiro();
   } else {
     btn.classList.remove('active');
-    btn.textContent = '📊 Relatório';
+    btn.innerHTML = TOPBTN.relatorio;
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     ctrlBar.style.display = '';
@@ -2193,7 +2200,7 @@ function toggleTreeView() {
 
   if (treeView) {
     btn.classList.add('active');
-    btn.textContent = '📋 Tabela';
+    btn.innerHTML = TOPBTN.tabela;
     tableArea.classList.add('hidden');
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
@@ -2201,7 +2208,7 @@ function toggleTreeView() {
     renderArvore();
   } else {
     btn.classList.remove('active');
-    btn.textContent = '🌳 Árvore';
+    btn.innerHTML = TOPBTN.arvore;
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     ctrlBar.style.display = '';

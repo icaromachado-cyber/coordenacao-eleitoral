@@ -27,7 +27,7 @@ function _toggleOrganogramaViewInner() {
 
   if (orgView) {
     btn.classList.add('active');
-    btn.textContent = '📋 Tabela';
+    btn.innerHTML = TOPBTN.tabela;
     tableArea.classList.add('hidden');
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
@@ -35,7 +35,7 @@ function _toggleOrganogramaViewInner() {
     renderOrganograma();
   } else {
     btn.classList.remove('active');
-    btn.textContent = '🏢';
+    btn.innerHTML = TOPBTN.organograma;
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     ctrlBar.style.display = '';

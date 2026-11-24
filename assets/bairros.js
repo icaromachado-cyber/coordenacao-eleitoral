@@ -70,7 +70,7 @@ function _toggleBairrosViewInner() {
   if (typeof treeView !== 'undefined' && treeView) {
     treeView = false;
     document.getElementById('btnTreeToggle').classList.remove('active');
-    document.getElementById('btnTreeToggle').textContent = '🌳 Árvore';
+    document.getElementById('btnTreeToggle').innerHTML = TOPBTN.arvore;
     document.getElementById('treeArea').classList.remove('active');
     document.querySelector('.table-area').classList.remove('hidden');
     document.getElementById('pag').style.display = '';
@@ -88,7 +88,7 @@ function _toggleBairrosViewInner() {
 
   if (bairrosView) {
     btn.classList.add('active');
-    btn.textContent = '📋 Tabela';
+    btn.innerHTML = TOPBTN.tabela;
     tableArea.classList.add('hidden');
     pag.style.display = 'none';
     ctrlBar.style.display = 'none';
@@ -100,7 +100,7 @@ function _toggleBairrosViewInner() {
     }, 100);
   } else {
     btn.classList.remove('active');
-    btn.textContent = '🗺️ Mapa';
+    btn.innerHTML = TOPBTN.mapa;
     tableArea.classList.remove('hidden');
     pag.style.display = '';
     ctrlBar.style.display = '';
