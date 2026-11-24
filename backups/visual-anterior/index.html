@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE — Sistema Integrado de Coordenação Eleitoral</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cline x1='32' y1='32' x2='10' y2='10' stroke='%233b82f6' stroke-width='2' stroke-opacity='.45'/%3E%3Cline x1='32' y1='32' x2='54' y2='14' stroke='%23a855f7' stroke-width='2' stroke-opacity='.45'/%3E%3Cline x1='32' y1='32' x2='11' y2='52' stroke='%2322c55e' stroke-width='2' stroke-opacity='.45'/%3E%3Cline x1='32' y1='32' x2='54' y2='50' stroke='%23f59e0b' stroke-width='2' stroke-opacity='.45'/%3E%3Ccircle cx='10' cy='10' r='6' fill='%233b82f6'/%3E%3Ccircle cx='54' cy='14' r='5' fill='%23a855f7'/%3E%3Ccircle cx='11' cy='52' r='5' fill='%2322c55e'/%3E%3Ccircle cx='54' cy='50' r='5.5' fill='%23f59e0b'/%3E%3Ccircle cx='32' cy='32' r='12' fill='url(%23g)'/%3E%3Ctext x='32' y='37' text-anchor='middle' font-size='12' font-weight='800' fill='white' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css?v=20260915b">
+<!-- Firebase SDK (compat) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg class="sice-logo-lg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="slg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <!-- linhas do centro para satélites -->
+        <line x1="32" y1="32" x2="10" y2="10" stroke="#3b82f6" stroke-width="1.8" stroke-opacity="0.4"/>
+        <line x1="32" y1="32" x2="54" y2="14" stroke="#a855f7" stroke-width="1.8" stroke-opacity="0.4"/>
+        <line x1="32" y1="32" x2="11" y2="52" stroke="#22c55e" stroke-width="1.8" stroke-opacity="0.4"/>
+        <line x1="32" y1="32" x2="54" y2="50" stroke="#f59e0b" stroke-width="1.8" stroke-opacity="0.4"/>
+        <!-- linhas entre satélites -->
+        <line x1="10" y1="10" x2="54" y2="14" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.18"/>
+        <line x1="11" y1="52" x2="54" y2="50" stroke="#22c55e" stroke-width="1" stroke-opacity="0.18"/>
+        <line x1="54" y1="14" x2="54" y2="50" stroke="#a855f7" stroke-width="1" stroke-opacity="0.18"/>
+        <!-- nós satélites -->
+        <circle cx="10" cy="10" r="5.5" fill="#3b82f6"/>
+        <circle cx="54" cy="14" r="4.5" fill="#a855f7"/>
+        <circle cx="11" cy="52" r="4.5" fill="#22c55e"/>
+        <circle cx="54" cy="50" r="5" fill="#f59e0b"/>
+        <!-- nó central -->
+        <circle cx="32" cy="32" r="11" fill="url(#slg)"/>
+        <text x="32" y="37" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="DM Sans,sans-serif" letter-spacing="-0.5">S</text>
+      </svg>
+      <h1>SICE</h1>
+      <p>Sistema Integrado de Coordenação Eleitoral</p>
+    </div>
+    <div class="login-field">
+      <label>Usuário (e-mail)</label>
+      <input type="email" id="loginEmail" placeholder="usuario@coord.com" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginSenha" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+
+  </div>
+</div>
+
+<!-- MOBILE SIDEBAR OVERLAY -->
+<div class="mob-overlay" id="mobOverlay"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="position:fixed;inset:0;background:rgba(28,30,36,.96);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:40px;height:40px;border:3px solid #383c4a;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;color:#fff">Carregando dados…</div>
+  <div style="font-size:.78rem;color:#6b7294">Conectando ao banco de dados</div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg class="sice-logo-sm" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ssg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#a855f7"/>
+        </linearGradient>
+      </defs>
+      <line x1="32" y1="32" x2="10" y2="10" stroke="#3b82f6" stroke-width="1.8" stroke-opacity="0.4"/>
+      <line x1="32" y1="32" x2="54" y2="14" stroke="#a855f7" stroke-width="1.8" stroke-opacity="0.4"/>
+      <line x1="32" y1="32" x2="11" y2="52" stroke="#22c55e" stroke-width="1.8" stroke-opacity="0.4"/>
+      <line x1="32" y1="32" x2="54" y2="50" stroke="#f59e0b" stroke-width="1.8" stroke-opacity="0.4"/>
+      <line x1="10" y1="10" x2="54" y2="14" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.18"/>
+      <line x1="11" y1="52" x2="54" y2="50" stroke="#22c55e" stroke-width="1" stroke-opacity="0.18"/>
+      <line x1="54" y1="14" x2="54" y2="50" stroke="#a855f7" stroke-width="1" stroke-opacity="0.18"/>
+      <circle cx="10" cy="10" r="5.5" fill="#3b82f6"/>
+      <circle cx="54" cy="14" r="4.5" fill="#a855f7"/>
+      <circle cx="11" cy="52" r="4.5" fill="#22c55e"/>
+      <circle cx="54" cy="50" r="5" fill="#f59e0b"/>
+      <circle cx="32" cy="32" r="11" fill="url(#ssg)"/>
+      <text x="32" y="37" text-anchor="middle" font-size="11" font-weight="800" fill="white" font-family="DM Sans,sans-serif" letter-spacing="-0.5">S</text>
+    </svg>
+    <div>
+      <h1>SICE</h1>
+      <p>Coordenação Eleitoral</p>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label" id="nav-label-geral">Coordenações</div>
+    <div class="nav-item active" id="nav-todas" data-zone-nav="todas" style="display:none">
+      <div class="nav-dot" style="background:linear-gradient(135deg,#3b82f6,#a855f7)"></div>
+      <span class="nav-name" id="nav-todas-label">Todos os Dados</span>
+      <span class="nav-count" id="nc-todas">0</span>
+    </div>
+
+    <div id="nav-section-regioes" style="display:none">
+      <div class="nav-label" style="margin-top:10px">Regiões</div>
+      <div class="nav-item" id="nav-norte" data-zone-nav="norte">
+        <div class="nav-dot" style="background:#ef4444"></div>
+        <span class="nav-name">Região Norte</span>
+        <span class="nav-count" id="nc-norte">0</span>
+      </div>
+      <div class="nav-item" id="nav-leste" data-zone-nav="leste">
+        <div class="nav-dot" style="background:#3b82f6"></div>
+        <span class="nav-name">Região Leste</span>
+        <span class="nav-count" id="nc-leste">0</span>
+      </div>
+      <div class="nav-item" id="nav-sul" data-zone-nav="sul">
+        <div class="nav-dot" style="background:#22c55e"></div>
+        <span class="nav-name">Região Sul</span>
+        <span class="nav-count" id="nc-sul">0</span>
+      </div>
+      <div class="nav-item" id="nav-sudeste" data-zone-nav="sudeste">
+        <div class="nav-dot" style="background:#a855f7"></div>
+        <span class="nav-name">Região Sudeste</span>
+        <span class="nav-count" id="nc-sudeste">0</span>
+      </div>
+      <div class="nav-item" id="nav-rural" data-zone-nav="rural">
+        <div class="nav-dot" style="background:#f59e0b"></div>
+        <span class="nav-name">Região Rural</span>
+        <span class="nav-count" id="nc-rural">0</span>
+      </div>
+    </div>
+
+    <!-- Seção por Coordenador — gerada dinamicamente para admin -->
+    <div id="sidebar-coord-section" style="display:none">
+      <div class="nav-label" style="margin-top:10px">Por Coordenador</div>
+      <div id="nav-coord-items"></div>
+    </div>
+
+    <div id="nav-section-filtro" style="display:none">
+    <div class="nav-label" style="margin-top:10px">Filtro combinado</div>
+    <div class="nav-item" id="nav-multi" data-action="toggle-multi-zona">
+      <div class="nav-dot" style="background:#60a5fa"></div>
+      <span class="nav-name">Selecionar regiões</span>
+      <span style="font-size:.65rem;color:var(--muted)">▾</span>
+    </div>
+    <div id="multi-zona-panel" style="display:none;padding:6px 10px 8px 10px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label class="mz-item"><input type="checkbox" value="norte" > <span style="color:#ef4444">●</span> Norte</label>
+        <label class="mz-item"><input type="checkbox" value="leste" > <span style="color:#3b82f6">●</span> Leste</label>
+        <label class="mz-item"><input type="checkbox" value="sul" > <span style="color:#22c55e">●</span> Sul</label>
+        <label class="mz-item"><input type="checkbox" value="sudeste" > <span style="color:#a855f7">●</span> Sudeste</label>
+        <label class="mz-item"><input type="checkbox" value="rural" > <span style="color:#f59e0b">●</span> Rural</label>
+      </div>
+    </div>
+    </div><!-- /nav-section-filtro -->
+  </nav>
+  <div class="sidebar-footer">
+    <div id="sync-status" style="margin-top:6px;font-size:.68rem;color:var(--muted)">🔄 Conectando…</div>
+    <div class="dev-signature">Desenvolvido por Ícaro Machado</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="mob-menu-btn" id="mobMenuBtn" title="Menu">☰</button>
+    <div class="zone-title">
+      <div class="zone-badge" id="zBadge"></div>
+      <h2 id="zTitle">Região Norte</h2>
+    </div>
+    <div class="topbar-pills">
+      <div class="pill" id="tp1"></div>
+      <div class="pill" id="tp2"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-tree-toggle" id="btnTheme" title="Alternar tema">☀️</button>
+      <button class="btn btn-import topbar-view-btn" id="btnRelatorioToggle" title="Relatório Financeiro">📊</button>
+      <button class="btn btn-import topbar-view-btn" id="btnTreeToggle" title="Árvore de equipe">🌳</button>
+      <button class="btn btn-import topbar-view-btn" id="btnOrganogramaToggle" title="Organograma">🏢</button>
+      <button class="btn btn-import topbar-view-btn" id="btnBairrosToggle" title="Mapa">🗺️</button>
+      <button class="btn btn-import topbar-view-btn" id="btnAniversariantesToggle" title="Aniversariantes do mês" onclick="abrirAniversariantes()">🎂</button>
+      <button class="btn btn-import topbar-view-btn" id="btnAuditoriaToggle" title="Histórico de ações" style="display:none" onclick="abrirAuditoria()">📋 Logs</button>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-logout" id="btnLogout">Sair</button>
+      </div>
+      <details class="tools-menu">
+        <summary>Ferramentas</summary>
+        <div class="tools-menu-list">
+          <button class="btn btn-import" id="btnFinanceiro">💰 Financeiro</button>
+          <label class="btn btn-import" title="Importar planilha desta região">
+            📥 <span>Importar</span>
+            <input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" >
+          </label>
+          <button class="btn btn-import" id="btnExport" title="Exportar dados da região atual em Excel">📤 Exportar</button>
+          <button class="btn btn-import" id="btnMigrarBairro" title="Organizar pessoas por região com base no bairro">🔄 Organizar Regiões</button>
+          <button class="btn btn-import" id="btnGerenciarUsuarios" title="Criar e gerenciar coordenadores">👥 Usuários</button>
+        </div>
+      </details>
+      <button class="btn btn-primary" id="btnNovoRegistro">+ Novo</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY STRIP -->
+  <div class="summary-strip">
+    <div class="strip-card s-total">
+      <div class="strip-label">Total</div>
+      <div class="strip-value" id="sc-total">0</div>
+      <div class="strip-sub">registros</div>
+    </div>
+    <div class="strip-card s-l">
+      <div class="strip-label" id="lbl-l">Liderança</div>
+      <div class="strip-value" id="sc-l">0</div>
+      <div class="strip-sub" id="sub-l">lideranças</div>
+    </div>
+    <div class="strip-card s-m">
+      <div class="strip-label" id="lbl-m">Mobilizadores</div>
+      <div class="strip-value" id="sc-m">0</div>
+      <div class="strip-sub" id="sub-m">mobilizadores</div>
+    </div>
+    <div class="strip-card s-le">
+      <div class="strip-label">Liderança Emp.</div>
+      <div class="strip-value" id="sc-le">0</div>
+      <div class="strip-sub">empregados</div>
+    </div>
+    <div class="strip-card s-me">
+      <div class="strip-label">Mobiliz. Emp.</div>
+      <div class="strip-value" id="sc-me">0</div>
+      <div class="strip-sub">empregados</div>
+    </div>
+    <div class="strip-card s-custo">
+      <div class="strip-label">Recursos</div>
+      <div class="strip-value" id="sc-custo">R$ 0</div>
+      <div class="strip-sub">aplicado</div>
+    </div>
+  </div>
+
+  <!-- ZONE PANEL -->
+  <div id="zone-panel"></div>
+
+  <!-- DASHBOARD VIEW -->
+  <div class="dashboard-area" id="dashboardArea">
+    <div class="dashboard-header">
+      <div>
+        <span class="dashboard-kicker">Visão do ciclo</span>
+        <h3 id="dashboardTitle">Dashboard</h3>
+      </div>
+    </div>
+    <div class="dashboard-grid" id="dashboardCards"></div>
+    <div class="dashboard-panels">
+      <div class="dashboard-panel">
+        <h4>Por região</h4>
+        <div id="dashboardRegioes"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Por perfil</h4>
+        <div id="dashboardPerfis"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Status</h4>
+        <div id="dashboardStatus"></div>
+      </div>
+      <div class="dashboard-panel">
+        <h4>Top bairros</h4>
+        <div id="dashboardBairros"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Buscar nome, bairro ou telefone…">
+    </div>
+    <details class="filters-menu">
+      <summary>Filtros</summary>
+      <div class="filters-menu-list">
+        <select id="filtro-coord" style="display:none">
+          <option value="">Todos os coordenadores</option>
+        </select>
+        <select id="filtro-tipo">
+          <option value="">Todos os perfis</option>
+          <option value="L">Liderança (L)</option>
+          <option value="M">Mobilizador (M)</option>
+          <option value="LE">Liderança EMPREGADO (LE)</option>
+          <option value="ME">Mobilizador EMPREGADO (ME)</option>
+          <option value="CA">Coordenador de Área (CA)</option>
+        </select>
+        <select id="filtro-bairro"></select>
+        <button class="btn btn-outline" id="btnLimparFiltros">Limpar</button>
+      </div>
+    </details>
+    <span class="result-info" id="rinfo"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-area">
+    <table>
+      <thead>
+        <tr>
+          <th data-c="id"># <span class="si">↕</span></th>
+          <th data-c="tipo">Tipo <span class="si">↕</span></th>
+          <th data-c="nome">Nome <span class="si">↕</span></th>
+          <th>Telefone</th>
+          <th data-c="bairro">Bairro <span class="si">↕</span></th>
+          <th data-c="colegio">Ponto <span class="si">↕</span></th>
+          <th data-c="secao">Seção <span class="si">↕</span></th>
+          <th data-c="zona_eleitoral">Cód. <span class="si">↕</span></th>
+          <th data-c="status">Status <span class="si">↕</span></th>
+          <th>Reunião</th>
+          <th data-c="votos" style="text-align:center">Apoios <span class="si">↕</span></th>
+          <th data-c="custo_jul" style="text-align:right">Jul <span class="si">↕</span></th>
+          <th data-c="custo_ago" style="text-align:right">Ago <span class="si">↕</span></th>
+          <th data-c="custo_set" style="text-align:right">Set <span class="si">↕</span></th>
+          <th data-c="custo_out" style="text-align:right">Out <span class="si">↕</span></th>
+          <th data-c="total" style="text-align:right">Total <span class="si">↕</span></th>
+          <th style="text-align:center">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty" style="display:none">
+      <div class="ei">🔍</div>
+      <p>Nenhum registro encontrado.</p>
+    </div>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="pagination" id="pag"></div>
+
+
+  <!-- BAIRROS VIEW (BAIRROS_2013 + cruzamento com QUADRAS) -->
+  <div class="bairros-area" id="bairrosArea">
+    <div id="bairroMap"></div>
+    <div class="zon-search-bar">
+      <span>🔍</span>
+      <input type="text" id="brrSearch" placeholder="Buscar bairro…" autocomplete="off">
+      <span class="zon-search-count" id="brrSearchCount"></span>
+    </div>
+    <div class="zon-pins-bar" id="brrPinsBar" style="display:none"></div>
+    <div class="zon-legend" id="brrLegendPanel">
+      <h4>Zonas <button class="zon-collapse-btn" id="brrLegendCollapseBtn" title="Minimizar">▾</button></h4>
+      <div id="brrLegendList"></div>
+    </div>
+    <div class="zon-list-panel" id="brrListPanel">
+      <h4>Bairros <button class="zon-collapse-btn" id="brrListCollapseBtn" title="Minimizar">▾</button></h4>
+      <div class="zon-list-body" id="brrListBody"></div>
+    </div>
+    <div class="zon-info-bar" id="brrInfoBar">Carregando…</div>
+  </div>
+
+  <!-- RELATORIO FINANCEIRO VIEW -->
+  <div class="relatorio-area" id="relatorioArea">
+    <div class="tree-header">
+      <h3>📊 Relatório Financeiro</h3>
+      <div id="relatorioStats" style="font-size:.78rem;color:var(--muted)"></div>
+    </div>
+    <div class="rel-filter-bar">
+      <div class="rel-zone-pills">
+        <button class="rel-zpill active" data-zona="" data-cor="">Todas</button>
+        <button class="rel-zpill" data-zona="norte"   data-cor="#ef4444">● Norte</button>
+        <button class="rel-zpill" data-zona="leste"   data-cor="#3b82f6">● Leste</button>
+        <button class="rel-zpill" data-zona="sul"     data-cor="#22c55e">● Sul</button>
+        <button class="rel-zpill" data-zona="sudeste" data-cor="#a855f7">● Sudeste</button>
+        <button class="rel-zpill" data-zona="rural"   data-cor="#f59e0b">● Rural</button>
+      </div>
+      <input class="rel-search" type="text" id="relSearch" placeholder="🔍 Buscar pessoa…">
+    </div>
+    <div id="relatorioContent"></div>
+  </div>
+
+  <!-- TREE VIEW -->
+  <div class="tree-area" id="treeArea">
+    <div class="tree-header">
+      <h3>🌳 Estrutura da equipe</h3>
+      <input class="tree-search" type="text" id="treeSearch" placeholder="Buscar na árvore…" >
+    </div>
+    <div class="tree-stats" id="treeStats"></div>
+    <div id="treeContent"></div>
+  </div>
+
+  <!-- ORGANOGRAMA VIEW -->
+  <div class="org-area" id="orgArea">
+    <div class="tree-header">
+      <h3>🏢 Organograma</h3>
+      <input class="tree-search" type="text" id="orgSearch" placeholder="Buscar nome…">
+    </div>
+    <div class="org-ca-strip" id="orgCaStrip"></div>
+    <div class="org-canvas" id="orgCanvas"></div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <button class="drawer-close" id="btnFecharDrawer">✕</button>
+  <div id="drawer-content"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modal-title">📋 Novo Registro</h2>
+    <div class="fgrid">
+      <div class="fg"><label>Tipo</label>
+        <select id="f-tipo">
+          <option value="CA">Coordenador de Área (CA)</option>
+          <option value="L">Liderança (L)</option>
+          <option value="M">Mobilizador (M)</option>
+          <option value="LE">Liderança EMPREGADO (LE)</option>
+          <option value="ME">Mobilizador EMPREGADO (ME)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Zona</label>
+        <select id="f-zona">
+          <option value="norte">🔴 Região Norte</option>
+          <option value="leste">🔵 Região Leste</option>
+          <option value="sul">🟢 Região Sul</option>
+          <option value="sudeste">🟣 Região Sudeste</option>
+          <option value="rural">🟡 Região Rural</option>
+        </select>
+      </div>
+      <div class="fg"><label>Status</label>
+        <select id="f-status">
+          <option value="ativo">✅ Ativo</option>
+          <option value="pendente">⚠️ Pendente contato</option>
+          <option value="inativo">❌ Inativo</option>
+        </select>
+      </div>
+      <div class="fg"><label>Reunião feita?</label>
+        <select id="f-reuniao">
+          <option value="nao">Não</option>
+          <option value="sim">Sim</option>
+        </select>
+      </div>
+      <div class="fg"><label>Data da reunião</label><input type="date" id="f-reuniao-data"></div>
+      <div class="fg"><label>Apoios</label><input type="number" id="f-votos" placeholder="0"></div>
+      <div class="fg full"><label>Nome completo</label><input type="text" id="f-nome" placeholder="Nome da referência"></div>
+      <div class="fg"><label>Telefone</label><input type="text" id="f-tel" placeholder="(86) 9 ..."></div>
+      <div class="fg"><label>Data de Aniversário</label><input type="date" id="f-aniversario"></div>
+      <div class="fg"><label>Bairro</label><input type="text" id="f-bairro" placeholder="Bairro" list="bairrosDatalist" autocomplete="off"></div>
+      <datalist id="bairrosDatalist"></datalist>
+      <div class="fg full"><label>Endereço (para link Google Maps)</label><input type="text" id="f-end" placeholder="Ex: Rua das Flores 123, Mocambinho, Teresina PI"></div>
+      <div class="fg full"><label>🏢 Local de trabalho</label><input type="text" id="f-lotacao" placeholder="Ex: CMEI, HGV, SEDUC..."></div>
+      <div class="fsep">🏛️ Hierarquia</div>
+      <div class="fg full" id="campo-coordenador" style="display:none">
+        <label>Coordenador de Área responsável</label>
+        <select id="f-coord-area">
+          <option value="">— Selecione o coordenador —</option>
+        </select>
+      </div>
+      <div class="fg full" id="campo-lideranca" style="display:none">
+        <label>Coordenação</label>
+        <select id="f-mob-coord">
+          <option value="">— Selecione a coordenação —</option>
+        </select>
+        <label style="margin-top:10px">Liderança responsável</label>
+        <select id="f-lider">
+          <option value="">— Selecione a liderança —</option>
+        </select>
+      </div>
+      <div class="fsep">🗳️ Dados operacionais</div>
+      <div class="fg"><label>Ponto de referência</label><input type="text" id="f-colegio" placeholder="Nome do ponto"></div>
+      <div class="fg"><label>Seção</label><input type="text" id="f-secao" placeholder="Ex: 0042"></div>
+      <div class="fg"><label>Código regional</label><input type="text" id="f-zona-el" placeholder="Ex: 001"></div>
+      <div class="fsep">💰 Ajuda de Custo</div>
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label>Julho (R$)</label><input type="number" id="f-jul" placeholder="0" min="0" step="0.01"></div>
+        <div class="fg"><label>Agosto (R$)</label><input type="number" id="f-ago" placeholder="0" min="0" step="0.01"></div>
+        <div class="fg"><label>Setembro (R$)</label><input type="number" id="f-set" placeholder="0" min="0" step="0.01"></div>
+        <div class="fg"><label>Outubro (R$)</label><input type="number" id="f-out" placeholder="0" min="0" step="0.01"></div>
+      </div>
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label>Total aplicado (R$)</label><input type="number" id="f-total" placeholder="0" readonly style="font-weight:700;background:rgba(59,130,246,.08)"></div>
+        <div class="fg"><label>Custo por apoio (R$)</label><input type="text" id="f-custo-apoio" placeholder="—" readonly style="font-weight:700;background:rgba(59,130,246,.08)"></div>
+      </div>
+      <div class="fg full">
+        <div id="custosExtrasList"></div>
+        <button type="button" class="btn btn-outline" id="btnAddCustoExtra" style="margin-top:8px;font-size:.8rem">+ Adicionar custo extra</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btnCancelarRegistro">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarRegistro">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCEIRO MODAL -->
+<div class="overlay" id="financeiroArea" style="display:none" onclick="if(event.target===this)closeFinanceiro()">
+  <div class="modal" style="max-width:480px">
+    <h2>💰 Financeiro</h2>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:16px">
+      Ciclo: <strong id="fin-ciclo">—</strong> &nbsp;·&nbsp; Região: <strong id="fin-regiao">—</strong>
+    </div>
+    <div class="financeiro-card">
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label>Julho (R$)</label><input type="number" id="fin-jul" placeholder="0" min="0"></div>
+        <div class="fg"><label>Agosto (R$)</label><input type="number" id="fin-ago" placeholder="0" min="0"></div>
+        <div class="fg"><label>Setembro (R$)</label><input type="number" id="fin-set" placeholder="0" min="0"></div>
+        <div class="fg"><label>Outubro (R$)</label><input type="number" id="fin-out" placeholder="0" min="0"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><label>Total aplicado (R$)</label><input type="number" id="fin-total" placeholder="0" readonly style="font-weight:800;background:rgba(59,130,246,.08)"></div>
+    </div>
+    <div id="financeiroMsg" style="font-size:.82rem;margin:10px 0;min-height:20px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btnCloseFinance">Fechar</button>
+      <button class="btn btn-primary" id="btnSaveFinance">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/dados-norte.js"></script>
+<script src="assets/app-utils.js"></script>
+<script src="assets/app.js?v=20260721k"></script>
+<script src="assets/dados-bairros.js"></script>
+<script src="assets/bairros.js"></script>
+<script src="assets/organograma.js"></script>
+<script>
+  // Bind direto — independente de DOMContentLoaded ou data-action
+  document.getElementById('btnRelatorioToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleRelatorioView(); });
+  document.getElementById('btnTreeToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleTreeView(); });
+  document.getElementById('btnOrganogramaToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleOrganogramaView(); });
+  document.getElementById('btnBairrosToggle').addEventListener('click', function(e){ e.stopPropagation(); toggleBairrosView(); });
+</script>
+<!-- MODAL SELEÇÃO DE CAMPANHAS -->
+<div class="modal-camps-sel" id="modalCampsSel">
+  <div class="modal-camps-sel-box">
+    <h3 id="mcs-titulo">📅 Adicionar em outros ciclos</h3>
+    <p id="mcs-desc">Selecione em quais ciclos esta pessoa também vai participar:</p>
+    <input class="mcs-search" type="text" id="mcs-search" placeholder="Buscar nome ou bairro">
+    <div class="mcs-actions" id="mcs-actions">
+      <button class="btn btn-outline" id="btnMcsTodos">Todos</button>
+      <button class="btn btn-outline" id="btnMcsLimpar">Limpar</button>
+    </div>
+    <div class="camp-check-list" id="mcs-lista"></div>
+    <div class="mcs-footer">
+      <button class="btn btn-outline" id="btnFecharCampsSel">Pular</button>
+      <button class="btn btn-primary" id="btnConfirmarCampsSel">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR USUÁRIOS (só admin) -->
+<div class="overlay" id="overlayUsuarios" style="display:none">
+  <div class="nu-modal">
+    <!-- Cabeçalho fixo -->
+    <div class="nu-modal-header">
+      <h2 style="font-size:1.05rem;font-weight:600">👥 Gerenciar Coordenadores</h2>
+      <button class="btn-ico" id="btnFecharUsuarios" onclick="fecharGerenciarUsuarios()" style="font-size:1rem">✕</button>
+    </div>
+
+    <!-- Corpo com scroll slim -->
+    <div class="nu-modal-body">
+
+      <!-- Criar novo -->
+      <details class="nu-section" id="nuCreateDetails">
+        <summary class="nu-section-summary">+ Criar novo login</summary>
+        <div class="nu-create-form">
+          <div class="fg"><label>Nome</label><input type="text" id="nu-nome" placeholder="Nome completo"></div>
+          <div class="fg"><label>E-mail</label><input type="email" id="nu-email" placeholder="email@exemplo.com"></div>
+          <div class="fg"><label>Senha</label><input type="password" id="nu-senha" placeholder="Mínimo 6 caracteres"></div>
+          <div class="fg">
+            <label>Função</label>
+            <select id="nu-role">
+              <option value="regional">Coordenador Regional</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div id="nu-region-group">
+            <div class="fg">
+              <label>Região</label>
+              <select id="nu-region">
+                <option value="norte">Norte</option>
+                <option value="sul">Sul</option>
+                <option value="leste">Leste</option>
+                <option value="sudeste">Sudeste</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Zona (número do coordenador)</label>
+              <input type="text" id="nu-zona" placeholder="Ex: 01, 02...">
+            </div>
+          </div>
+          <div id="nu-msg" style="color:var(--danger);font-size:.85rem;margin-top:4px"></div>
+          <button class="btn btn-primary" id="btnCriarUsuario" style="margin-top:12px;width:100%">Criar conta</button>
+        </div>
+      </details>
+
+      <!-- Lista -->
+      <div style="margin-top:16px">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;font-weight:600">Cadastrados</div>
+        <div id="nu-lista"></div>
+      </div>
+
+      <!-- Migração de dados -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;font-weight:600">Migrar dados sem coordenador</div>
+        <div id="nu-migrate-info" style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Verificando registros...</div>
+        <div class="fg">
+          <label>Atribuir para</label>
+          <select id="nu-migrate-coord">
+            <option value="">— selecione um coordenador —</option>
+          </select>
+        </div>
+        <label style="font-size:.82rem;display:flex;align-items:center;gap:8px;margin:8px 0 14px;cursor:pointer">
+          <input type="checkbox" id="nu-migrate-zona" checked style="accent-color:#3b82f6">
+          Mover registros para a zona do coordenador selecionado
+        </label>
+        <div id="nu-migrate-msg" style="color:var(--danger);font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-primary" onclick="executarMigracaoDados()" style="width:100%">Executar migração</button>
+      </div>
+
+      <!-- Sincronizar CAs -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600">Sincronizar registros CA</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Cria o registro tipo CA na liderança para coordenadores que ainda não possuem.</div>
+        <div id="nu-sync-msg" style="font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-outline" onclick="sincronizarCAsCoord()" style="width:100%">Sincronizar coordenadores → CA</button>
+      </div>
+
+      <!-- Limpar duplicados -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600">Limpar CAs duplicados</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Remove registros CA extras, mantendo apenas 1 por coordenador.</div>
+        <div id="nu-dedup-msg" style="font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-outline" onclick="limparCAsDuplicados()" style="width:100%;border-color:rgba(239,68,68,.4);color:#f87171">Limpar duplicados</button>
+      </div>
+
+      <!-- Reparar _criadoPor -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600">Reparar vínculo de proprietário</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Corrige o _criadoPor dos CAs para apontar para o coordenador correto (por região + zona).</div>
+        <div id="nu-repair-msg" style="font-size:.82rem;margin-bottom:8px"></div>
+        <button class="btn btn-outline" onclick="repararCriadoPorCAs()" style="width:100%;border-color:rgba(251,191,36,.4);color:#fbbf24">Reparar proprietários</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- AUDITORIA (super admin) -->
+<div class="overlay" id="aniversariantesArea" style="display:none;align-items:center;justify-content:center" onclick="if(event.target===this)fecharAniversariantes()">
+  <div class="modal" style="max-width:760px;width:96vw;max-height:88vh;display:flex;flex-direction:column;background:var(--surface-solid);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px 12px;border-bottom:1px solid var(--border)">
+      <h2 style="font-size:1rem;font-weight:600;margin:0">🎂 Aniversariantes</h2>
+      <button class="btn-ico" onclick="fecharAniversariantes()" style="font-size:1rem">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);gap:8px">
+      <button onclick="navAniversarioMes(-1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:1rem;color:var(--text)">‹</button>
+      <span id="aniversariantesMesLabel" style="font-size:.92rem;font-weight:600;color:var(--text)"></span>
+      <button onclick="navAniversarioMes(1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:1rem;color:var(--text)">›</button>
+    </div>
+    <div id="aniversariantesContent" style="overflow-y:auto;padding:16px 24px 24px;flex:1"></div>
+  </div>
+</div>
+
+<div class="overlay" id="auditoriaArea" style="display:none;align-items:center;justify-content:center" onclick="if(event.target===this)fecharAuditoria()">
+  <div class="modal" style="max-width:920px;width:96vw;max-height:88vh;display:flex;flex-direction:column;background:var(--surface-solid);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 14px;border-bottom:1px solid var(--border)">
+      <div>
+        <h2 style="font-size:1rem;font-weight:600;margin:0">📋 Histórico de Ações</h2>
+        <p style="font-size:.72rem;color:var(--muted);margin:2px 0 0">Edições e exclusões registradas no sistema</p>
+      </div>
+      <button class="btn-ico" onclick="fecharAuditoria()" style="font-size:1rem">✕</button>
+    </div>
+    <div id="auditoriaContent" style="overflow-y:auto;padding:16px 24px 24px;flex:1"></div>
+  </div>
+</div>
+
+</body>
+</html>

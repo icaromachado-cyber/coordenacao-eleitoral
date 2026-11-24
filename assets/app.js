@@ -10,6 +10,9 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const ICO_VER = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICO_EDIT = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+const ICO_DEL = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>';
 
 // App secundário para criar usuários sem deslogar o admin
 const secondaryApp = firebase.initializeApp(firebaseConfig, 'secondary');
@@ -312,6 +315,7 @@ function _primeiraZonaDeRegiao(region) {
   return zonas[0] || '01'; // fallback '01'
 }
 let filtrado = [];
+let _baseFiltrado = [];
 let sortCol = 'id';
 let sortAsc = true;
 let pg = 1;
@@ -802,7 +806,7 @@ function aplicarFiltros() {
   const bairro = document.getElementById('filtro-bairro').value;
   const coord = (document.getElementById('filtro-coord')?.value || '');
 
-  filtrado = getDados().filter(d => {
+  _baseFiltrado = getDados().filter(d => {
     const mn = norm(d.nome), mb = norm(d.bairro), mt = (d.telefone||'').toLowerCase();
     const passaCoord = !coord || d._criadoPor === coord;
     // Filtro por _coordZona: se o registro tem _coordZona, exige match exato
@@ -813,11 +817,11 @@ function aplicarFiltros() {
         : _coordZonaFiltro === _primeiraZonaDeRegiao(_coordZonaRegiao)
     );
     return (!q || mn.includes(q) || mb.includes(q) || mt.includes(q))
-        && (!tipo || d.tipo === tipo)
         && (!bairro || d.bairro === bairro)
         && passaCoord
         && passaCoordZona;
   });
+  filtrado = tipo ? _baseFiltrado.filter(d => d.tipo === tipo) : _baseFiltrado;
 
   doSort();
   pg = 1;
@@ -929,8 +933,26 @@ function totalStyle(v) {
   return 'color:var(--z-norte)';
 }
 
+function toggleDashboardStrip() {
+  const area = document.getElementById('dashboardArea');
+  if (!area) return;
+  const recolhido = area.classList.toggle('recolhido');
+  area.querySelector('.dash-toggle')?.setAttribute('aria-expanded', String(!recolhido));
+}
+
+function filtrarPorTipoCard(el, tipo) {
+  const sel = document.getElementById('filtro-tipo');
+  if (!sel) return;
+  sel.value = el.classList.contains('is-active') ? '' : tipo;
+  aplicarFiltros();
+}
+
 function renderCards() {
-  const src = filtrado;
+  const src = _baseFiltrado;
+  const tipoAtivo = document.getElementById('filtro-tipo')?.value || '';
+  document.querySelectorAll('.summary-strip .strip-card[data-action="filtrar-tipo"]').forEach(c => {
+    c.classList.toggle('is-active', (c.dataset.tipo || '') === tipoAtivo);
+  });
   document.getElementById('sc-total').textContent = src.length;
   document.getElementById('sc-l').textContent  = src.filter(d=>d.tipo==='L').length;
   document.getElementById('sc-m').textContent  = src.filter(d=>d.tipo==='M').length;
@@ -979,7 +1001,7 @@ function renderTable() {
 
   tbody.innerHTML = slice.map(d => {
     const nome = d.nome || '';
-    const nomeDisplay = nome.length > 32 ? nome.substring(0,30)+'…' : nome;
+    const nomeDisplay = nome;
     const colegio = d.colegio || '';
     const colegioDisplay = colegio ? colegio.substring(0,18)+(colegio.length>18?'…':'') : '—';
     const c = ZONAS_CFG[d._zona] || {};
@@ -1006,9 +1028,9 @@ function renderTable() {
       <td class="total-td" style="${totalStyle(d.total)}" title="${(d.custos_extras||[]).length ? a((d.custos_extras||[]).map(c=>`${c.label||'Extra'}: R$${(c.valor||0).toLocaleString('pt-BR')}`).join(' · ')) : ''}">${d.total?'R$'+d.total.toLocaleString('pt-BR'):'—'}${(d.custos_extras||[]).length?' <span style="font-size:.62rem;color:var(--accent,#e8433a);vertical-align:top">➕'+d.custos_extras.length+'</span>':''}</td>
       <td style="text-align:center">
         <div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;align-items:center">
-          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">👁</button>
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">✏️</button>
-          ${d.tipo !== 'CA' ? `<button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">🗑</button>` : '<span></span>'}
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Visualizar">${ICO_VER}</button>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Editar">${ICO_EDIT}</button>
+          ${d.tipo !== 'CA' ? `<button class="btn-ico del" data-action="deletar-registro" data-id="${a(d.id)}" data-zona="${a(d._zona)}" title="Excluir">${ICO_DEL}</button>` : '<span></span>'}
         </div>
       </td>
     </tr>`;
@@ -2329,7 +2351,7 @@ function renderArvore() {
             <div class="tree-count-pill">🗳️ <strong>${apoiosL}</strong> apoios</div>
           </div>
           <div style="display:flex;gap:6px;margin-left:8px">
-            <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">👁</button>
+            <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">${ICO_VER}</button>
           </div>
           <span class="tree-toggle open" id="tog-l-${ci}-${li}" style="margin-left:6px">▶</span>
         </div>
@@ -2345,7 +2367,7 @@ function renderArvore() {
           <span class="tree-m-nome">${h(m.nome)}</span>
           <span class="tree-m-bairro">${h(m.bairro || '')}</span>
           ${m.votos ? `<span class="tree-m-votos">🗳️ ${m.votos}</span>` : ''}
-          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">👁</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">${ICO_VER}</button>
         </div>`;
       });
 
@@ -2375,8 +2397,8 @@ function renderArvore() {
           <span class="badge badge-${a(l.tipo)}">${h(l.tipo)}</span>
           <span class="orphan-name">${h(l.nome)}</span>
           <span class="orphan-bairro">${h(l.bairro || '')}</span>
-          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">👁</button>
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Editar">✏️</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Visualizar">${ICO_VER}</button>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(l.id)}" data-zona="${a(l._zona)}" title="Editar">${ICO_EDIT}</button>
         </div>`;
       });
     }
@@ -2388,8 +2410,8 @@ function renderArvore() {
           <span class="badge badge-${a(m.tipo)}">${h(m.tipo)}</span>
           <span class="orphan-name">${h(m.nome)}</span>
           <span class="orphan-bairro">${h(m.bairro || '')}</span>
-          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">👁</button>
-          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Editar">✏️</button>
+          <button class="btn-ico view" data-action="ver-drawer" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Visualizar">${ICO_VER}</button>
+          <button class="btn-ico edit" data-action="editar-registro" data-id="${a(m.id)}" data-zona="${a(m._zona)}" title="Editar">${ICO_EDIT}</button>
         </div>`;
       });
     }
@@ -3078,6 +3100,12 @@ function handleActionClick(event) {
     case 'salvar-reuniao':
       salvarReuniao(ds.fireId, id, ds.zona);
       break;
+    case 'filtrar-tipo':
+      filtrarPorTipoCard(el, ds.tipo);
+      break;
+    case 'toggle-dash':
+      toggleDashboardStrip();
+      break;
     case 'salvar-pagamento':
       salvarPagamento(ds.fireId, id, ds.zona);
       break;
@@ -3191,9 +3219,11 @@ async function fazerLogout() {
 
 
 // ===================== TEMA =====================
+const ICON_SOL = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const ICON_LUA = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
 function toggleTheme() {
   const isLight = document.body.classList.toggle('theme-light');
-  document.getElementById('btnTheme').textContent = isLight ? '🌙' : '☀️';
+  document.getElementById('btnTheme').innerHTML = isLight ? ICON_LUA : ICON_SOL;
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
@@ -3205,7 +3235,7 @@ function toggleTheme() {
     // Botão será atualizado após DOM carregar
     document.addEventListener('DOMContentLoaded', () => {
       const btn = document.getElementById('btnTheme');
-      if (btn) btn.textContent = '🌙';
+      if (btn) btn.innerHTML = ICON_LUA;
     });
   }
 })();
